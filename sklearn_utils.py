@@ -215,7 +215,7 @@ def plot_importances(importances, feat_names):
     plt.ylabel("Feature Importance")
     plt.show()
 
-def disp_best_features(importances, feat_names, n_features):
+def select_best_features(importances, feat_names, n_features):
 
     # Combine importances and feature names into a list of tuples
     feature_importance = list(zip(feat_names, importances))
