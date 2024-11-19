@@ -26,7 +26,7 @@ def print_performance_metrics(confmat_train, *confmat_test):
         acc, sen, esp, ppv, fsc = get_metrics(confmat_train)
         print('ACC: %2.2f' % (100*acc))
         print('SEN: %2.2f' % (100*sen))
-        print('ESP: %2.2f' % (100*esp))
+        print('SPE: %2.2f' % (100*esp))
         print('PPV: %2.2f' % (100*ppv))
         print('F1: %2.2f' % (100*fsc))
     else:
@@ -39,7 +39,7 @@ def print_performance_metrics(confmat_train, *confmat_test):
         print('\tTRAIN\tTEST')
         print('ACC:\t%2.2f\t%2.2f' % (100*acc_train, 100*acc_test))
         print('SEN:\t%2.2f\t%2.2f' % (100*sen_train, 100*sen_test))
-        print('ESP:\t%2.2f\t%2.2f' % (100*esp_train, 100*esp_test))
+        print('SPE:\t%2.2f\t%2.2f' % (100*esp_train, 100*esp_test))
         print('PPV:\t%2.2f\t%2.2f' % (100*ppv_train, 100*ppv_test))
         print('F1:\t%2.2f\t%2.2f' % (100*fsc_train, 100*fsc_test))
 
@@ -214,3 +214,22 @@ def plot_importances(importances, feat_names):
     df_importances.plot.bar()
     plt.ylabel("Feature Importance")
     plt.show()
+
+def disp_best_features(importances, feat_names, n_features):
+
+    # Combine importances and feature names into a list of tuples
+    feature_importance = list(zip(feat_names, importances))
+    
+    # Sort the list of tuples based on importances in descending order
+    sorted_features = sorted(feature_importance, key=lambda x: x[1], reverse=True)
+    
+    # Select top n_features
+    top_features = sorted_features[:n_features]
+    
+    # Display the results
+    print("Top", n_features, "features:")
+    for feature, importance in top_features:
+        print(f"{feature}: {importance:.4f}")
+
+    return top_features
+
