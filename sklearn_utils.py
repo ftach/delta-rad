@@ -125,7 +125,7 @@ def plot_confusion_matrix(confmat_train, *confmat_test):
         plt.show()
 
 
-def analyze_train_test_performance(clf, X_train, X_test, y_train, y_test):
+def analyze_train_test_performance(clf, X_train, X_test, y_train, y_test, predict_proba=True):
     '''Analyze Train and Test Performance'''
     train_metrics = {}
     test_metrics = {}
@@ -141,9 +141,12 @@ def analyze_train_test_performance(clf, X_train, X_test, y_train, y_test):
     print_performance_metrics(confmat_train, confmat_test)
     plot_confusion_matrix(confmat_train, confmat_test)
 
-    # Plot ROC curve
-    y_prob = clf.predict_proba(X_test)[:, 1]
-    plot_roc_curve(y_test, y_prob)
+    try:
+        # Plot ROC curve
+        y_prob = clf.predict_proba(X_test)[:, 1]
+        plot_roc_curve(y_test, y_prob)
+    except AttributeError: 
+        print("This method has not predict_proba method, ROC cannot be displayed. ")
 
 
 def get_train_test_performances(clf, X_train, X_test, y_train, y_test):
