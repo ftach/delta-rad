@@ -15,8 +15,8 @@ def get_highly_corr_features(correlation_matrix, threshold=0.9):
     print("There are {} highly correlated features (correlation superior to {}): ".format(len(highly_correlated_pairs), threshold))
 
     # Display highly correlated pairs
-    for column1, column2, corr_value in highly_correlated_pairs:
-        print(f"{column1} and {column2} have a correlation of {corr_value:.2f}")
+    # for column1, column2, corr_value in highly_correlated_pairs:
+    #     print(f"{column1} and {column2} have a correlation of {corr_value:.2f}")
 
     return highly_correlated_pairs
 
@@ -35,22 +35,28 @@ def remove_highly_corr_features(highly_correlated_pairs, original_df):
 
     return reduced_df 
 
-def get_dataset(rad_csv_path: str, outcome_csv_path: str, y_val: pd.DataFrame, selection: str = 'random'): 
-    # TODO: get dataset from y_val
-    
-    rad_df = pd.read_csv(rad_csv_path, index_col=0) # header=None, names=feature_list
-    rad_df = rad_df.dropna() # delete nan values 
-    correlation_matrix = rad_df.corr(method='pearson') 
+def get_dataset(rad_csv_path: str, outcome_csv_path: str, selection: str = 'fixed', sample_features: list = ['Récidive Locale', 'Récidive Méta', 'Décès'], forbidden_patients: list = [57, 32, 74, 82, 84, 85, 56, 63], test_ratio: float = 0.3): 
+    X = pd.read_csv(rad_csv_path, index_col=0) # header=None, names=feature_list
+    X = X.dropna() # delete nan values 
 
-    X = remove_highly_corr_features(get_highly_corr_features(correlation_matrix), rad_df) #  drop features whom collinearity > 0.9 
+    correlation_matrix = X.corr(method='pearson') 
+    X = remove_highly_corr_features(get_highly_corr_features(correlation_matrix), X) #  drop features whom collinearity > 0.9 
     
     outcome_df = pd.read_csv(outcome_csv_path, index_col=0)
     y = outcome_df.loc[outcome_df.index.isin(X.index)] 
-    
-    # obtain X_train, X_val, y_train, y_val 
-    if selection == 'random': 
-        y_train, y_val = get_random_test_patient(y) # if we want to have the same x_val and y_val dataset for the whole study!! 
-        # TODO: get X_train, y_train 
+
+    if selection == 'fixed': 
+        y_val = get_random_test_patient(y, sample_features, forbidden_patients, test_ratio)
+        y_train = y.drop(y_val.index)
+
+        X_train = X.drop(y_val.index)
+        X_val = X.loc[X.index.isin(y_val.index)] 
+
+        assert set(y_train.index).isdisjoint(set(y_val.index)), "y_train and y_val have common indices"
+        assert set(X_train.index).isdisjoint(set(X_val.index)), "X_train and X_val have common indices"
+        assert len(X) == len(X_train) + len(X_val), "X array not of good size"
+        assert len(y) == len(y_train) + len(y_val), "y array not of good size"
+
     else: 
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42)
 
@@ -64,26 +70,27 @@ def get_dataset(rad_csv_path: str, outcome_csv_path: str, y_val: pd.DataFrame, s
 def get_random_test_patient(outcome_df: pd.DataFrame, sample_features: list = ['Récidive Locale', 'Récidive Méta', 'Décès'], forbidden_patients: list = [57, 32, 74, 82, 84, 85, 56, 63], test_ratio: float = 0.3): 
     forbidden_patients = ['Patient ' + str(x) for x in forbidden_patients]
     authorized_df = outcome_df.drop(forbidden_patients)
-
+    
     y_val = pd.DataFrame(columns=outcome_df.columns)
-    for feat in sample_features: 
-        outcome_selected_df = authorized_df[authorized_df[feat] == 1] # patients in outcome_df for which value at feature 'feat' == 1
-        to_sample = round(len(outcome_selected_df[outcome_selected_df[feat] == 1])*test_ratio) - len(y_val[y_val[feat] == 1]) # number of patients in outcome_df for which value at feature 'feat' == 1 - number of patients in filtered_df for which value at feature 'feat' == 1
-        print(to_sample)
-        sampled_rows = outcome_selected_df.sample(n=to_sample, random_state=42)
-        y_val = pd.concat([y_val, sampled_rows]) # append sampled rows to filtered df 
+    while len(y_val) != round(len(outcome_df)*test_ratio):
+        y_val = pd.DataFrame(columns=outcome_df.columns)
+        for feat in sample_features: 
+            outcome_selected_df = authorized_df[authorized_df[feat] == 1]
+            
+            # Get patient IDs already sampled
+            existing_patient_ids = set(y_val.index) if not y_val.empty else set()
 
-    print(len(outcome_df))
-    # Drop filtered_df from outcome_df
-    y_train = outcome_df.drop(y_val.index)
-    print(y_val.duplicated().sum())  # Should return 0
+            to_sample = round(len(outcome_selected_df[outcome_selected_df[feat] == 1])*test_ratio) - len(y_val[y_val[feat] == 1])
+            
+            if to_sample > 0: 
+                sampled_rows = outcome_selected_df[outcome_selected_df.index.isin(y_val.index) == False].sample(n=to_sample)
+                outcome_selected_df = outcome_selected_df.drop(sampled_rows.index)
+                
+                # Add sampled rows to y_val only if they are not already there
+                new_samples = sampled_rows[sampled_rows.index.isin(existing_patient_ids) == False]
+                y_val = pd.concat([y_val, new_samples])
+    return y_val
 
-    print(len(y_train), len(y_val), len(outcome_df))
-
-    # Validate size consistency
-    assert len(y_train) + len(y_val) == len(outcome_df), "Mismatch in DataFrame sizes"
-
-    return y_train, y_val  
 
 def get_best_features(X_train: pd.DataFrame, feat_sel_algo: str): 
     pass 
