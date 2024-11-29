@@ -187,8 +187,8 @@ def hyper_parameters_search(clf, X, y, param_grid, scorer = 'f1', cv=5):
     grid = GridSearchCV(clf, param_grid = param_grid, scoring = scorer, cv = cv)
     grid.fit(X, y)
 
-    print("best mean cross-validation score: {:.3f}".format(grid.best_score_))
-    print("best parameters: {}".format(grid.best_params_))
+    # print("best mean cross-validation score: {:.3f}".format(grid.best_score_))
+    # print("best parameters: {}".format(grid.best_params_))
     
     return grid
 
