@@ -15,11 +15,10 @@ def main():
     folder_path = '/mnt/c/Users/tachenne/delta-rad/extracted_radiomics'
     delta_rad_tables = [p for p in os.listdir(folder_path) if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')] # X data csv names 
 
-    #feat_sel_algo_list = ['RF', 'ADABOOST', 'NZV_01', 'NZV_01', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
-    #                , 'PCA_7', 'PCA_8', 'PCA_9']
-    feat_sel_algo_list = ['RF']
-    pred_algo_list = ['DT', 'RF', 'ADABOOST', 'LSVM', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'GaussianP', 'NaiveB']
-    # pred_algo_list = ['LOGREG']
+    feat_sel_algo_list = ['RF', 'ADABOOST', 'NZV_01', 'NZV_01', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
+    #                 , 'PCA_7', 'PCA_8', 'PCA_9']
+
+    pred_algo_list = ['DT', 'RF', 'ADABOOST', 'LSVM', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB']
     MAX_FEATURES = 5
     outcomes_list = ['Récidive Locale', 'Récidive Méta', 'Décès']
     results = {

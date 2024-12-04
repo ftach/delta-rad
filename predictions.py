@@ -39,9 +39,8 @@ def train_rf(X_train_filtered, y_train):
     RandomForestClassifier: The best estimator found by the grid search.
     """
 
-    # TODO: modify param grid
-    param_grid = {'max_depth': range(1, 5, 4), 'n_estimators' : range(25, 50, 25)} # maximimum depth and number of estimators tuning
-    # param_grid = {'n_estimators' : range(25, 1001, 25)}
+    # param_grid = {'max_depth': range(1, 5, 4), 'n_estimators' : range(25, 50, 25)} # maximimum depth and number of estimators tuning
+    param_grid = {'n_estimators' : range(25, 1001, 25)}
 
     estimator = RandomForestClassifier(random_state=42) 
 
@@ -81,8 +80,9 @@ def train_adaboost(X_train_filtered, y_train):
     AdaBoostClassifier: The best estimator found by the hyperparameter search.
     """
 
-    # TODO: modify param grid
-    param_grid = {'n_estimators' : range(25, 50, 25)} # number of estimators tuning
+    #param_grid = {'n_estimators' : range(25, 50, 25)} # number of estimators tuning
+    param_grid = {'n_estimators' : range(25, 1001, 25)}
+
 
     estimator = AdaBoostClassifier(random_state=42, algorithm='SAMME') 
 
@@ -121,8 +121,8 @@ def train_psvm(X_train_filtered, y_train):
     sklearn.svm.SVC: The best estimator found by the grid search.
     """
 
-    # param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01)), 'degree': range(2, 5, 1)} # number of estimators tuning
-    param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01)), 'degree': [2]}
+    param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01)), 'degree': range(2, 5, 1)} # number of estimators tuning
+    # param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01)), 'degree': [2]}
     ksvm = SVC( kernel="poly", coef0=0, gamma=1.0, probability=True)
     grid_ksvm = sku.hyper_parameters_search(ksvm, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
@@ -181,8 +181,8 @@ def train_bagg(X_train_filtered, y_train):
     BaggingClassifier: The best estimator found by the hyperparameter search.
     """
 
-    param_grid = {'n_estimators' : range(25, 50, 25)} # number of estimators tuning
-    # param_grid = {'n_estimators' : range(25, 1001, 25)}
+    #param_grid = {'n_estimators' : range(25, 50, 25)} # number of estimators tuning
+    param_grid = {'n_estimators' : range(25, 1001, 25)}
 
     bagg = BaggingClassifier(oob_score=True)
 
@@ -191,15 +191,15 @@ def train_bagg(X_train_filtered, y_train):
     return grid_bagging.best_estimator_
 
 def train_mlp(X_train_filtered, y_train):
-    # param_grid = {
-    #     'alpha' : 10.0 ** -np.arange(2, 5), 
-    #     'learning_rate_init': 10.0 ** -np.arange(2, 5),
-    # }
-
     param_grid = {
-        'alpha' : [10.0 ** -3], 
-        'learning_rate_init': [10.0 ** -3],
+        'alpha' : 10.0 ** -np.arange(2, 5), 
+        'learning_rate_init': 10.0 ** -np.arange(2, 5),
     }
+
+    # param_grid = {
+    #     'alpha' : [10.0 ** -3], 
+    #     'learning_rate_init': [10.0 ** -3],
+    # }
 
     mlp = MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling')
     grid_mlp = sku.hyper_parameters_search(mlp, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)

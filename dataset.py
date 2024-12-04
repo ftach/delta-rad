@@ -209,17 +209,20 @@ def convert_to_list(obj):
          If the input is a dictionary, its values are recursively converted. 
          Otherwise, the original object is returned.
     """
-
-    if callable(obj):
-        return obj.__name__
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    elif isinstance(obj, dict):
-        return {k: convert_to_list(v) for k,v in obj.items()}
-    elif isinstance(obj, pd.Index):
-        return obj.tolist()
-    if isinstance(obj, ConstantKernel):
-        return {"type": "ConstantKernel"}
-    else:
-        return obj
+    try:
+        if callable(obj):
+            return obj.__name__
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: convert_to_list(v) for k,v in obj.items()}
+        elif isinstance(obj, pd.Index):
+            return obj.tolist()
+        if isinstance(obj, ConstantKernel):
+            return {"type": "ConstantKernel", "constant_value": obj.constant_value}
+        else:
+            return obj
+    except Exception as e:
+        print(obj)
+        print(e)
 
