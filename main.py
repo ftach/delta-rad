@@ -42,6 +42,7 @@ def main():
         for outcome in outcomes_list: # each outcome is analyzed separately
             X_train, X_val, y_train, y_val, features_list = dataset.get_dataset(os.path.join(folder_path, table), os.path.join(folder_path, 'outcomes.csv'), selection_method='fixed', outcome=outcome, test_ratio=0.3)
             # X_train and X_val are not normalized!! 
+            #exit()
 
             ##################### FEATURE SELECTION ############################
             for feat_sel_algo in feat_sel_algo_list: # we compare different feature selection algorithms
