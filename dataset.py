@@ -110,8 +110,8 @@ def get_dataset(rad_csv_path: str, outcome_csv_path: str, selection_method: str 
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42)
 
     # # save y_val and y_train
-    # y_val.to_csv('y_val.csv')
-    # y_train.to_csv('y_train.csv')
+    y_val.to_csv('y_val.csv')
+    y_train.to_csv('y_train.csv')
 
     # keep only one outcome 
     y_train = y_train.loc[:, [outcome]]

@@ -15,10 +15,11 @@ def main():
     folder_path = '/mnt/c/Users/tachenne/delta-rad/extracted_radiomics'
     delta_rad_tables = [p for p in os.listdir(folder_path) if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')] # X data csv names 
 
-    feat_sel_algo_list = ['RF', 'ADABOOST', 'NZV_01', 'NZV_01', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
-    #                 , 'PCA_7', 'PCA_8', 'PCA_9']
-
-    pred_algo_list = ['DT', 'RF', 'ADABOOST', 'LSVM', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB']
+    # feat_sel_algo_list = ['RF', 'ADABOOST', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
+    #                 , 'PCA_7', 'PCA_8', 'PCA_9'] 'NZV_01', 'NZV_01', 
+    feat_sel_algo_list = ['RDM_SEL']
+    pred_algo_list = [''LOGREGRIDGE'']
+    #pred_algo_list = ['DT', 'RF', 'ADABOOST', 'LSVM', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB']
     MAX_FEATURES = 5
     outcomes_list = ['Récidive Locale', 'Récidive Méta', 'Décès']
     results = {
@@ -37,12 +38,13 @@ def main():
 
     ##################### COMPUTATIONS #################################
     for table in delta_rad_tables: # each radiomic table is analyzed separately
+        print('Training on table ', table)
         if not table in results.keys():
             results[table] = {}
         for outcome in outcomes_list: # each outcome is analyzed separately
             X_train, X_val, y_train, y_val, features_list = dataset.get_dataset(os.path.join(folder_path, table), os.path.join(folder_path, 'outcomes.csv'), selection_method='fixed', outcome=outcome, test_ratio=0.3)
             # X_train and X_val are not normalized!! 
-            #exit()
+            exit()
 
             ##################### FEATURE SELECTION ############################
             for feat_sel_algo in feat_sel_algo_list: # we compare different feature selection algorithms
@@ -56,9 +58,6 @@ def main():
                 # elif 'PCA' not in feat_sel_algo:
                 best_features, best_feat_sel_model = fsa.get_best_features(X_train, y_train, feat_sel_algo, features_list=features_list, max_features=MAX_FEATURES)
 
-                if feat_sel_algo != 'NO_SEL':
-                    assert len(best_features) <= MAX_FEATURES, "Too many features selected"
-
                 # save feature selection model parameters 
                 if best_feat_sel_model is None:
                     results[table][feat_sel_algo]['params'] = 'None'
@@ -67,10 +66,12 @@ def main():
                         results[table][feat_sel_algo]['params'] = best_feat_sel_model.best_params_
                     except AttributeError:
                         results[table][feat_sel_algo]['params'] = best_feat_sel_model.get_params() 
-                print(best_features, sep='\n')
+
                 ##################### PREDICTION ALGORITHMS ############################
-                for nb_features in range(1, len(best_features)+1): # number of features selected
+                for nb_features in range(1, MAX_FEATURES+1): # number of features selected
+                    print('nb features', nb_features)
                     sel_features, X_train_filtered, X_val_filtered = fsa.filter_dataset(X_train, X_val, best_features, nb_features, features_list)
+                    print('nb features max', len(sel_features))
                     for pred_algo in pred_algo_list:
                         if not nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features] = {}
