@@ -15,11 +15,11 @@ def main():
     folder_path = '/mnt/c/Users/tachenne/delta-rad/extracted_radiomics'
     delta_rad_tables = [p for p in os.listdir(folder_path) if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')] # X data csv names 
 
-    # feat_sel_algo_list = ['RF', 'ADABOOST', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
+    feat_sel_algo_list = ['RF', 'ADABOOST', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
     #                 , 'PCA_7', 'PCA_8', 'PCA_9'] 'NZV_01', 'NZV_01', 
-    feat_sel_algo_list = ['RDM_SEL']
-    pred_algo_list = [''LOGREGRIDGE'']
-    #pred_algo_list = ['DT', 'RF', 'ADABOOST', 'LSVM', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB']
+    #feat_sel_algo_list = ['RDM_SEL']
+    #pred_algo_list = ['LOGREGRIDGE']
+    pred_algo_list = ['DT', 'RF', 'ADABOOST', 'LSVM', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB']
     MAX_FEATURES = 5
     outcomes_list = ['Récidive Locale', 'Récidive Méta', 'Décès']
     results = {
@@ -42,9 +42,9 @@ def main():
         if not table in results.keys():
             results[table] = {}
         for outcome in outcomes_list: # each outcome is analyzed separately
+            print("Training for outcome ", outcome)
             X_train, X_val, y_train, y_val, features_list = dataset.get_dataset(os.path.join(folder_path, table), os.path.join(folder_path, 'outcomes.csv'), selection_method='fixed', outcome=outcome, test_ratio=0.3)
             # X_train and X_val are not normalized!! 
-            exit()
 
             ##################### FEATURE SELECTION ############################
             for feat_sel_algo in feat_sel_algo_list: # we compare different feature selection algorithms
@@ -69,9 +69,7 @@ def main():
 
                 ##################### PREDICTION ALGORITHMS ############################
                 for nb_features in range(1, MAX_FEATURES+1): # number of features selected
-                    print('nb features', nb_features)
                     sel_features, X_train_filtered, X_val_filtered = fsa.filter_dataset(X_train, X_val, best_features, nb_features, features_list)
-                    print('nb features max', len(sel_features))
                     for pred_algo in pred_algo_list:
                         if not nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features] = {}
@@ -95,7 +93,7 @@ def main():
                         results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity'] = spec
                         results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = sens
                         results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = mispreds
-                    break 
+                break 
                 # else: if pca 
                 #     break 
                     # sel_features, X_train_filtered, X_val_filtered = filter_dataset(X_train, X_val, best_features, nb_features)

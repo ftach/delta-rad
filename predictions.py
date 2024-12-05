@@ -239,7 +239,7 @@ def train_naiveb(X_train_filtered, y_train):
 
 
 def train_model(pred_algo: str, X_train_filtered: pd.DataFrame, y_train: pd.DataFrame): 
-    print("Beginning training with {}...".format(pred_algo))
+    #print("Beginning training with {}...".format(pred_algo))
 
     if pred_algo == 'RF': 
         best_model = train_rf(X_train_filtered, y_train)
@@ -270,7 +270,7 @@ def train_model(pred_algo: str, X_train_filtered: pd.DataFrame, y_train: pd.Data
     elif pred_algo == 'NaiveB':
         best_model = train_naiveb(X_train_filtered, y_train)
                                   
-    print("Training with {} ended.".format(pred_algo))
+    #print("Training with {} ended.".format(pred_algo))
     return best_model 
 
 def compute_metric(X_val: np.ndarray, y_val: np.ndarray, model):

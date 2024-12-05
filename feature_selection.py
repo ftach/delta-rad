@@ -54,12 +54,12 @@ def rf_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: int 
         - best_model (RandomForestClassifier): The trained Random Forest model.
     """
 
-    print("Beginning feature selection with Random Forest...")
+    #print("Beginning feature selection with Random Forest...")
 
     best_model = p.train_rf(znorm_scaled_x_train, y_train)
     selected_features = select_best_features(best_model.feature_importances_, features_list, n_features=max_features)
     
-    print("Feature selection with Random Forest ended.")
+    #print("Feature selection with Random Forest ended.")
 
     return selected_features, best_model
 
@@ -79,12 +79,12 @@ def adaboost_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features
         - best_model (AdaBoostClassifier): The trained AdaBoost model.
     """
 
-    print("Beginning feature selection with AdaBoost...") 
+    #print("Beginning feature selection with AdaBoost...") 
 
     best_model = p.train_adaboost(znorm_scaled_x_train, y_train)
     selected_features = select_best_features(best_model.feature_importances_, features_list, n_features=max_features)
 
-    print("Feature selection with AdaBoost ended.")
+    #print("Feature selection with AdaBoost ended.")
 
     return selected_features, best_model
 
@@ -104,14 +104,14 @@ def lasso_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: i
         - best_estimator (Lasso): The best Lasso estimator found during hyperparameter tuning.
     """
 
-    print("Beginning feature selection with Lasso...")
+    #print("Beginning feature selection with Lasso...")
     param_grid = {'alpha' : list(np.arange(0.01, 0.11, 0.01))} # regularizer tuning
     estimator = Lasso(random_state=42) 
     grid_lasso = sku.hyper_parameters_search(estimator, znorm_scaled_x_train, y_train, param_grid, scorer=SCORER, cv=5)
 
     selected_features = select_best_features(grid_lasso.best_estimator_.coef_, features_list, n_features=max_features)        
 
-    print("Feature selection with Lasso ended.")
+    #print("Feature selection with Lasso ended.")
 
     return selected_features, grid_lasso.best_estimator_
 
@@ -140,14 +140,14 @@ def nzv_feat_sel(znorm_scaled_x_train, features_list, threshold: float = 0.1):
           methods that might return additional information.
     """
 
-    print("Beginning feature selection with NZV ({})...".format(threshold))
+    #print("Beginning feature selection with NZV ({})...".format(threshold))
 
     selector = VarianceThreshold(threshold=threshold)
     X_filtered  = selector.fit_transform(znorm_scaled_x_train) # data have to have variance different than 0!! Not normalized!! 
 
     selected_features = selector.get_feature_names_out(features_list)
 
-    print("Feature selection with NZV ({}) ended.".format(threshold))
+    #print("Feature selection with NZV ({}) ended.".format(threshold))
 
     return selected_features, None
 
@@ -174,7 +174,7 @@ def gus_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: int
     - If a ValueError is raised during the fit_transform process, the minimum and maximum values of znorm_scaled_x_train will be printed.
     """
 
-    print("Beginning feature selection with ...")
+    #print("Beginning feature selection with ...")
 
     if method == 'ANOVA': 
         score_func = f_classif
@@ -193,7 +193,7 @@ def gus_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: int
 
     selected_features = selector.get_feature_names_out(features_list)
 
-    print("Feature selection with {} ({}) ended.".format(method, mode))
+    #print("Feature selection with {} ({}) ended.".format(method, mode))
 
     return selected_features, selector 
 
@@ -233,7 +233,7 @@ def get_best_features(X_train: np.ndarray, y_train: np.ndarray, feat_sel_algo: s
         - best_model: The model used for feature selection, if applicable. None if not applicable.
     """
 
-    print("Beginning feature selection with {}...".format(feat_sel_algo))
+    #print("Beginning feature selection with {}...".format(feat_sel_algo))
     if feat_sel_algo == 'RF': 
         best_features, best_model = rf_feat_sel(X_train, y_train, features_list, max_features)
     elif feat_sel_algo == 'ADABOOST':
@@ -269,7 +269,7 @@ def get_best_features(X_train: np.ndarray, y_train: np.ndarray, feat_sel_algo: s
     elif feat_sel_algo == 'RDM_SEL':
         best_features, best_model =  random.sample(list(features_list), max_features), None 
 
-    print("Feature selection with {} ended.".format(feat_sel_algo))
+    #print("Feature selection with {} ended.".format(feat_sel_algo))
 
     return best_features, best_model
 
@@ -297,7 +297,7 @@ def filter_dataset(X_train: np.ndarray, X_val: np.ndarray, best_features: Sequen
         best_features = list(best_features_dict.keys())
     elif type(best_features) == list: 
         pass 
-    selected_features = best_features[:nb_features+1] # select only i best features 
+    selected_features = best_features[:nb_features] # select only i best features 
 
     X_train = pd.DataFrame(X_train, columns=feature_names)
     X_val = pd.DataFrame(X_val, columns=feature_names)
