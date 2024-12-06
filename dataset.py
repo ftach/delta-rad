@@ -27,7 +27,7 @@ def get_highly_corr_features(correlation_matrix: pd.DataFrame, threshold: float 
         if (column1 != column2) and (abs(correlation_matrix.loc[column1, column2]) > threshold)
     ]
 
-    print("There are {} highly correlated features (correlation superior to {}): ".format(len(highly_correlated_pairs), threshold))
+    # print("There are {} highly correlated features (correlation superior to {}): ".format(len(highly_correlated_pairs), threshold))
 
     # Display highly correlated pairs
     # for column1, column2, corr_value in highly_correlated_pairs:
@@ -57,7 +57,7 @@ def remove_highly_corr_features(highly_correlated_pairs, original_df: pd.DataFra
 
     # Drop features
     reduced_df = original_df.drop(columns=to_drop)
-    print("{} features dropped. Reduced DataFrame has {} features.".format(len(to_drop), reduced_df.shape[1]))
+    # print("{} features dropped. Reduced DataFrame has {} features.".format(len(to_drop), reduced_df.shape[1]))
 
     return reduced_df 
 
