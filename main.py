@@ -93,7 +93,6 @@ def main():
                         results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity'] = spec
                         results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = sens
                         results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = mispreds
-                break 
                 # else: if pca 
                 #     break 
                     # sel_features, X_train_filtered, X_val_filtered = filter_dataset(X_train, X_val, best_features, nb_features)
