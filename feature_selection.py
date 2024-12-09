@@ -299,6 +299,8 @@ def filter_dataset(X_train: np.ndarray, X_val: np.ndarray, best_features: Sequen
         pass 
     selected_features = best_features[:nb_features] # select only i best features 
 
+    assert len(selected_features) == nb_features, "The number of selected features is not equal to the number of features requested."
+    
     X_train = pd.DataFrame(X_train, columns=feature_names)
     X_val = pd.DataFrame(X_val, columns=feature_names)
 

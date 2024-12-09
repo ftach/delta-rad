@@ -79,7 +79,7 @@ def main():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = []
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = []
 
-                        try:
+                        if X_train_filtered.shape[1] > 0:
                             best_model = p.train_model(pred_algo, X_train_filtered, y_train) # train with selected features in cross validation 
 
                             sens, spec, roc_auc, mispreds = p.compute_metric(X_val_filtered, y_val, best_model) # use best algo to make predictions # compute roc auc # later compare the auc for each model using a boxplot (to show the distribution of auc for different number of selected features)
@@ -98,8 +98,7 @@ def main():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = sens
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = mispreds
 
-                        except Exception as e:
-                            print("Error in training model: ", e)
+                        else:
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features'] = sel_features 
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = 'None'
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['roc_auc'] = 'None'
