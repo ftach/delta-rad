@@ -70,29 +70,42 @@ def main():
                 ##################### PREDICTION ALGORITHMS ############################
                 for nb_features in range(1, MAX_FEATURES+1): # number of features selected
                     sel_features, X_train_filtered, X_val_filtered = fsa.filter_dataset(X_train, X_val, best_features, nb_features, features_list)
+
+                    
                     for pred_algo in pred_algo_list:
                         if not nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features] = {}
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features'] = []
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = []
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = []
-                        best_model = p.train_model(pred_algo, X_train_filtered, y_train) # train with selected features in cross validation 
-                        
-                        sens, spec, roc_auc, mispreds = p.compute_metric(X_val_filtered, y_val, best_model) # use best algo to make predictions # compute roc auc # later compare the auc for each model using a boxplot (to show the distribution of auc for different number of selected features)
-                        
-                        # save results in a dict
-                        results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features'] = sel_features 
-                        if best_model is None:
+
+                        try:
+                            best_model = p.train_model(pred_algo, X_train_filtered, y_train) # train with selected features in cross validation 
+
+                            sens, spec, roc_auc, mispreds = p.compute_metric(X_val_filtered, y_val, best_model) # use best algo to make predictions # compute roc auc # later compare the auc for each model using a boxplot (to show the distribution of auc for different number of selected features)
+
+                            # save results in a dict
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features'] = sel_features 
+                            if best_model is None:
+                                results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = 'None'
+                            else: 
+                                try: 
+                                    results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = best_model.best_params_
+                                except AttributeError:
+                                    results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = best_model.get_params()
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['roc_auc'] = roc_auc
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity'] = spec
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = sens
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = mispreds
+
+                        except Exception as e:
+                            print("Error in training model: ", e)
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features'] = sel_features 
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = 'None'
-                        else: 
-                            try: 
-                                results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = best_model.best_params_
-                            except AttributeError:
-                                results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params'] = best_model.get_params()
-                        results[table][feat_sel_algo][pred_algo][outcome][nb_features]['roc_auc'] = roc_auc
-                        results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity'] = spec
-                        results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = sens
-                        results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = mispreds
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['roc_auc'] = 'None'
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity'] = 'None'
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = 'None'
+                            results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = 'None'
                 # else: if pca 
                 #     break 
                     # sel_features, X_train_filtered, X_val_filtered = filter_dataset(X_train, X_val, best_features, nb_features)
