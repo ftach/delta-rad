@@ -20,7 +20,7 @@ def main():
     #feat_sel_algo_list = ['RDM_SEL']
     #pred_algo_list = ['LOGREGRIDGE']
     pred_algo_list = ['DT', 'RF', 'ADABOOST', 'LSVM', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB']
-    MAX_FEATURES = 5
+    MAX_FEATURES = 3
     outcomes_list = ['Récidive Locale', 'Récidive Méta', 'Décès']
     results = {
         table: {
@@ -109,7 +109,7 @@ def main():
 
                 else:
                     sel_features, X_train_filtered, X_val_filtered = fsa.filter_dataset(X_train, X_val, best_features, nb_features, features_list)
-                    
+
                     for pred_algo in pred_algo_list:
                         if not nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features] = {}
