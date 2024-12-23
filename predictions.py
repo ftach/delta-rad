@@ -39,8 +39,8 @@ def train_rf(X_train_filtered, y_train):
     RandomForestClassifier: The best estimator found by the grid search.
     """
 
-    # param_grid = {'max_depth': range(1, 5, 4), 'n_estimators' : range(25, 50, 25)} # maximimum depth and number of estimators tuning
-    param_grid = {'n_estimators' : range(25, 1001, 25)}
+    param_grid = {'max_depth': range(1, 5, 4), 'n_estimators' : range(25, 50, 25)} # maximimum depth and number of estimators tuning
+    # param_grid = {'n_estimators' : range(25, 1001, 25)}
 
     estimator = RandomForestClassifier(random_state=42) 
 
