@@ -12,16 +12,16 @@ import predictions as p
 
 def main(): 
     ###################### INITIALIZATION ##############################
-    folder_path = '/mnt/c/Users/tachenne/delta-rad/extracted_radiomics'
-    delta_rad_tables = [p for p in os.listdir(folder_path) if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')] # X data csv names 
-
+    folder_path = 'extracted_radiomics'
+    #delta_rad_tables = [p for p in os.listdir(folder_path) if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')] # X data csv names 
+    delta_rad_tables = ['f1_f4_gtv.csv', 'f1_f5_gtv.csv']
     feat_sel_algo_list = ['RF', 'ADABOOST', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
     #                 , 'PCA_7', 'PCA_8', 'PCA_9'] 'NZV_01', 'NZV_01', 
     #feat_sel_algo_list = ['RDM_SEL']
     #pred_algo_list = ['LOGREGRIDGE']
-    pred_algo_list = ['DT', 'RF', 'ADABOOST', 'LSVM', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB']
+    pred_algo_list = ['DT', 'RF', 'ADABOOST', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB'] # 'LSVM', 
     MAX_FEATURES = 3
-    outcomes_list = ['Récidive Locale', 'Récidive Méta', 'Décès']
+    outcomes_list = ['Récidive Locale', 'Décès'] # 'Récidive Méta', 
     results = {
         table: {
             feat_sel_algo: {
@@ -154,7 +154,7 @@ def main():
     # save results in a json file   
     results_ser = dataset.convert_to_list(results)
 
-    with open('/mnt/c/Users/tachenne/delta-rad/results.json', 'w') as f: 
+    with open('/mnt/c/Users/tachenne/delta-rad/results_f4_f5.json', 'w') as f: 
         json.dump(results_ser, f)                     
     print("Results saved in results.json file.")
 
