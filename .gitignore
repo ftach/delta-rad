@@ -1,3 +1,6 @@
 *.csv
 *.json
 *.yml
+*.yaml
+*.nii
+*.nii.gz

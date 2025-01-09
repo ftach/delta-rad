@@ -3,6 +3,7 @@
 import pandas as pd 
 import json 
 import os 
+import time
 
 import feature_selection as fsa 
 import dataset 
@@ -11,6 +12,8 @@ import predictions as p
 
 
 def main(): 
+    start_time = time.time()
+
     ###################### INITIALIZATION ##############################
     folder_path = 'extracted_radiomics'
     #delta_rad_tables = [p for p in os.listdir(folder_path) if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')] # X data csv names 
@@ -143,6 +146,7 @@ def main():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity'] = 'None'
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = 'None'
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = 'None'
+        print("--- %s seconds ---" % (time.time() - start_time))
 
                 # else: if pca 
                 #     break 
@@ -154,11 +158,12 @@ def main():
     # save results in a json file   
     results_ser = dataset.convert_to_list(results)
 
-    with open('/mnt/c/Users/tachenne/delta-rad/results_f4_f5.json', 'w') as f: 
+    with open('results_f4_f5.json', 'w') as f: 
         json.dump(results_ser, f)                     
     print("Results saved in results.json file.")
 
-# make plots 
+
+
 # display patient for which prediction got wrong (mispreds)
 # compute p value between models for the ones we want to compare
 
@@ -186,3 +191,4 @@ def main():
 
 if __name__ == '__main__': 
     main()
+
