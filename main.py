@@ -17,8 +17,11 @@ def main():
     ###################### INITIALIZATION ##############################
     folder_path = 'extracted_radiomics'
     #delta_rad_tables = [p for p in os.listdir(folder_path) if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')] # X data csv names 
-    delta_rad_tables = ['f1_f4_gtv.csv', 'f1_f5_gtv.csv']
+    delta_rad_tables = ['gie_1month_gtv.csv', 'simu_gie_gtv.csv', 'simu_onemth_gtv.csv', 'rd_simu_onemth_gtv.csv']#['f1_f4_gtv.csv', 'f1_f5_gtv.csv']
     feat_sel_algo_list = ['RF', 'ADABOOST', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
+    outcome_csv = 'simu_onemth_outcomes.csv'
+    results_file = 'results_simu_gie.json'
+    dset_selection_method = 'random' #'fixed'
     #                 , 'PCA_7', 'PCA_8', 'PCA_9'] 'NZV_01', 'NZV_01', 
     #feat_sel_algo_list = ['RDM_SEL']
     #pred_algo_list = ['LOGREGRIDGE']
@@ -46,7 +49,7 @@ def main():
             results[table] = {}
         for outcome in outcomes_list: # each outcome is analyzed separately
             print("Training for outcome ", outcome)
-            X_train, X_val, y_train, y_val, features_list = dataset.get_dataset(os.path.join(folder_path, table), os.path.join(folder_path, 'outcomes.csv'), selection_method='fixed', outcome=outcome, test_ratio=0.3)
+            X_train, X_val, y_train, y_val, features_list = dataset.get_dataset(os.path.join(folder_path, table), os.path.join(folder_path, outcome_csv), selection_method=dset_selection_method, outcome=outcome, test_ratio=0.3)
             # X_train and X_val are not normalized!! 
 
             ##################### FEATURE SELECTION ############################
@@ -147,18 +150,11 @@ def main():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = 'None'
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = 'None'
         print("--- %s seconds ---" % (time.time() - start_time))
-
-                # else: if pca 
-                #     break 
-                    # sel_features, X_train_filtered, X_val_filtered = filter_dataset(X_train, X_val, best_features, nb_features)
-                    # for pred_algo in pred_algo_list:
-                        # best_model = train_model(pred_algo, X_train_filtered, y_train) # train with selected features in cross validation 
-                        # sens, spec, roc_auc, mispreds = compute_metric(X_val, y_val) # use best algo to make predictions # compute roc auc # later compare the auc for each model using a boxplot (to show the distribution of auc for different number of selected features)
-                        # save results in a dict    
+ 
     # save results in a json file   
     results_ser = dataset.convert_to_list(results)
 
-    with open('results_f4_f5.json', 'w') as f: 
+    with open(results_file, 'w') as f: 
         json.dump(results_ser, f)                     
     print("Results saved in results.json file.")
 

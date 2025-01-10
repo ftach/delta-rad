@@ -4,3 +4,4 @@
 *.yaml
 *.nii
 *.nii.gz
+*.nrrd
