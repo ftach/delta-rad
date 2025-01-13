@@ -16,13 +16,13 @@ def main():
 
     ###################### INITIALIZATION ##############################
     folder_path = 'extracted_radiomics'
-    delta_rad_tables = ['rd_f1_f5_gtv.csv', 'rd_f1_f2_gtv.csv', 'rd_f1_f3_gtv.csv', 'rd_f2_f3_gtv.csv', 'rd_f1_f4_gtv.csv'] # X data csv names if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')
+    # delta_rad_tables = ['rd_f1_f5_gtv.csv', 'rd_f1_f2_gtv.csv', 'rd_f1_f3_gtv.csv', 'rd_f2_f3_gtv.csv', 'rd_f1_f4_gtv.csv'] # X data csv names if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')
 
-    # delta_rad_tables = ['f4_gtv.csv', 'f5_gtv.csv'] #['gie_1month_gtv.csv', 'simu_gie_gtv.csv', 'simu_onemth_gtv.csv', 'rd_simu_onemth_gtv.csv']#['f1_f4_gtv.csv', 'f1_f5_gtv.csv']
+    delta_rad_tables = ['gie_1month_gtv.csv', 'simu_gie_gtv.csv', 'simu_onemth_gtv.csv'] # ['f4_gtv.csv', 'f5_gtv.csv'] ##['f1_f4_gtv.csv', 'f1_f5_gtv.csv']
     feat_sel_algo_list = ['RF', 'ADABOOST', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
     outcome_csv = 'outcomes.csv'
-    results_file = 'results_rd_delta_rad.json'
-    dset_selection_method = 'fixed' #'random'
+    results_file = 'result_gie.json'
+    dset_selection_method = 'random' # 'fixed' 
 
     #                 , 'PCA_7', 'PCA_8', 'PCA_9'] 'NZV_01', 'NZV_01', 
     #feat_sel_algo_list = ['RDM_SEL']
@@ -151,14 +151,17 @@ def main():
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity'] = 'None'
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] = 'None'
                             results[table][feat_sel_algo][pred_algo][outcome][nb_features]['mispreds'] = 'None'
+            
+            # save results in a json file, at each iteration to avoid errors
+            results_ser = dataset.convert_to_list(results)
+
+            with open(results_file, 'w') as f: 
+                json.dump(results_ser, f)                     
+            print("Results saved in {} file.".format(results_file))    
+                    
         print("--- %s seconds ---" % (time.time() - start_time))
  
-    # save results in a json file   
-    results_ser = dataset.convert_to_list(results)
 
-    with open(results_file, 'w') as f: 
-        json.dump(results_ser, f)                     
-    print("Results saved in {} file.".format(results_file))
 
 
 
