@@ -17,7 +17,7 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path):
     img_path: str, candidate image path;
     roi_path: str, candidate ROI path;
     parameter_path: str, .yaml parameter path;
-    store_path: str;
+    store_path: str, directory where to store the feature maps;
     Returns
     -------
     """
@@ -30,6 +30,8 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path):
     result = extractor.execute(img_path, roi_path, voxelBased=True)
 
     # save maps
+    if os.path.exists(store_path) is False:
+        os.makedirs(store_path)
     for key, val in six.iteritems(result):
         if isinstance(val, sitk.Image):
             sitk.WriteImage(val, os.path.join(store_path, key + '.nrrd'), True)
@@ -57,8 +59,19 @@ def compute_feature_map_params(feature_map_path):
     Parameters
     ----------
     feature_map_path: str, feature map path to .nrrd file;
-    
+
     Returns
     mean, std, max, min, coefficient of variation, skewness, kurtosis
     -------
     """
+
+    feature_map = sitk.ReadImage(feature_map_path)
+    feature_map = sitk.GetArrayFromImage(feature_map)
+    mean = np.mean(feature_map)
+    std = np.std(feature_map)
+    max_val = np.max(feature_map)
+    min_val = np.min(feature_map)
+    cv = std / mean
+    skewness = np.mean(((feature_map - mean) / std) ** 3)
+    kurtosis = np.mean(((feature_map - mean) / std) ** 4)
+    return mean, std, max_val, min_val, cv, skewness, kurtosis
