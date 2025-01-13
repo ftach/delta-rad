@@ -16,18 +16,20 @@ def main():
 
     ###################### INITIALIZATION ##############################
     folder_path = 'extracted_radiomics'
-    #delta_rad_tables = [p for p in os.listdir(folder_path) if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')] # X data csv names 
-    delta_rad_tables = ['gie_1month_gtv.csv', 'simu_gie_gtv.csv', 'simu_onemth_gtv.csv', 'rd_simu_onemth_gtv.csv']#['f1_f4_gtv.csv', 'f1_f5_gtv.csv']
+    delta_rad_tables = ['rd_f1_f5_gtv.csv', 'rd_f1_f2_gtv.csv', 'rd_f1_f3_gtv.csv', 'rd_f2_f3_gtv.csv', 'rd_f1_f4_gtv.csv'] # X data csv names if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')
+
+    # delta_rad_tables = ['f4_gtv.csv', 'f5_gtv.csv'] #['gie_1month_gtv.csv', 'simu_gie_gtv.csv', 'simu_onemth_gtv.csv', 'rd_simu_onemth_gtv.csv']#['f1_f4_gtv.csv', 'f1_f5_gtv.csv']
     feat_sel_algo_list = ['RF', 'ADABOOST', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
-    outcome_csv = 'simu_onemth_outcomes.csv'
-    results_file = 'results_simu_gie.json'
-    dset_selection_method = 'random' #'fixed'
+    outcome_csv = 'outcomes.csv'
+    results_file = 'results_rd_delta_rad.json'
+    dset_selection_method = 'fixed' #'random'
+
     #                 , 'PCA_7', 'PCA_8', 'PCA_9'] 'NZV_01', 'NZV_01', 
     #feat_sel_algo_list = ['RDM_SEL']
     #pred_algo_list = ['LOGREGRIDGE']
     pred_algo_list = ['DT', 'RF', 'ADABOOST', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB'] # 'LSVM', 
     MAX_FEATURES = 3
-    outcomes_list = ['Récidive Locale', 'Décès'] # 'Récidive Méta', 
+    outcomes_list = ['Récidive Locale', 'Décès'] # 'Récidive Méta'
     results = {
         table: {
             feat_sel_algo: {
@@ -156,7 +158,7 @@ def main():
 
     with open(results_file, 'w') as f: 
         json.dump(results_ser, f)                     
-    print("Results saved in results.json file.")
+    print("Results saved in {} file.".format(results_file))
 
 
 

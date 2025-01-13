@@ -51,3 +51,14 @@ def disp_map(map_path, slice_num):
     plt.imshow(feature_map[:, :, slice_num], cmap='inferno')
     plt.show()
 
+def compute_feature_map_params(feature_map_path):
+    """
+        Compute intensity parameters of a given feature map.
+    Parameters
+    ----------
+    feature_map_path: str, feature map path to .nrrd file;
+    
+    Returns
+    mean, std, max, min, coefficient of variation, skewness, kurtosis
+    -------
+    """
