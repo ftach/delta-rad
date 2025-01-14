@@ -9,7 +9,7 @@ import time
 import six 
 import os 
 
-def generate_feature_map(img_path, roi_path, parameter_path, store_path):
+def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled_features):
     """
         Generate specific feature map based on kernel Radius.
     Parameters
@@ -18,6 +18,7 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path):
     roi_path: str, candidate ROI path;
     parameter_path: str, .yaml parameter path;
     store_path: str, directory where to store the feature maps;
+    enabled_features: list, list of enabled features;
     Returns
     -------
     """
@@ -33,7 +34,7 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path):
     if os.path.exists(store_path) is False:
         os.makedirs(store_path)
     for key, val in six.iteritems(result):
-        if isinstance(val, sitk.Image):
+        if isinstance(val, sitk.Image) and key in enabled_features:
             sitk.WriteImage(val, os.path.join(store_path, key + '.nrrd'), True)
     print('Elapsed time: {} s'.format(time.time() - start_time))
 
@@ -61,7 +62,7 @@ def compute_feature_map_params(feature_map_path):
     feature_map_path: str, feature map path to .nrrd file;
 
     Returns
-    mean, std, max, min, coefficient of variation, skewness, kurtosis
+    mean, std, min, max, coefficient of variation, skewness, kurtosis
     -------
     """
 
@@ -74,4 +75,4 @@ def compute_feature_map_params(feature_map_path):
     cv = std / mean
     skewness = np.mean(((feature_map - mean) / std) ** 3)
     kurtosis = np.mean(((feature_map - mean) / std) ** 4)
-    return mean, std, max_val, min_val, cv, skewness, kurtosis
+    return mean, std, min_val, max_val, cv, skewness, kurtosis
