@@ -52,7 +52,7 @@ def compute_params(fractions, patients, enabled_features):
                     stored_params_df.loc[p] = rad_params
             if not os.path.exists('Data/intensity_params/' + fraction + '/'):
                 os.makedirs('Data/intensity_params/' + fraction + '/')
-                
+
             # remove empty rows before saving
             stored_params_df = stored_params_df.dropna()
 
@@ -62,40 +62,36 @@ def main():
     # COMPUTE FEATURE MAPS
     params = 'params.yaml' 
 
-    fractions = ['ttt_1', 'ttt_3']
+    fractions = ['ttt_3'] # , 'ttt_1'
     # get list of folders in Data/ if the name of the folder begins by Patient 
     patients = os.listdir('Data/')
     patients = [p for p in patients if p.startswith('Patient')]
     patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
     patients_filtered = [p for p in patients if patients not in patients_to_remove]
-    enabled_features = ['original_firstorder_Skewness', 'original_firstorder_Kurtosis', 'original_firstorder_Maximum'] 
+    enabled_features = [ 'original_firstorder_Skewness' ] # 'original_firstorder_Skewness', 'original_firstorder_Kurtosis', 'original_firstorder_Maximum'
 
     # compute_feature_maps(fractions, patients_filtered, params, enabled_features)
 
-    compute_params(fractions, patients_filtered, enabled_features)
-    # TODO: correct for files that are not Patient ...
-    # TODO: correct to get on csv by fraction and feature
+    # compute_params(fractions, patients_filtered, enabled_features)
 
     # TODO: compare statistics between patients using scipy or pengouin 
     # load outcome table 
-    # outcomes = ['Récidive Locale', 'Décès']
-    # outcomes_df = pd.read_csv('/home/tachennf/Documents/delta-rad/extracted_radiomics/outcomes.csv', index_col=0)
-    # outcomes_df = outcomes_df[outcomes]    # keep only columns of interest
-    # outcomes_df = outcomes_df.dropna()     # remove rows with NaN values
-# 
-    # intensity_params = ['mean', 'std', 'min', 'max', 'cv', 'skewness', 'kurtosis']
-    # for o in outcomes: 
-    #     index1 = outcomes_df.index[outcomes_df[o] == 1]
-    #     index2 = outcomes_df.index[outcomes_df[o] == 0]
-    #     for ttt in fractions: 
-    #         for f in enabled_features: 
-    #             df = pd.read_csv('Data/' + f + '_params.csv') # load csv file 
-    #             intensity_params = df.columns
-    #             for i in intensity_params: 
-    #                 x1, x2 = gs.separate_groups(df, index1, index2)  # separate groups of patients based on outcome
-    #                 # assess normality
-    #                 # compare between patients using scipy or pengouin
-
+    outcomes = ['Décès' ] # 'Récidive Locale'
+    outcomes_df = pd.read_csv('/home/tachennf/Documents/delta-rad/extracted_radiomics/outcomes.csv', index_col=0)
+    outcomes_df = outcomes_df[outcomes]    # keep only columns of interest
+    outcomes_df = outcomes_df.dropna()     # remove rows with NaN values
+ 
+    for o in outcomes: 
+        for ttt in fractions: 
+            for f in enabled_features: 
+                df = pd.read_csv('Data/intensity_params/' + ttt + '/' + f + '_params.csv', index_col=0) # load csv file 
+                intensity_params = df.columns
+                for i in intensity_params: 
+                    x1, x2 = gs.separate_groups(df, outcomes_df, o, i)  # separate groups of patients based on outcome and intensity parameter 
+                    # normality = gs.assess_normality(x1, x2) # assess normality
+                    result, pval = gs.compare_groups(x1, x2) # compare between patients using pingouin
+                    if result: 
+                        print('Significant difference between groups for ' + i + ' in ' + o + ' patients for ' + f + ' in ' + ttt + ' fraction. P-value: ', pval)
 
 
 if __name__ == '__main__':
