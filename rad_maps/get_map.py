@@ -38,6 +38,59 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled
             sitk.WriteImage(val, os.path.join(store_path, key + '.nrrd'), True)
     print('Elapsed time: {} s'.format(time.time() - start_time))
 
+def generate_delta_map(map_paths, fraction_names, store_path):
+    """
+        Generate delta-radiomics feature map.
+    Parameters
+    ----------
+    map_paths: list, map paths to .nrrd files, length=2;
+    fraction_names: list, list of fraction names, length=2;
+    store_path: str, directory where to store the delta map;
+    Returns
+    -------
+    """
+    map1 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[0]))
+    map2 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[1]))
+
+    # TODO: check if the two maps have the same shape, otherwise use padding
+    if map1.shape != map2.shape: 
+        target_shape = (
+            max(map1.shape[0], map2.shape[0]),  # Max height
+            max(map1.shape[1], map2.shape[1]),  # Max width
+            max(map1.shape[2], map2.shape[2])   # Max depth
+        )
+        map1 = pad_to_shape(map1, target_shape)
+        map2 = pad_to_shape(map2, target_shape)
+
+    map2[map2==0] = 1e-12 # add a little value to the voxels of map2 equal to zero to avoid division by zero
+
+    delta_map = (map1 - map2) / map2 # compute delta map 
+
+    assert np.any(np.isnan(delta_map)) == False, "Error, NaN values in the delta map"    # check for nan values in the delta map array
+
+    delta_map = sitk.GetImageFromArray(delta_map)
+
+    if os.path.exists(store_path) is False:
+        os.makedirs(store_path) 
+    sitk.WriteImage(delta_map, os.path.join(store_path, fraction_names[0] + '_' + fraction_names[1] + '.nrrd'), True)
+
+def pad_to_shape(image, target_shape):
+    '''Pad one image to a given shape. 
+    Parameters
+    image: np.ndarray;
+    target_shape: tuple, length=3, x, y, z dimensions for padding
+    '''
+
+    # Calculate the padding for each dimension
+    pad_width = [
+        ((target_shape[i] - image.shape[i]) // 2,  # Padding before
+         (target_shape[i] - image.shape[i] + 1) // 2)  # Padding after
+        for i in range(len(target_shape))
+    ]
+
+    # Apply padding
+    return np.pad(image, pad_width, mode='constant', constant_values=0)
+
 
 def disp_map(map_path, slice_num):
     """
@@ -52,6 +105,7 @@ def disp_map(map_path, slice_num):
     feature_map = sitk.ReadImage(map_path)
     feature_map = sitk.GetArrayFromImage(feature_map)
     plt.imshow(feature_map[:, :, slice_num], cmap='inferno')
+    plt.colorbar()
     plt.show()
 
 def compute_feature_map_params(feature_map_path):

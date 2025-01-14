@@ -158,12 +158,9 @@ def main():
             with open(results_file, 'w') as f: 
                 json.dump(results_ser, f)                     
             print("Results saved in {} file.".format(results_file))    
-                    
+
         print("--- %s seconds ---" % (time.time() - start_time))
  
-
-
-
 
 # display patient for which prediction got wrong (mispreds)
 # compute p value between models for the ones we want to compare
