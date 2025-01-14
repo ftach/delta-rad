@@ -9,4 +9,8 @@ Significant difference between groups for kurtosis in Récidive Locale patients 
 # F3, Décès, Kurtosis
 No significant differences
 
+# Delta-radiomics maps
+Significant difference between groups for std in Décès patients for original_firstorder_Skewness in ttt_1_ttt_3 fraction. P-value:  0.02394217584052614
+Significant difference between groups for min in Décès patients for original_firstorder_Skewness in ttt_1_ttt_3 fraction. P-value:  0.013257175726916481
+
 Montrer que la valeur moyenne est moins bien que d'autres paramètres d'intensité pour prédire un outcome

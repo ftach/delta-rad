@@ -5,6 +5,7 @@ import numpy as np
 import get_map as gm 
 import get_stats as gs
 import pandas as pd 
+import shutil
 
 def compute_feature_maps(fractions, patients, params_path, enabled_features):
     '''Compute feature maps for all given patients and fractions.
@@ -45,7 +46,8 @@ def compute_delta_maps(fractions, patients, enabled_features):
     for p in patients: 
         for f in enabled_features:
             try: 
-                gm.generate_delta_map(['Data/' + p + '/rad_maps/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + fractions[1] + '/' + f + '.nrrd'], fractions, 'Data/' + p + '/rad_maps/delta/')
+                gm.generate_delta_map(map_paths=['Data/' + p + '/rad_maps/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + fractions[1] + '/' + f + '.nrrd'], 
+                                      store_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f)
             except RuntimeError: 
                 continue
             except ValueError: 
@@ -54,7 +56,7 @@ def compute_delta_maps(fractions, patients, enabled_features):
 
 
 def compute_params(fractions, patients, enabled_features): 
-    '''Compute statistics for each feature map and save in a csv file.
+    '''Compute intensity parameters for each feature map and save in a csv file.
     Parameters:
     ----------
         fractions: list, list of fractions to compute feature maps for;
@@ -119,10 +121,10 @@ def compute_delta_params(fractions, patients, enabled_features):
     '''
     # for each radiomics feature map, compute the intensity parameters, store them in a csv with patient ID as index 
     for feature in enabled_features: 
-        # create df with patient ID as index
-        stored_params_df = pd.DataFrame(index=patients, columns=['mean', 'std', 'min', 'max', 'cv', 'skewness', 'kurtosis'])
+        stored_params_df = pd.DataFrame(index=patients, columns=['mean', 'std', 'min', 'max', 'cv', 'skewness', 'kurtosis']) # create df with patient ID as index
+
         for p in patients:
-            rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/delta/' + feature + '.nrrd')
+            rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + feature + '.nrrd')
             if rad_params is not None:
                 stored_params_df.loc[p] = rad_params
         if not os.path.exists('Data/intensity_params/' + fractions[0] + '_' + fractions[1] + '/'):
@@ -137,7 +139,7 @@ def main():
     # COMPUTE FEATURE MAPS
     params = 'params.yaml' 
 
-    fractions = ['ttt_3', 'ttt_1'] # 
+    fractions = ['ttt_1_ttt_3'] # 
     # get list of folders in Data/ if the name of the folder begins by Patient 
     patients = os.listdir('Data/')
     patients = [p for p in patients if p.startswith('Patient')]
@@ -150,15 +152,17 @@ def main():
     # compute_params(fractions, patients_filtered, enabled_features) 
 
     # compute delta feature maps 
-    #compute_delta_maps(fractions, patients_filtered, enabled_features)
-    #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3.nrrd', 2)
+    # compute_delta_maps(fractions, patients_filtered, enabled_features)
+    #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3/original_firstorder_Kurtosis.nrrd', 2)
 
-    # compute_params
+    # compute_delta_params(fractions, patients_filtered, enabled_features)
     
     # COMPARE FEATURE MAPS
-    # outcomes = ['Décès' ] # 'Récidive Locale'
-    # outcomes_df = pd.read_csv('/home/tachennf/Documents/delta-rad/extracted_radiomics/outcomes.csv', index_col=0) # load outcome table 
-    # compare_params(outcomes, outcomes_df, fractions, enabled_features) TODO: re-test this function
+    outcomes = ['Décès', 'Récidive Locale'] 
+    outcomes_df = pd.read_csv('/home/tachennf/Documents/delta-rad/extracted_radiomics/outcomes.csv', index_col=0) # load outcome table 
+    compare_params(outcomes, outcomes_df, fractions, enabled_features) 
+
+    # TODO: compare delta feature maps parameters by changing fractions list 
 
 if __name__ == '__main__':
     main()

@@ -38,13 +38,13 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled
             sitk.WriteImage(val, os.path.join(store_path, key + '.nrrd'), True)
     print('Elapsed time: {} s'.format(time.time() - start_time))
 
-def generate_delta_map(map_paths, fraction_names, store_path):
+def generate_delta_map(map_paths, feature_name, store_path):
     """
         Generate delta-radiomics feature map.
     Parameters
     ----------
     map_paths: list, map paths to .nrrd files, length=2;
-    fraction_names: list, list of fraction names, length=2;
+    feature_name: str, name of the feature computed;
     store_path: str, directory where to store the delta map;
     Returns
     -------
@@ -72,7 +72,7 @@ def generate_delta_map(map_paths, fraction_names, store_path):
 
     if os.path.exists(store_path) is False:
         os.makedirs(store_path) 
-    sitk.WriteImage(delta_map, os.path.join(store_path, fraction_names[0] + '_' + fraction_names[1] + '.nrrd'), True)
+    sitk.WriteImage(delta_map, os.path.join(store_path, feature_name + '.nrrd'), True)
 
 def pad_to_shape(image, target_shape):
     '''Pad one image to a given shape. 
