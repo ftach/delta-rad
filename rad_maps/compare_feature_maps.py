@@ -3,6 +3,7 @@
 import os 
 import numpy as np
 import get_map as gm 
+import get_stats as gs
 import pandas as pd 
 
 def compute_feature_maps(fractions, patients, params_path, enabled_features):
@@ -46,30 +47,56 @@ def compute_params(fractions, patients, enabled_features):
             # create df with patient ID as index
             stored_params_df = pd.DataFrame(index=patients, columns=['mean', 'std', 'min', 'max', 'cv', 'skewness', 'kurtosis'])
             for p in patients:
-                try: 
-                    rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/' + fraction + '/' + feature + '.nrrd')
+                rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/' + fraction + '/' + feature + '.nrrd')
+                if rad_params is not None:
                     stored_params_df.loc[p] = rad_params
-                except RuntimeError:
-                    print('Feature map not found for ' + p)
-                    continue
-            stored_params_df.to_csv('Data/' + feature + '_params.csv')
+            if not os.path.exists('Data/intensity_params/' + fraction + '/'):
+                os.makedirs('Data/intensity_params/' + fraction + '/')
+                
+            # remove empty rows before saving
+            stored_params_df = stored_params_df.dropna()
+
+            stored_params_df.to_csv('Data/intensity_params/' + fraction + '/' + feature + '_params.csv')
 
 def main(): 
     # COMPUTE FEATURE MAPS
     params = 'params.yaml' 
 
     fractions = ['ttt_1', 'ttt_3']
-
+    # get list of folders in Data/ if the name of the folder begins by Patient 
     patients = os.listdir('Data/')
+    patients = [p for p in patients if p.startswith('Patient')]
     patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
     patients_filtered = [p for p in patients if patients not in patients_to_remove]
     enabled_features = ['original_firstorder_Skewness', 'original_firstorder_Kurtosis', 'original_firstorder_Maximum'] 
-    
+
     # compute_feature_maps(fractions, patients_filtered, params, enabled_features)
 
-    # compute_params(fractions, patients_filtered, enabled_features)
+    compute_params(fractions, patients_filtered, enabled_features)
+    # TODO: correct for files that are not Patient ...
+    # TODO: correct to get on csv by fraction and feature
 
     # TODO: compare statistics between patients using scipy or pengouin 
+    # load outcome table 
+    # outcomes = ['Récidive Locale', 'Décès']
+    # outcomes_df = pd.read_csv('/home/tachennf/Documents/delta-rad/extracted_radiomics/outcomes.csv', index_col=0)
+    # outcomes_df = outcomes_df[outcomes]    # keep only columns of interest
+    # outcomes_df = outcomes_df.dropna()     # remove rows with NaN values
+# 
+    # intensity_params = ['mean', 'std', 'min', 'max', 'cv', 'skewness', 'kurtosis']
+    # for o in outcomes: 
+    #     index1 = outcomes_df.index[outcomes_df[o] == 1]
+    #     index2 = outcomes_df.index[outcomes_df[o] == 0]
+    #     for ttt in fractions: 
+    #         for f in enabled_features: 
+    #             df = pd.read_csv('Data/' + f + '_params.csv') # load csv file 
+    #             intensity_params = df.columns
+    #             for i in intensity_params: 
+    #                 x1, x2 = gs.separate_groups(df, index1, index2)  # separate groups of patients based on outcome
+    #                 # assess normality
+    #                 # compare between patients using scipy or pengouin
+
+
 
 if __name__ == '__main__':
     main()

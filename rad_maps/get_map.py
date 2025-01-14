@@ -65,9 +65,13 @@ def compute_feature_map_params(feature_map_path):
     mean, std, min, max, coefficient of variation, skewness, kurtosis
     -------
     """
-
-    feature_map = sitk.ReadImage(feature_map_path)
-    feature_map = sitk.GetArrayFromImage(feature_map)
+    try: 
+        feature_map = sitk.ReadImage(feature_map_path)
+        feature_map = sitk.GetArrayFromImage(feature_map)
+    except RuntimeError:
+        print('Feature map not found. File path: ' + feature_map_path)
+        return None
+    
     mean = np.mean(feature_map)
     std = np.std(feature_map)
     max_val = np.max(feature_map)
@@ -75,4 +79,5 @@ def compute_feature_map_params(feature_map_path):
     cv = std / mean
     skewness = np.mean(((feature_map - mean) / std) ** 3)
     kurtosis = np.mean(((feature_map - mean) / std) ** 4)
+
     return mean, std, min_val, max_val, cv, skewness, kurtosis
