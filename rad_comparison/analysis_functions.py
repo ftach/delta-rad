@@ -50,52 +50,6 @@ def plot_heatmap(results: dict, table: str, outcome: str, feat_sel_algo_list: li
             plt.ylabel('Prediction Algorithm')
     plt.show()
 
-def plot_map(results: dict, table: str, outcomes_list: list, feat_sel_algo_list: list, pred_algo_list: list, metric: str = 'roc_auc', value: str = 'max'): 
-    """
-    Plots a heat map based on the given results.
-    Args:
-        results (dict): A dictionary containing the results to be plotted.
-        metric (str, optional): The metric to be used for plotting. Defaults to 'roc_auc'. Options include: 'roc_auc', 'sensitivity', 'specificity'.
-        value (str, optional): The value to be used for plotting. Defaults to 'max'. Options include: 'max', 'mean'. 
-    Returns:
-        None
-    """
-    heatmaps = []
-    for outcome in outcomes_list:
-        heatmap_data = pd.DataFrame(index=pred_algo_list, columns=feat_sel_algo_list)
-        for feat_sel_algo in feat_sel_algo_list:
-            for pred_algo in pred_algo_list:
-                try: 
-                    values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features][metric] for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                    # remove zeros from the list
-                    filtered_values = [x for x in values if (x != 'N/A') & (x != 0)]
-                    if len(filtered_values) == 0:
-                        heatmap_data.loc[pred_algo, feat_sel_algo] = 0
-                    else:
-                        if value == 'max':
-                            heatmap_data.loc[pred_algo, feat_sel_algo] = max(filtered_values)
-                        elif value == 'mean':
-                            heatmap_data.loc[pred_algo, feat_sel_algo] = np.mean(filtered_values)
-
-                except ValueError:
-                    print(results[table][feat_sel_algo][pred_algo][outcome].keys(), feat_sel_algo, pred_algo, outcome)
-                
-        heatmap_data = heatmap_data.astype(float)
-        heatmaps.append(heatmap_data)   
-    # Plot the heatmap
-    plt.figure(figsize=(24, 8))
-    for i, heatmap_data in enumerate(heatmaps):
-        outcome = outcomes_list[i]
-        plt.subplot(1, 3, i+1)
-        sns.heatmap(heatmap_data, annot=True, cmap='viridis', vmin=0, vmax=1)
-        plt.title(f'Heatmap of {metric} {value} for {outcome} in {table}')
-        if i == 0:
-            plt.xlabel('Feature Selection Algorithm')
-            plt.ylabel('Prediction Algorithm')
-    plt.show()
-
-
-
 def get_best_results_dict(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, metric_list: list, outcome: str): 
     """ 
     Get the top 5 results for each table and each outcome in terms of sensitivity.
@@ -276,7 +230,7 @@ def get_best_results_features_dict(outcomes_list, metric_list, results: dict, de
                                 nb_feat_results[table][outcome][metric][nb_features] = []
 
                             value = results[table][feat_sel_algo][pred_algo][outcome][nb_features][metric]
-                            if value != 'N/A':
+                            if value != 'N/A' and value != 'None':
                                 nb_feat_results[table][outcome][metric][nb_features].append(value)
             
     # SORTING
