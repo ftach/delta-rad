@@ -141,10 +141,13 @@ def find_perf_alg(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, 
             for feat_sel_algo in feat_sel_algo_list:
                 for pred_algo in pred_algo_list:
                     # get performances for each number of features, save them in a list
-                    for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys():
-                        if results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] != 'None':
-                            if (results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity'] > threshold) & (results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity'] > threshold): 
-                                print(f"Table: {table}, Outcome: {outcome}, Feature Selection Algorithm: {feat_sel_algo}, Prediction Algorithm: {pred_algo}, Number of Features: {nb_features}, AUC: {results[table][feat_sel_algo][pred_algo][outcome][nb_features]['roc_auc']}, Sensitivity: {results[table][feat_sel_algo][pred_algo][outcome][nb_features]['sensitivity']}, Specificity: {results[table][feat_sel_algo][pred_algo][outcome][nb_features]['specificity']}")
+                    sub_outcome_results = results[table][feat_sel_algo][pred_algo][outcome]
+                    for nb_features in sub_outcome_results.keys():
+                        if sub_outcome_results[nb_features]['sensitivity'] != 'None':
+                            if (sub_outcome_results[nb_features]['sensitivity'] > threshold) & (sub_outcome_results[nb_features]['specificity'] > threshold): 
+                                print(f"Table: {table}, Outcome: {outcome}, Feature Selection Algorithm: {feat_sel_algo}, Prediction Algorithm: {pred_algo}, Number of Features: {nb_features}, '\n' \
+                                      AUC: {sub_outcome_results[nb_features]['roc_auc']}, Sensitivity: {sub_outcome_results[nb_features]['sensitivity']}, Specificity: {sub_outcome_results[nb_features]['specificity']}, '\n' \
+                                      Features: {sub_outcome_results[nb_features]['features']}")
 
 def find_robust_alg(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, pred_algo_list, threshold: float = 0.8): 
     '''Find the robust algorithms based on a given threshold.
