@@ -52,3 +52,6 @@ It was defined randomly using the sklearn train_test_split function with a test 
 # 15/01/2025
 ## Best feature names
 TODO : Add the best feature names for each table.
+
+# 20/01/2025
+Tried to compute again ROC AUC curves but got highly different results than last analysis. 

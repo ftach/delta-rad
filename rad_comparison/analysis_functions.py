@@ -203,7 +203,7 @@ def get_data_from_table(table, features, outcome):
 
     # get the data
     X_train, X_val, y_train, y_test, features_list = get_dataset("/home/tachennf/Documents/delta-rad/extracted_radiomics/"+table, 
-        "/home/tachennf/Documents/delta-rad/extracted_radiomics/outcomes.csv", selection_method='fixed', outcome=outcome, sample_features=['Récidive Locale', 'Décès'])
+        "/home/tachennf/Documents/delta-rad/extracted_radiomics/outcomes.csv", selection_method='random', outcome=outcome)
     
     # normalize the data
     X_train, X_val = min_max_scaling(X_train, X_val)
