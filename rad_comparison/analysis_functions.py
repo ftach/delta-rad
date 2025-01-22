@@ -24,6 +24,7 @@ from sklearn.naive_bayes import GaussianNB
 from predictions import train_model
 from dataset import get_dataset, min_max_scaling
 from typing import Sequence
+import math
 
 
 def plot_heatmap(results: dict, table: str, outcome: str, feat_sel_algo_list: list, pred_algo_list: list, metrics: list = ['roc_auc', 'sensitivity', 'specificity'], value: str = 'max'): 
@@ -280,8 +281,8 @@ def compare_roc_auc(top_results, outcome: str, nice_tables : list, cval: bool = 
         y_test = y_test.astype('int64')
         y_prob = model.predict_proba(X_test)[:, 1]
         fpr, tpr, thresholds = roc_curve(y_test, y_prob)
-        # sens, spe = compute_best_metrics(fpr, tpr, thresholds, y_prob, y_test)
-        # print(f"Table: {table}, Sensitivity: {sens}, Specificity: {spe}")
+        sens, spe, opt_threshold = compute_best_metrics(fpr, tpr, thresholds, y_prob, y_test)
+        print(f"Table: {table}, Sensitivity: {sens}, Specificity: {spe}, Optimal threshold: {opt_threshold}")
         roc_auc = auc(fpr, tpr)
         plt.plot(fpr, tpr, lw=2, label='%s | AUC = %0.3f' % (nice_tables[k], roc_auc))
         k += 1
@@ -307,7 +308,14 @@ def compute_best_metrics(fpr, tpr, thresholds, y_prob, y_true):
     Returns:
         Sensitivity (float): The sensitivity.
         Specificity (float): The specificity.
+        Optimal threshold (float): The optimal threshold.
     '''
+    thresholds = [x for x in thresholds if math.isfinite(x)]
+
+    assert np.all(np.isfinite(tpr)), "tpr contient des valeurs non définies."
+    assert np.all(np.isfinite(fpr)), "fpr contient des valeurs non définies."
+    assert np.all(np.isfinite(thresholds)), print(thresholds)
+
     youden_index = tpr - fpr
     optimal_idx = np.argmax(youden_index)
     optimal_threshold = thresholds[optimal_idx]
@@ -317,7 +325,7 @@ def compute_best_metrics(fpr, tpr, thresholds, y_prob, y_true):
     sensitivity = tp / (tp + fn)
     specificity = tn / (tn + fp)
 
-    return sensitivity, specificity
+    return sensitivity, specificity, optimal_threshold
 
 def find_perf_alg(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, pred_algo_list, threshold: float = 0.7): 
     '''Find the algorithms with good performance based on a given threshold.
