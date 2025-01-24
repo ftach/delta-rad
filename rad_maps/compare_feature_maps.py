@@ -139,30 +139,23 @@ def main():
     # COMPUTE FEATURE MAPS
     params = 'params.yaml' 
 
-    fractions = ['ttt_1_ttt_3'] # 
+    fractions = ['ttt_1', 'ttt_5'] # 
     # get list of folders in Data/ if the name of the folder begins by Patient 
     patients = os.listdir('Data/')
     patients = [p for p in patients if p.startswith('Patient')]
     patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
     patients_filtered = [p for p in patients if patients not in patients_to_remove]
-    enabled_features = [ 'original_firstorder_Skewness', 'original_firstorder_Kurtosis', 'original_firstorder_Maximum']
+    enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
 
-    # compute_feature_maps(fractions, patients_filtered, params, enabled_features)
+    # COMPUTE SIMPLE FEATURE MAPS
+    #compute_feature_maps(fractions, patients_filtered, params, enabled_features)
+    #compute_params(fractions, patients_filtered, enabled_features) 
 
-    # compute_params(fractions, patients_filtered, enabled_features) 
-
-    # compute delta feature maps 
-    # compute_delta_maps(fractions, patients_filtered, enabled_features)
+    # COMPUTE DELTA FEATURES MAPS 
+    compute_feature_maps(fractions, patients_filtered, params, enabled_features)
+    compute_delta_maps(fractions, patients_filtered, enabled_features)
     #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3/original_firstorder_Kurtosis.nrrd', 2)
-
-    # compute_delta_params(fractions, patients_filtered, enabled_features)
-    
-    # COMPARE FEATURE MAPS
-    outcomes = ['Décès', 'Récidive Locale'] 
-    outcomes_df = pd.read_csv('/home/tachennf/Documents/delta-rad/extracted_radiomics/outcomes.csv', index_col=0) # load outcome table 
-    compare_params(outcomes, outcomes_df, fractions, enabled_features) 
-
-    # TODO: compare delta feature maps parameters by changing fractions list 
+    compute_delta_params(fractions, patients_filtered, enabled_features)
 
 if __name__ == '__main__':
     main()

@@ -59,4 +59,6 @@ Re-run for récidive locale with random split
 
 ## 22/01/2025
 Computations are now OK if random split of data. But YES results (AUC) vary. Highly reduced with simple radiomics. 
-Re-run for outcome décès, waiting results. 
+Re-run for outcome décès with random split. 
+
+
