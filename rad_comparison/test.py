@@ -28,4 +28,8 @@ top_results = af.get_best_results(results, delta_rad_tables, feat_sel_algo_list,
 nice_tables = ['F1', 'F5', 'F1/F5', 'F1/F3', 'F1/F4']
 # nice_tables = ['1 month', 'Simu', 'Delta']
 
-af.compare_roc_auc(top_results, 'Décès', nice_tables, cval=False)
+# af.compare_roc_auc(top_results, 'Décès', nice_tables, cval=False, youden_index=False)
+af.compare_sens_spe(top_results, 'Décès', cval=False)
+
+
+

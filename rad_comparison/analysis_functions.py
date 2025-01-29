@@ -212,7 +212,7 @@ def retrain_best_models(result, X_train, y_train):
 
 
 def retrain_best_models2(result, X_train, y_train):
-    # Get info from best models and retrain them
+    # Get info from best models and retrain them with cross-validation
 
     pred_algo = result[1]
 
@@ -275,7 +275,7 @@ def filter_dataset(X_train: np.ndarray, X_val: np.ndarray, best_features: Sequen
     return best_features, X_train_filtered, X_val_filtered
 
 
-def compare_roc_auc(top_results, outcome: str, nice_tables: list, cval: bool = True):
+def compare_roc_auc(top_results, outcome: str, nice_tables: list, cval: bool = True, youden_index: bool = True):
     '''Plots the ROC AUC of the top models for each table and outcome.
     Args:
         top_results (dict): A dictionary containing the top results.
@@ -307,7 +307,7 @@ def compare_roc_auc(top_results, outcome: str, nice_tables: list, cval: bool = T
         y_prob = model.predict_proba(X_test)[:, 1]
         fpr, tpr, thresholds = roc_curve(y_test, y_prob)
         sens, spe, opt_threshold = compute_best_metrics(
-            fpr, tpr, thresholds, y_prob, y_test)
+            fpr, tpr, thresholds, y_prob, y_test, youden_index)
         print(f"Table: {table}, Sensitivity: {sens}, Specificity: {spe}, Optimal threshold: {opt_threshold}")
         roc_auc = auc(fpr, tpr)
         plt.plot(fpr, tpr, lw=2, label='%s | AUC = %0.3f' %
@@ -322,8 +322,54 @@ def compare_roc_auc(top_results, outcome: str, nice_tables: list, cval: bool = T
     plt.legend(loc="lower right")
     plt.show()
 
+    
+def compare_sens_spe(top_results, outcome: str, cval: bool = True):
+    '''
+    Args:
+        top_results (dict): A dictionary containing the top results.
+        outcome (str): The outcome of interest.
+        nice_tables (list): A list of the nice names of the tables.
+        cval (bool): Whether to use cross-validation or not.
 
-def compute_best_metrics(fpr, tpr, thresholds, y_prob, y_true):
+    Returns:
+        None
+    '''
+    plt.figure(figsize=(14, 5))
+    k = 0
+    for table in top_results.keys():
+        result = top_results[table][outcome][0]
+        features = result[3]
+        X_train, X_test, y_train, y_test = get_data_from_table(
+            table, features, outcome)  # normalizes the data
+
+        if cval:
+            model = retrain_best_models2(result, X_train, y_train)
+        else:
+            model = retrain_best_models(result, X_train, y_train)
+
+        y_test = y_test.astype('int64')
+        y_prob = model.predict_proba(X_test)[:, 1]
+        fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+        sens, spe, thresholds = compute_metrics_for_all_thresholds(
+            fpr, tpr, thresholds, y_prob, y_test, table)
+        plt.subplot(1, len(list(top_results.keys())), k+1)
+        plt.plot(thresholds, sens, label='Sensitivity')
+        plt.plot(thresholds, spe, label='Specificity')
+        plt.legend()
+        plt.xlabel('Threshold')
+        plt.ylabel('Metric')
+        plt.title(f'{table}')
+        
+        print(f"Table: {table}, Sensitivity: {sens}, Specificity: {spe}, Threshold: {thresholds}")
+        k += 1
+    print(len(list(top_results.keys()))+1, k)
+    plt.title('Sensitivity and Specificity for different thresholds')
+    plt.tight_layout()
+
+    plt.show()
+
+
+def compute_best_metrics(fpr, tpr, thresholds, y_prob, y_true, youden_index: bool = True):
     '''Computes the best metrics for the best threshold according to Youden index.
     Args:
         fpr (array): The false positive rate.
@@ -343,8 +389,13 @@ def compute_best_metrics(fpr, tpr, thresholds, y_prob, y_true):
     assert np.all(np.isfinite(fpr)), "fpr contient des valeurs non définies."
     assert np.all(np.isfinite(thresholds)), print(thresholds)
 
-    youden_index = tpr - fpr
-    optimal_idx = np.argmax(youden_index)
+    if youden_index:
+        youden_index = tpr - fpr
+        optimal_idx = np.argmax(youden_index)
+    else: # maximize distance to the diagonal
+        distances = np.sqrt((1 - tpr)**2 + fpr**2)
+        optimal_idx = np.argmin(distances)
+
     optimal_threshold = thresholds[optimal_idx]
     y_pred_optimal = (y_prob >= optimal_threshold).astype(int)
     conf_matrix = confusion_matrix(y_true, y_pred_optimal)
@@ -353,6 +404,39 @@ def compute_best_metrics(fpr, tpr, thresholds, y_prob, y_true):
     specificity = tn / (tn + fp)
 
     return sensitivity, specificity, optimal_threshold
+
+def compute_metrics_for_all_thresholds(fpr, tpr, thresholds, y_prob, y_true, table):
+    '''Computes the metrics for all thresholds.
+    Args:
+        fpr (array): The false positive rate.
+        tpr (array): The true positive rate.
+        thresholds (array): The thresholds.
+        y_prob (array): The predicted probabilities.
+        y_true (array): The true labels.
+
+    Returns:
+        Sensitivity (float): The sensitivity.
+        Specificity (float): The specificity.
+        Optimal threshold (float): The optimal threshold.
+    '''
+    thresholds = [x for x in thresholds if math.isfinite(x)]
+
+    assert np.all(np.isfinite(tpr)), "tpr contient des valeurs non définies."
+    assert np.all(np.isfinite(fpr)), "fpr contient des valeurs non définies."
+    assert np.all(np.isfinite(thresholds)), print(thresholds)
+
+    sensitivities = []
+    specificities = []
+    for threshold in thresholds:
+        y_pred = (y_prob >= threshold).astype(int)
+        conf_matrix = confusion_matrix(y_true, y_pred)
+        tn, fp, fn, tp = conf_matrix.ravel()
+        sensitivity = tp / (tp + fn)
+        specificity = tn / (tn + fp)
+        sensitivities.append(sensitivity)
+        specificities.append(specificity)
+
+    return sensitivities, specificities, thresholds
 
 
 def find_perf_alg(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, pred_algo_list, threshold: float = 0.7):
