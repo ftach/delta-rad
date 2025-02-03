@@ -107,7 +107,7 @@ def get_dataset(rad_csv_path: str, outcome_csv_path: str, selection_method: str 
         assert len(y) == len(y_train) + len(y_val), "y array not of good size"
 
     else: 
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42)
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y[outcome])
 
     # # save y_val and y_train
     y_val.to_csv('y_val.csv')

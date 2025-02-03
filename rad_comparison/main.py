@@ -16,10 +16,10 @@ def main():
 
     ###################### INITIALIZATION ##############################
     folder_path = '/home/tachennf/Documents/delta-rad/extracted_radiomics/'
-    delta_rad_tables = ['f1_gtv.csv', 'f5_gtv.csv', 'rd_f1_f5_gtv.csv', 'rd_f1_f3_gtv.csv', 'rd_f1_f4_gtv.csv'] # X data csv names if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')
+    delta_rad_tables = ['rd_f1_f5_gtv.csv'] # X data csv names if (p != 'outcomes.csv') & (p != 'simu_gtv.csv')
     feat_sel_algo_list = ['RF', 'ADABOOST', 'ANOVA_PERC', 'ANOVA_K_BEST', 'CHI2_PERC', 'CHI2_K_BEST', 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO']
     outcome_csv = 'outcomes.csv'
-    results_file = 'result_random_run2.json'
+    results_file = 'results_ncv_test.json'
     dset_selection_method = 'random' # 'fixed' 
 
     #                 , 'PCA_7', 'PCA_8', 'PCA_9'] 'NZV_01', 'NZV_01', 
@@ -27,7 +27,7 @@ def main():
     #pred_algo_list = ['LOGREGRIDGE']
     pred_algo_list = ['DT', 'RF', 'ADABOOST', 'PSVM', 'KNN', 'LOGREG', 'LOGREGRIDGE', 'BAGG', 'MLP', 'LDA', 'QDA', 'NaiveB'] # 'LSVM', 
     MAX_FEATURES = 3
-    outcomes_list = ['Décès'] # 'Récidive Méta', 'Récidive Locale'
+    outcomes_list = ['Récidive Locale'] # 'Récidive Méta', 
     results = {
         table: {
             feat_sel_algo: {
