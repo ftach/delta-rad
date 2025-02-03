@@ -2,6 +2,7 @@
 from sklearn.linear_model import Lasso
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.feature_selection import GenericUnivariateSelect, f_classif, chi2, mutual_info_classif
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 import utils.sklearn_utils as sku 
 import pandas as pd 
@@ -312,3 +313,32 @@ def filter_dataset(X_train: np.ndarray, X_val: np.ndarray, best_features: Sequen
 
 
     return selected_features, X_train_filtered, X_val_filtered
+
+def filter_dataset2(X: np.ndarray, best_features: Sequence, nb_features: int, feature_names: list): 
+    """
+    Filters the dataset to retain only the features selected by the algorithms.
+
+    Parameters:
+    X (pd.DataFrame): Features array.
+    best_features (Sequence): Sequence of best features, can be a list or a dictionary.
+    nb_features (int): Number of top features to select.
+    feature_names (list): List of feature names corresponding to the columns in X_train and X_val.
+
+    Returns:
+    tuple: A tuple containing:
+        - selected_features (list): List of selected feature names.
+        - X_filtered (pd.DataFrame): Filtered data array.
+        
+    """
+
+    if type(best_features) == dict: 
+        best_features_dict = best_features
+        best_features = list(best_features_dict.keys())
+    elif type(best_features) == list: 
+        pass 
+    selected_features = best_features[:nb_features] # select only i best features 
+    
+    # Use indices to filter the arrays
+    X_filtered = X[selected_features]
+
+    return selected_features, X_filtered
