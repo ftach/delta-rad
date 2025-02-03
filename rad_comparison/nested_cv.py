@@ -18,7 +18,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 
 
 
@@ -63,7 +63,7 @@ def main():
             clf2 = KNeighborsClassifier(algorithm='ball_tree',
                                         leaf_size=50)
             clf3 = DecisionTreeClassifier(random_state=42)
-            clf4 = SVC(random_state=42)
+            #clf4 = SVC(random_state=42)
 
             # Setting up the parameter grids 
             param_grid1 = [{'clf1__penalty': ['l2'],
@@ -75,11 +75,11 @@ def main():
             param_grid3 = [{'max_depth': list(range(1, 10)) + [None],
                             'criterion': ['gini', 'entropy']}]
 
-            param_grid4 = [{'clf4__kernel': ['rbf'],
-                            'clf4__C': np.power(10., np.arange(-4, 4)),
-                            'clf4__gamma': np.power(10., np.arange(-5, 0))},
-                           {'clf4__kernel': ['linear'],
-                            'clf4__C': np.power(10., np.arange(-4, 4))}]
+            # param_grid4 = [{'clf4__kernel': ['rbf'],
+            #                 'clf4__C': np.power(10., np.arange(-4, 4)),
+            #                 'clf4__gamma': np.power(10., np.arange(-5, 0))},
+            #                {'clf4__kernel': ['linear'],
+            #                 'clf4__C': np.power(10., np.arange(-4, 4))}]
 
             # Setting up the pipelines
             pipe1 = Pipeline([('std', StandardScaler()),
@@ -88,60 +88,90 @@ def main():
             pipe2 = Pipeline([('std', StandardScaler()),
                               ('clf2', clf2)])
 
-            pipe4 = Pipeline([('std', StandardScaler()),
-                              ('clf4', clf4)])
+            # pipe4 = Pipeline([('std', StandardScaler()),
+            #                   ('clf4', clf4)])
 
             # Setting up multi GridSearchCV for each classifier
             gridcvs = {}
 
             for pgrid, est, name in zip((param_grid1, param_grid2,
-                                         param_grid3, param_grid4),
-                                        (pipe1, pipe2, clf3, pipe4),
-                                        ('Softmax', 'KNN', 'DTree', 'SVM')):
+                                         param_grid3),
+                                        (pipe1, pipe2, clf3),
+                                        ('Logistic Regression', 'KNN', 'DTree')):
                 gcv = GridSearchCV(estimator=est,
                                    param_grid=pgrid,
-                                   scoring='accuracy',
+                                   scoring='roc_auc',
                                    n_jobs=1,
-                                   cv=4,
-                                   verbose=0,
-                                   refit=True)
+                                   cv=4, # inner folds
+                                   verbose=1,
+                                   refit=True) # refit the best model with the entire dataset
                 gridcvs[name] = gcv
 
-                cv_scores = {name: [] for name, gs_est in gridcvs.items()}
+                cv_scores = {name: [] for name in gridcvs.keys()}
 
-            skfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+            skfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42) # outer folds
 
             # The outer loop for algorithm selection
             for c, (outer_train_idx, outer_valid_idx) in enumerate(skfold.split(X, y)):
                 for name, gs_est in sorted(gridcvs.items()):
                     print('outer fold %d/5 | tuning %-8s' % (c, name), end='')
+
                     # The inner loop for hyperparameter tuning
                     gs_est.fit(X.iloc[outer_train_idx], y.iloc[outer_train_idx])
-                    y_pred = gs_est.predict(X.iloc[outer_valid_idx])
-                    acc = accuracy_score(y_true=y.iloc[outer_valid_idx], y_pred=y_pred)
-                    print(' | inner ACC %.2f%% | outer ACC %.2f%%' %
-                          (gs_est.best_score_ * 100, acc * 100))
-                    cv_scores[name].append(acc)
+
+                    # **Compute AUC & select threshold on inner validation set**
+                    best_model = gs_est.best_estimator_  # Best model from inner CV
+                    y_prob = best_model.predict_proba(X.iloc[outer_train_idx])[:, 1]  # Inner validation set probabilities
+
+                    # Compute ROC curve on inner validation set
+                    fpr, tpr, thresholds = roc_curve(y.iloc[outer_train_idx], y_prob)
+
+                    # Determine the optimal threshold using Youden's J statistic
+                    J_scores = tpr - fpr
+                    optimal_idx = J_scores.argmax()
+                    optimal_threshold = thresholds[optimal_idx]
+
+                    # compute outer auc
+                    outer_y_prob = best_model.predict_proba(X.iloc[outer_valid_idx])[:, 1]
+                    fpr, tpr, _ = roc_curve(y.iloc[outer_valid_idx], outer_y_prob)
+                    outer_auc = auc(fpr, tpr)
+
+                    # compute sensitivity and specificity based on y_pred 
+                    outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
+                    tn, fp, fn, tp = confusion_matrix(y.iloc[outer_valid_idx], outer_y_pred).ravel()
+                    sensitivity = tp / (tp + fn)
+                    specificity = tn / (tn + fp)
+
+                    # print inner auc and outter auc, sensitivity and specificity
+                    print(' | inner AUC: %.2f%% outer AUC: %.2f%% sens: %.2f%% spec: %.2f%%' % (
+                        100 * gs_est.best_score_, 100 * outer_auc, 100 * sensitivity, 100 * specificity))
+                    cv_scores[name].append(outer_auc)
 
             # Looking at the results
             for name in cv_scores:
-                print('%-8s | outer CV acc. %.2f%% +\- %.3f' % (
+                print('%-8s | outer CV AUC: %.2f%% +\- %.3f' % (
                       name, 100 * np.mean(cv_scores[name]), 100 * np.std(cv_scores[name])))
-            print('\nSVM Best parameters', gridcvs['SVM'].best_params_)
-
+            # get name of the best algorithm based on the best mean AUC
+            best_algo_name = max(cv_scores, key=lambda key: np.mean(cv_scores[key]))
+            print('Best algorithm: %s' % best_algo_name)
             # Fitting a model to the whole training set
             # using the "best" algorithm
-            best_algo = gridcvs['DTree']
+            best_algo = gridcvs[best_algo_name]
 
             best_algo.fit(X.iloc[outer_train_idx], y.iloc[outer_train_idx])
-            train_acc = accuracy_score(y_true=y.iloc[outer_train_idx], y_pred=best_algo.predict(X.iloc[outer_train_idx]))
-            test_acc = accuracy_score(y_true=y.iloc[outer_valid_idx], y_pred=best_algo.predict(X.iloc[outer_valid_idx]))
-
-            print('Accuracy %.2f%% (average over CV test folds)' %
-                  (100 * best_algo.best_score_))
-            print('Best Parameters: %s' % gridcvs['SVM'].best_params_)
-            print('Training Accuracy: %.2f%%' % (100 * train_acc))
-            print('Test Accuracy: %.2f%%' % (100 * test_acc))
+            train_auc = best_algo.best_score_
+            y_prob = best_algo.predict_proba(X.iloc[outer_valid_idx])[:, 1]
+            fpr, tpr, thresholds = roc_curve(y.iloc[outer_valid_idx], y_prob)
+            test_auc = auc(fpr, tpr)
+            tn, fp, fn, tp = confusion_matrix(y.iloc[outer_valid_idx], outer_y_pred).ravel()
+            sensitivity = tp / (tp + fn)
+            specificity = tn / (tn + fp)
+                        
+            print('Best Parameters: %s' % gridcvs[best_algo_name].best_params_)
+            print('Training AUC when re-trained on whole train set: %.2f%%' % (train_auc))
+            print('Test AUC: %.2f%%' % (test_auc))
+            print('Sensitivity: %.2f%%' % (sensitivity))
+            print('Specificity: %.2f%%' % (specificity))
 
 if __name__ == "__main__": 
     main()
