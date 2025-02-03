@@ -12,6 +12,10 @@ from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import BaggingClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+
 import warnings
 warnings.filterwarnings('ignore')
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -26,6 +30,58 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc
 import utils.sklearn_utils as sku 
 
 SCORER = 'roc_auc' 
+
+def get_param_grids(pred_algo_list: list): 
+    """
+    Returns the parameter grids for each classifier in the list.
+    
+    Parameters:
+    pred_algo_list (list): The list of classifiers names for which to get the parameter grids.
+
+    Returns:
+    dict: A dictionary containing the parameter grids for each classifier.
+    """
+    param_grids = []
+    for pred_algo in pred_algo_list:
+        if pred_algo == 'RF': 
+            param_grid = [{'RF__max_depth': range(1, 5, 4), 'RF__n_estimators' : range(25, 50, 25)}]
+        elif pred_algo == 'ADABOOST':
+            param_grid = [{'ADABOOST__n_estimators' : range(25, 50, 25)}]
+        elif pred_algo == 'LOGREG':
+            param_grid = [{'LOGREG__penalty': ['l2'],
+                        'LOGREG__C': np.power(10., np.arange(-4, 4))}]
+        param_grids.append(param_grid)
+
+    return param_grids
+    
+
+def get_pipelines(pred_algo_list: list):
+    '''Returns the pipelines for each classifier in the list. 
+    
+    Parameters:
+    pred_algo_list (list): The list of classifiers names for which to get the pipelines.
+    
+    Returns:
+    dict: A dictionary containing the pipelines for each classifier.
+    '''
+    pipelines = []
+    for pred_algo in pred_algo_list:
+        if pred_algo == 'RF':
+            pipeline = Pipeline([('std', StandardScaler()), ('RF', RandomForestClassifier(random_state=42))])
+        elif pred_algo == 'ADABOOST':
+            pipeline = Pipeline([('std', StandardScaler()), ('ADABOOST', AdaBoostClassifier(random_state=42))])
+        elif pred_algo == 'LOGREG':
+            pipeline = Pipeline([('std', StandardScaler()), ('LOGREG', LogisticRegression(multi_class='multinomial', solver='newton-cg', random_state=42))])
+        # elif pred_algo == 'KNN':
+        #     pipeline = Pipeline([('scaler', StandardScaler()), ('clf2', KNeighborsClassifier())])
+        # elif pred_algo == 'DT':
+        #     pipeline = Pipeline([('scaler', StandardScaler()), ('clf3', DecisionTreeClassifier(random_state=42))])
+        # elif pred_algo == 'SVM':
+        #     pipeline = Pipeline([('scaler', StandardScaler()), ('clf4', SVC(random_state=42))])
+        pipelines.append(pipeline)
+
+    return pipelines
+    
 
 def train_rf(X_train_filtered, y_train): 
     """
@@ -326,3 +382,55 @@ def compute_pvalue(binary_preds1, binary_preds2, y_test):
     result = mcnemar(contingency_table, exact=True)
 
     return result.pvalue 
+
+def compute_opt_threshold(gs_est, X_train, y_train): 
+    '''
+    Compute the optimal threshold for a given model based on Youden's J statistic.
+
+    Parameters:
+    gs_est (GridSearchCV): The GridSearchCV object containing the best estimator.
+    X_train (pd.DataFrame): The training data features.
+    y_train (pd.Series): The training data labels.
+
+    Returns:
+    float: The optimal threshold for the model. 
+    '''
+    best_model = gs_est.best_estimator_  # Best model from inner CV
+    y_prob = best_model.predict_proba(X_train)[:, 1]  # Inner validation set probabilities
+    fpr, tpr, thresholds = roc_curve(y_train, y_prob)
+
+    # Determine the optimal threshold using Youden's J statistic
+    J_scores = tpr - fpr
+    optimal_idx = J_scores.argmax()
+    optimal_threshold = thresholds[optimal_idx] 
+
+    return optimal_threshold
+
+def compute_test_metrics(gs_est, X_test, y_test, optimal_threshold):
+    '''
+    Compute the test metrics for a given model.
+
+    Parameters:
+    gs_est (GridSearchCV): The GridSearchCV object containing the best estimator.
+    X_test (pd.DataFrame): The test data features.
+    y_test (pd.Series): The test data labels.
+    optimal_threshold (float): The optimal threshold for the model.
+
+    Returns:
+    float: The test AUC.
+    float: The sensitivity.
+    float: The specificity.
+    '''
+
+    # compute outer auc
+    outer_y_prob = gs_est.best_estimator_.predict_proba(X_test)[:, 1]
+    fpr, tpr, _ = roc_curve(y_test, outer_y_prob)
+    test_auc = auc(fpr, tpr)
+
+    # compute sensitivity and specificity based on y_pred 
+    outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
+    tn, fp, fn, tp = confusion_matrix(y_test, outer_y_pred).ravel()
+    sensitivity = tp / (tp + fn)
+    specificity = tn / (tn + fp)
+
+    return test_auc, sensitivity, specificity

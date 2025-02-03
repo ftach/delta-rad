@@ -61,6 +61,40 @@ def remove_highly_corr_features(highly_correlated_pairs, original_df: pd.DataFra
 
     return reduced_df 
 
+def get_xy(rad_csv_path: str, outcome_csv_path: str, outcome: str = 'Décès', forbidden_patients: list = [57, 32, 56, 63]): # also 74, 82, 84, 85 are forbidden
+    """
+    Load and preprocess dataset for training and validation.
+
+    Parameters:
+    rad_csv_path (str): Path to the radiomics CSV file.
+    outcome_csv_path (str): Path to the outcome CSV file.
+    outcome (str, optional): The outcome feature to predict. Default is 'Décès'.
+    forbidden_patients (list, optional): List of patient IDs to exclude from the dataset. Default is [57, 32, 56, 63].
+
+    Returns:
+    tuple: A tuple containing:
+        - X (pd.DataFrame): Features.
+        - y (np.ndarray): Labels.
+        - features_list (pd.Index): List of feature names.
+    """
+
+    X = pd.read_csv(rad_csv_path) 
+    X = X.dropna() # delete nan values 
+    X = X.drop(X.columns[0], axis=1) # drop first X column (Patient indexes)
+    X = X.drop(forbidden_patients, axis=0)    # drop forbidden patients
+
+    correlation_matrix = X.corr(method='pearson') 
+    X = remove_highly_corr_features(get_highly_corr_features(correlation_matrix), X) #  drop features whom collinearity > 0.9 
+
+    outcome_df = pd.read_csv(outcome_csv_path)
+    outcome_df = outcome_df.drop(outcome_df.columns[0], axis=1) # drop first column (Patient indexes)
+    outcome_df = outcome_df.drop(forbidden_patients, axis=0) # drop forbidden patients
+    y = outcome_df.loc[outcome_df.index.isin(X.index)] # ensure same patients in X and y
+
+    y = y.loc[:, [outcome]] # get the specific outcome column
+
+    return X, y, X.columns
+
 def get_dataset(rad_csv_path: str, outcome_csv_path: str, selection_method: str = 'fixed', outcome: str = 'Décès', sample_features: list = ['Récidive Locale', 'Récidive Méta', 'Décès'], forbidden_patients: list = [57, 32, 56, 63], test_ratio: float = 0.3): # also 74, 82, 84, 85 are forbidden
     """
     Load and preprocess dataset for training and validation.
