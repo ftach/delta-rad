@@ -38,45 +38,65 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled
             sitk.WriteImage(val, os.path.join(store_path, key + '.nrrd'), True)
     print('Elapsed time: {} s'.format(time.time() - start_time))
 
-def generate_delta_map(map_paths, feature_name, store_path):
+def generate_delta_map(mask_paths, map_paths, feature_name, store_path):
     """
         Generate delta-radiomics feature map.
+
     Parameters
     ----------
+    mask_paths: list, mask paths to .nii files, length=2;
     map_paths: list, map paths to .nrrd files, length=2;
     feature_name: str, name of the feature computed;
     store_path: str, directory where to store the delta map;
+
     Returns
     -------
     """
-    map1 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[0]))
-    map2 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[1]))
+
+    # load mask1 and mask2 to get original image shape
+    full_size_mask1 = nib.load(mask_paths[0]).get_fdata()
+    full_size_mask2 = nib.load(mask_paths[1]).get_fdata()
+    
+    # Load maps computed with pyradiomics (mini because cropped)
+    mini_map1 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[0]))
+    mini_map1 = np.transpose(mini_map1, (1, 2, 0))
+    mini_map2 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[1]))
+    mini_map2 = np.transpose(mini_map2, (1, 2, 0))
+
+    # Retrieve original image shape
+    map1 = full_size_mask1.copy()
+    map2 = full_size_mask2.copy()
+    map1[np.where(full_size_mask1 == 1)] = mini_map1[np.where(mini_map1 != 0)]
+    map2[np.where(full_size_mask2 == 1)] = mini_map2[np.where(mini_map2 != 0)]
 
     # check if the two maps have the same shape, otherwise use padding
     if map1.shape != map2.shape: 
         map1, map2 = pad_img(map1, map2)
 
-    delta_map = (map1 - map2) / map2 # compute delta map 
+    full_size_delta_map = (map1 - map2) / map2 # compute delta map 
 
-    delta_map[np.abs(delta_map) == 1] = np.nan # we set to nan valus that are on the border of the delta-rad map 
+    full_size_delta_map[np.abs(full_size_delta_map) == 1] = np.nan # we set to nan valus that are on the border of the delta-rad map 
 
+    # SAVE DELTA MAPs
     if os.path.exists(store_path) is False:
         os.makedirs(store_path) 
 
-    # SAVE NUMPY ARRAY DELTA MAP to conserve nan for statistical analysis
-    np.save(os.path.join(store_path, feature_name + '.npy'), delta_map)
+    # Save numpy array to conserve nan for statistical analysis
+    np.save(os.path.join(store_path, feature_name + '.npy'), full_size_delta_map)
 
-    # SAVE NII DELTA MAP   
-    nii_delta_map = delta_map.copy()
+    # Save as nrrd to visualize the map in 3D    
+    nii_delta_map = full_size_delta_map.copy()
     nii_delta_map[np.isnan(nii_delta_map)] = 0
     nii_delta_map[np.isinf(nii_delta_map)] = 0
-
+    nii_delta_map = np.transpose(nii_delta_map, (2, 0, 1))  # (x, y, z) → (z, x, y)
     nii_delta_map = sitk.GetImageFromArray(nii_delta_map)
     sitk.WriteImage(nii_delta_map, os.path.join(store_path, feature_name + '.nrrd'), True)
 
-    # GET DELTA MAP MASK 
-    mask = np.logical_or(map1 != 0, map2 != 0).astype(np.uint8)
-    np.save(os.path.join(store_path, feature_name + '_mask.npy'), mask)
+    # Save delta map mask 
+    if full_size_mask1.shape != full_size_mask2.shape:
+        full_size_mask1, full_size_mask2 = pad_img(full_size_mask1, full_size_mask2)
+    full_size_mask = np.logical_or(full_size_mask1 != 0, full_size_mask2 != 0).astype(np.uint8)
+    np.save(os.path.join(store_path, feature_name + '_mask.npy'), full_size_mask) # save the mask as npy to keep nan and inf values
 
 def pad_img(X1, X2): 
     '''Pad the images to the biggest size of both 
