@@ -1,7 +1,7 @@
 # Radiomic feature maps statistical analysis results
 
 ## 24/01 
-Run rad maps for features selected by random run:
+Run rad maps for features selected last run:
 F1:  ['original_glrlm_GrayLevelNonUniformity']
 
 F5: ['original_glrlm_GrayLevelNonUniformity', 'original_glszm_SizeZoneNonUniformityNormalized']

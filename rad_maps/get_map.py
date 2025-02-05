@@ -54,17 +54,11 @@ def generate_delta_map(map_paths, feature_name, store_path):
 
     # TODO: check if the two maps have the same shape, otherwise use padding
     if map1.shape != map2.shape: 
-        target_shape = (
-            max(map1.shape[0], map2.shape[0]),  # Max height
-            max(map1.shape[1], map2.shape[1]),  # Max width
-            max(map1.shape[2], map2.shape[2])   # Max depth
-        )
-        map1 = pad_to_shape(map1, target_shape)
-        map2 = pad_to_shape(map2, target_shape)
-
-    map2[map2==0] = 1e-12 # add a little value to the voxels of map2 equal to zero to avoid division by zero
+        map1, map2 = pad_img(map1, map2)
 
     delta_map = (map1 - map2) / map2 # compute delta map 
+
+    delta_map[np.abs(delta_map) == 1] = np.nan # we set to nan valus that are on the border of the delta-rad map 
 
     assert np.any(np.isnan(delta_map)) == False, "Error, NaN values in the delta map"    # check for nan values in the delta map array
 
@@ -74,22 +68,45 @@ def generate_delta_map(map_paths, feature_name, store_path):
         os.makedirs(store_path) 
     sitk.WriteImage(delta_map, os.path.join(store_path, feature_name + '.nrrd'), True)
 
-def pad_to_shape(image, target_shape):
-    '''Pad one image to a given shape. 
+def pad_img(X1, X2): 
+    '''Pad the images to the biggest size of both 
+
     Parameters
-    image: np.ndarray;
-    target_shape: tuple, length=3, x, y, z dimensions for padding
+    ----------
+    X1: numpy array, image 1;
+    X2: numpy array, image 2;
+
+    Returns
+    -------
+    X1, X2: numpy arrays, padded images;
     '''
+    max_shape = np.maximum(X1.shape, X2.shape)
+    if X1.shape[0] < max_shape[0]:
+        X1_padded = np.zeros(max_shape)
+        X1_padded[:X1.shape[0], :X1.shape[1], :X1.shape[2]] = X1
+        X1 = X1_padded
+    if X2.shape[0] < max_shape[0]:
+        X2_padded = np.zeros(max_shape)
+        X2_padded[:X2.shape[0], :X2.shape[1], :X2.shape[2]] = X2
+        X2 = X2_padded
+    if X1.shape[1] < max_shape[1]:
+        X1_padded = np.zeros(max_shape)
+        X1_padded[:X1.shape[0], :X1.shape[1], :X1.shape[2]] = X1
+        X1 = X1_padded
+    if X2.shape[1] < max_shape[1]:
+        X2_padded = np.zeros(max_shape)
+        X2_padded[:X2.shape[0], :X2.shape[1], :X2.shape[2]] = X2
+        X2 = X2_padded
+    if X1.shape[2] < max_shape[2]:
+        X1_padded = np.zeros(max_shape)
+        X1_padded[:X1.shape[0], :X1.shape[1], :X1.shape[2]] = X1
+        X1 = X1_padded
+    if X2.shape[2] < max_shape[2]:
+        X2_padded = np.zeros(max_shape)
+        X2_padded[:X2.shape[0], :X2.shape[1], :X2.shape[2]] = X2
+        X2 = X2_padded
 
-    # Calculate the padding for each dimension
-    pad_width = [
-        ((target_shape[i] - image.shape[i]) // 2,  # Padding before
-         (target_shape[i] - image.shape[i] + 1) // 2)  # Padding after
-        for i in range(len(target_shape))
-    ]
-
-    # Apply padding
-    return np.pad(image, pad_width, mode='constant', constant_values=0)
+    return X1, X2
 
 
 def disp_map(map_path, slice_num):
