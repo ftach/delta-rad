@@ -52,7 +52,7 @@ def generate_delta_map(map_paths, feature_name, store_path):
     map1 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[0]))
     map2 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[1]))
 
-    # TODO: check if the two maps have the same shape, otherwise use padding
+    # check if the two maps have the same shape, otherwise use padding
     if map1.shape != map2.shape: 
         map1, map2 = pad_img(map1, map2)
 
@@ -71,10 +71,12 @@ def generate_delta_map(map_paths, feature_name, store_path):
     nii_delta_map[np.isnan(nii_delta_map)] = 0
     nii_delta_map[np.isinf(nii_delta_map)] = 0
 
-    assert np.any(np.isnan(nii_delta_map)) == False, "Error, NaN values in the delta map"    # check for nan values in the delta map array
-
     nii_delta_map = sitk.GetImageFromArray(nii_delta_map)
     sitk.WriteImage(nii_delta_map, os.path.join(store_path, feature_name + '.nrrd'), True)
+
+    # GET DELTA MAP MASK 
+    mask = np.logical_or(map1 != 0, map2 != 0).astype(np.uint8)
+    np.save(os.path.join(store_path, feature_name + '_mask.npy'), mask)
 
 def pad_img(X1, X2): 
     '''Pad the images to the biggest size of both 
