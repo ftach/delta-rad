@@ -60,13 +60,21 @@ def generate_delta_map(map_paths, feature_name, store_path):
 
     delta_map[np.abs(delta_map) == 1] = np.nan # we set to nan valus that are on the border of the delta-rad map 
 
-    assert np.any(np.isnan(delta_map)) == False, "Error, NaN values in the delta map"    # check for nan values in the delta map array
-
-    delta_map = sitk.GetImageFromArray(delta_map)
-
     if os.path.exists(store_path) is False:
         os.makedirs(store_path) 
-    sitk.WriteImage(delta_map, os.path.join(store_path, feature_name + '.nrrd'), True)
+
+    # SAVE NUMPY ARRAY DELTA MAP to conserve nan for statistical analysis
+    np.save(os.path.join(store_path, feature_name + '.npy'), delta_map)
+
+    # SAVE NII DELTA MAP   
+    nii_delta_map = delta_map.copy()
+    nii_delta_map[np.isnan(nii_delta_map)] = 0
+    nii_delta_map[np.isinf(nii_delta_map)] = 0
+
+    assert np.any(np.isnan(nii_delta_map)) == False, "Error, NaN values in the delta map"    # check for nan values in the delta map array
+
+    nii_delta_map = sitk.GetImageFromArray(nii_delta_map)
+    sitk.WriteImage(nii_delta_map, os.path.join(store_path, feature_name + '.nrrd'), True)
 
 def pad_img(X1, X2): 
     '''Pad the images to the biggest size of both 
