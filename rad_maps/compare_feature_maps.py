@@ -4,6 +4,7 @@ import os
 import numpy as np
 import get_map as gm 
 import get_stats as gs
+import clustering as cl 
 import pandas as pd 
 import shutil
 
@@ -46,15 +47,25 @@ def compute_delta_maps(fractions, patients, enabled_features):
     for p in patients: 
         for f in enabled_features:
             try: 
-                gm.generate_delta_map(map_paths=['Data/' + p + '/rad_maps/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + fractions[1] + '/' + f + '.nrrd'], 
+                gm.generate_delta_map(mask_paths=['Data/' + p + '/mask_dir/' + p + '_mridian_' + fractions[0] + '_gtv.nii', 'Data/' + p + '/mask_dir/' + p + '_mridian_' + fractions[1] + '_gtv.nii'],  
+                    map_paths=['Data/' + p + '/rad_maps/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + fractions[1] + '/' + f + '.nrrd'], 
                                       store_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f)
             except RuntimeError: 
                 continue
             except ValueError: 
                 print('Shape Error in ' + p + ' ' + f)
                 continue
+            except FileNotFoundError: 
+                print('File not found in ' + p + ' ' + f)
+                continue
 
-
+def compute_clustered_delta_maps(fractions, patients, enabled_features, k):
+    for p in patients: 
+        for f in enabled_features:
+            cl.gen_clustered_map(delta_map_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '.nrrd', 
+                                    mask_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '_mask.npy', 
+                                    store_path='Data/' + p + '/rad_maps/clustered_delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f, k=k)
+                
 def compute_params(fractions, patients, enabled_features): 
     '''Compute intensity parameters for each feature map and save in a csv file.
     Parameters:
@@ -145,6 +156,7 @@ def main():
     patients = [p for p in patients if p.startswith('Patient')]
     patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
     patients_filtered = [p for p in patients if patients not in patients_to_remove]
+    patients_filtered = ['Patient76'] # TODO: remove this line after first test 
     enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
 
     # COMPUTE SIMPLE FEATURE MAPS
@@ -152,8 +164,10 @@ def main():
     #compute_params(fractions, patients_filtered, enabled_features) 
 
     # COMPUTE DELTA FEATURES MAPS 
-    compute_feature_maps(fractions, patients_filtered, params, enabled_features)
-    compute_delta_maps(fractions, patients_filtered, enabled_features)
+    # compute_feature_maps(fractions, patients_filtered, params, enabled_features) # optional if already computed
+    # compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
+    compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed
+    quit()
     #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3/original_firstorder_Kurtosis.nrrd', 2)
     compute_delta_params(fractions, patients_filtered, enabled_features)
 
