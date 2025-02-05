@@ -35,14 +35,15 @@ def compute_feature_maps(fractions, patients, params_path, enabled_features):
     print(errors)
 
 def compute_delta_maps(fractions, patients, enabled_features):
-    '''Compute delta feature maps for all given patients and fractions.
+    '''Compute delta feature maps for all given patients and fractions. Save them as .nrrd file. 
     Parameters:
     ----------
         fractions: list, list of the 2 fractions to compute delta feature maps for;
         patients: list, list of patients to compute feature maps for;
         enabled_features: list, list of enabled features;
         
-        Returns:
+        Returns: None 
+
     '''
     for p in patients: 
         for f in enabled_features:
@@ -60,6 +61,19 @@ def compute_delta_maps(fractions, patients, enabled_features):
                 continue
 
 def compute_clustered_delta_maps(fractions, patients, enabled_features, k):
+    '''Compute clustered delta feature maps for all given patients and fractions. Save them as .nrrd file. 
+    
+    Parameters:
+    ----------
+    
+    fractions: list, list of the 2 fractions to compute delta feature maps for;
+    patients: list, list of patients to compute feature maps for;
+    enabled_features: list, list of enabled features;
+    k: int, number of clusters;
+    
+    Returns: None 
+    
+    '''
     for p in patients: 
         for f in enabled_features:
             cl.gen_clustered_map(delta_map_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '.nrrd', 
@@ -74,7 +88,7 @@ def compute_params(fractions, patients, enabled_features):
         patients: list, list of patients to compute feature maps for;
         enabled_features: list, list of enabled features;
         
-        Returns:
+        Returns: None 
     '''
     # for each radiomics feature map, compute the intensity parameters, store them in a csv with patient ID as index 
     for feature in enabled_features: 
@@ -165,7 +179,7 @@ def main():
 
     # COMPUTE DELTA FEATURES MAPS 
     # compute_feature_maps(fractions, patients_filtered, params, enabled_features) # optional if already computed
-    # compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
+    compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
     compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed
     quit()
     #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3/original_firstorder_Kurtosis.nrrd', 2)

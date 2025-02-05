@@ -58,10 +58,13 @@ def generate_delta_map(mask_paths, map_paths, feature_name, store_path):
     full_size_mask2 = nib.load(mask_paths[1]).get_fdata()
     
     # Load maps computed with pyradiomics (mini because cropped)
-    mini_map1 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[0]))
-    mini_map1 = np.transpose(mini_map1, (1, 2, 0))
-    mini_map2 = sitk.GetArrayFromImage(sitk.ReadImage(map_paths[1]))
-    mini_map2 = np.transpose(mini_map2, (1, 2, 0))
+    mini_map1_img = sitk.ReadImage(map_paths[0])
+    mini_map1_array = sitk.GetArrayFromImage(mini_map1_img)
+    mini_map1 = np.transpose(mini_map1_array, (2, 1, 0))
+
+    mini_map2_img = sitk.ReadImage(map_paths[1])
+    mini_map2_array = sitk.GetArrayFromImage(mini_map2_img)
+    mini_map2 = np.transpose(mini_map2_array, (2, 1, 0)) # z, y, x -> x, y, z
 
     # Retrieve original image shape
     map1 = full_size_mask1.copy()
@@ -88,15 +91,20 @@ def generate_delta_map(mask_paths, map_paths, feature_name, store_path):
     nii_delta_map = full_size_delta_map.copy()
     nii_delta_map[np.isnan(nii_delta_map)] = 0
     nii_delta_map[np.isinf(nii_delta_map)] = 0
-    nii_delta_map = np.transpose(nii_delta_map, (2, 0, 1))  # (x, y, z) → (z, x, y)
-    nii_delta_map = sitk.GetImageFromArray(nii_delta_map)
-    sitk.WriteImage(nii_delta_map, os.path.join(store_path, feature_name + '.nrrd'), True)
+    nii_delta_map = np.transpose(nii_delta_map, (2, 1, 0))  # (x, y, z) → (z, y, x)
+
+    nii_delta_map_sitk = sitk.GetImageFromArray(nii_delta_map)
+    nii_delta_map_sitk.SetSpacing(mini_map1_img.GetSpacing())  # Set voxel spacing
+    nii_delta_map_sitk.SetDirection(mini_map1_img.GetDirection())  # Set orientation
+    nii_delta_map_sitk.SetOrigin(mini_map1_img.GetOrigin())  # Set origin
+
+    sitk.WriteImage(nii_delta_map_sitk, os.path.join(store_path, feature_name + '.nrrd'), True)
 
     # Save delta map mask 
-    if full_size_mask1.shape != full_size_mask2.shape:
-        full_size_mask1, full_size_mask2 = pad_img(full_size_mask1, full_size_mask2)
-    full_size_mask = np.logical_or(full_size_mask1 != 0, full_size_mask2 != 0).astype(np.uint8)
-    np.save(os.path.join(store_path, feature_name + '_mask.npy'), full_size_mask) # save the mask as npy to keep nan and inf values
+    # if full_size_mask1.shape != full_size_mask2.shape:
+    #     full_size_mask1, full_size_mask2 = pad_img(full_size_mask1, full_size_mask2)
+    # full_size_mask = np.logical_and(full_size_mask1, full_size_mask2).astype(np.uint8)
+    np.save(os.path.join(store_path, feature_name + '_mask.npy'), full_size_mask1) # save the mask as npy to keep nan and inf values
 
 def pad_img(X1, X2): 
     '''Pad the images to the biggest size of both 
