@@ -61,4 +61,5 @@ Re-run for récidive locale with random split
 Computations are now OK if random split of data. But YES results (AUC) vary. Highly reduced with simple radiomics. 
 Re-run for outcome décès with random split. 
 
-
+## 06/02
+Implemented nested-cross validation with feature selection before cross-validation

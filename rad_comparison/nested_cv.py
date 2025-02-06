@@ -85,7 +85,7 @@ def main():
                     gridcvs, results = p.init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, nb_features, outcome) # init pred algo  
                     skfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42) # outer folds
  
-                    # OUTER LOOP FOR ALGORITHM SELECTION TODO 
+                    # OUTER LOOP FOR ALGORITHM SELECTION  
                     results = p.make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features)
                     print("Predictions done for ", nb_features, " features.")
 
