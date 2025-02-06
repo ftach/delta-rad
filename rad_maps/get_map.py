@@ -101,10 +101,10 @@ def generate_delta_map(mask_paths, map_paths, feature_name, store_path):
     sitk.WriteImage(nii_delta_map_sitk, os.path.join(store_path, feature_name + '.nrrd'), True)
 
     # Save delta map mask 
-    # if full_size_mask1.shape != full_size_mask2.shape:
-    #     full_size_mask1, full_size_mask2 = pad_img(full_size_mask1, full_size_mask2)
-    # full_size_mask = np.logical_and(full_size_mask1, full_size_mask2).astype(np.uint8)
-    np.save(os.path.join(store_path, feature_name + '_mask.npy'), full_size_mask1) # save the mask as npy to keep nan and inf values
+    if full_size_mask1.shape != full_size_mask2.shape:
+        full_size_mask1, full_size_mask2 = pad_img(full_size_mask1, full_size_mask2)
+    full_size_mask = np.logical_and(full_size_mask1, full_size_mask2).astype(np.uint8)
+    np.save(os.path.join(store_path, feature_name + '_mask.npy'), full_size_mask) # save the mask as npy to keep nan and inf values
 
 def pad_img(X1, X2): 
     '''Pad the images to the biggest size of both 

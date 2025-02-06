@@ -14,7 +14,7 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.model_selection import GridSearchCV
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -30,6 +30,84 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc
 import utils.sklearn_utils as sku 
 
 SCORER = 'roc_auc' 
+
+def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, nb_features, outcome):
+    '''Initialize the parameters for the prediction algorithms. 
+    
+    Parameters:
+    ----------------
+    results (dict): The dictionary containing the results of the prediction algorithms.
+    table (str): The name of the table.
+    fs_algo (str): The name of the feature selection algorithm.
+    best_feat_sel_model (object): The best feature selection model.
+    pred_algo_list (list): The list of classifiers names for which to get the pipelines.
+    nb_features (int): The number of features selected.
+    sel_features (list): The list of selected features.
+    outcome (str): The name of the outcome to predict.
+
+    Returns:
+    ----------------
+    gridcvs (dict): A dictionary containing the GridSearchCV objects for each classifier.
+    results (dict): The initialized results dictionary that will contain the results of the prediction algorithms.
+    '''
+    # INIT PRED ALGO RESULTS
+    if best_feat_sel_model is not None:
+        try: 
+            results[table][fs_algo]['params'] = best_feat_sel_model.best_params_
+        except AttributeError:
+            results[table][fs_algo]['params'] = best_feat_sel_model.get_params()
+    else: 
+        results[table][fs_algo]['params'] = 'no_feature_selection'
+
+    ###################### PREDICTION ####################################
+    # INITIALIZATION 
+    param_grids = get_param_grids(pred_algo_list) # Get parameter grids and pipelines
+    pipes = get_pipelines(pred_algo_list) # Setting up the pipelines
+    gridcvs = {} # Setting up multi GridSearchCV for each classifier
+    for pgrid, est, pred_algo in zip(param_grids, # one iteration for each classifier
+                                pipes,
+                                pred_algo_list):
+        # init results dict
+        if not nb_features in results[table][fs_algo][pred_algo][outcome].keys():
+            results[table][fs_algo][pred_algo][outcome][nb_features] = {}
+            results[table][fs_algo][pred_algo][outcome][nb_features]['features'] = []
+            results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = []
+        # init gridsearch of each classifier
+        gcv = GridSearchCV(estimator=est,
+                           param_grid=pgrid,
+                           scoring='roc_auc',
+                           n_jobs=1,
+                           cv=4, # inner folds
+                           verbose=0,
+                           refit=True) # refit the best model with the entire dataset
+        gridcvs[pred_algo] = gcv
+    
+    return gridcvs, results
+
+def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features):
+    for c, (outer_train_idx, outer_valid_idx) in enumerate(skfold.split(X_filtered, y)):
+        for pred_algo, gs_est in sorted(gridcvs.items()):
+            # print('outer fold %d/5 | tuning %-8s' % (c, pred_algo), end='')
+
+            # The inner loop for hyperparameter tuning
+            gs_est.fit(X_filtered.iloc[outer_train_idx], y.iloc[outer_train_idx]) # hyperparameter tuning
+            optimal_threshold = compute_opt_threshold(gs_est, X_filtered.iloc[outer_train_idx], y.iloc[outer_train_idx]) # compute optimal threshold
+
+            # Computing the test metrics
+            test_auc, sensitivity, specificity = compute_test_metrics(gs_est, X_filtered.iloc[outer_valid_idx], y.iloc[outer_valid_idx], optimal_threshold)
+            # print(' | Train AUC: %.2f%% Test AUC: %.2f%% sens: %.2f%% spec: %.2f%%' % (
+            #     100 * gs_est.best_score_, 100 * test_auc, 100 * sensitivity, 100 * specificity))
+                
+            # save results 
+            results[table][fs_algo][pred_algo][outcome][nb_features]['features'] = sel_features
+            results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = gs_est.best_params_
+            results[table][fs_algo][pred_algo][outcome][nb_features]['train_auc'] = gs_est.best_score_
+            results[table][fs_algo][pred_algo][outcome][nb_features]['test_auc'] = test_auc
+            results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'] = sensitivity
+            results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'] = specificity
+
+    return results
+
 
 def get_param_grids(pred_algo_list: list): 
     """
@@ -47,9 +125,21 @@ def get_param_grids(pred_algo_list: list):
             param_grid = [{'RF__max_depth': range(1, 5, 4), 'RF__n_estimators' : range(25, 50, 25)}]
         elif pred_algo == 'ADABOOST':
             param_grid = [{'ADABOOST__n_estimators' : range(25, 50, 25)}]
-        elif pred_algo == 'LOGREG':
-            param_grid = [{'LOGREG__penalty': ['l2'],
-                        'LOGREG__C': np.power(10., np.arange(-4, 4))}]
+        elif pred_algo == 'LOGREGRIDGE':
+            param_grid = [{'LOGREGRIDGE__penalty': ['l2'],
+                        'LOGREGRIDGE__C': np.power(10., np.arange(-4, 4))}]
+        elif pred_algo =='PSVM':
+            param_grid = [{'PSVM__C' : list(np.arange(0.01, 0.11, 0.01)), 'PSVM__degree': range(2, 5, 1)}]
+        elif pred_algo == 'KNN':
+            param_grid = [{'KNN__n_neighbors': range(1, 10)}]
+        elif pred_algo == 'BAGG':
+            param_grid = [{'BAGG__n_estimators' : range(25, 1001, 25)}]
+        elif pred_algo == 'MLP':
+            param_grid = [{
+                'MLP__alpha' : 10.0 ** -np.arange(2, 5), 
+                'MLP__learning_rate_init': 10.0 ** -np.arange(2, 5)            }]
+        elif pred_algo == 'QDA':
+            param_grid = [{'QDA__reg_param': list(np.arange(0.01, 0.11, 0.01))}]
         param_grids.append(param_grid)
 
     return param_grids
@@ -69,15 +159,19 @@ def get_pipelines(pred_algo_list: list):
         if pred_algo == 'RF':
             pipeline = Pipeline([('std', StandardScaler()), ('RF', RandomForestClassifier(random_state=42))])
         elif pred_algo == 'ADABOOST':
-            pipeline = Pipeline([('std', StandardScaler()), ('ADABOOST', AdaBoostClassifier(random_state=42))])
-        elif pred_algo == 'LOGREG':
-            pipeline = Pipeline([('std', StandardScaler()), ('LOGREG', LogisticRegression(multi_class='multinomial', solver='newton-cg', random_state=42))])
-        # elif pred_algo == 'KNN':
-        #     pipeline = Pipeline([('scaler', StandardScaler()), ('clf2', KNeighborsClassifier())])
-        # elif pred_algo == 'DT':
-        #     pipeline = Pipeline([('scaler', StandardScaler()), ('clf3', DecisionTreeClassifier(random_state=42))])
-        # elif pred_algo == 'SVM':
-        #     pipeline = Pipeline([('scaler', StandardScaler()), ('clf4', SVC(random_state=42))])
+            pipeline = Pipeline([('std', StandardScaler()), ('ADABOOST', AdaBoostClassifier(random_state=42, algorithm='SAMME'))])
+        elif pred_algo == 'LOGREGRIDGE':
+            pipeline = Pipeline([('std', StandardScaler()), ('LOGREGRIDGE', LogisticRegression(multi_class='multinomial', solver='newton-cg', random_state=42))])
+        elif pred_algo == 'PSVM':
+            pipeline = Pipeline([('std', StandardScaler()), ('PSVM', SVC(kernel='poly', coef0=0, gamma=1.0, probability=True, random_state=42))])
+        elif pred_algo == 'KNN':
+            pipeline = Pipeline([('std', StandardScaler()), ('KNN', KNeighborsClassifier())])
+        elif pred_algo == 'BAGG':
+            pipeline = Pipeline([('std', StandardScaler()), ('BAGG', BaggingClassifier(oob_score=True))])
+        elif pred_algo == 'MLP':
+            pipeline = Pipeline([('std', StandardScaler()), ('MLP', MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling'))])
+        elif pred_algo == 'QDA':
+            pipeline = Pipeline([('std', StandardScaler()), ('QDA', QuadraticDiscriminantAnalysis())])
         pipelines.append(pipeline)
 
     return pipelines
