@@ -72,6 +72,10 @@ def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_
             results[table][fs_algo][pred_algo][outcome][nb_features] = {}
             results[table][fs_algo][pred_algo][outcome][nb_features]['features'] = []
             results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = []
+            results[table][fs_algo][pred_algo][outcome][nb_features]['test_auc'] = [] 
+            results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'] = []
+            results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'] = []
+
         # init gridsearch of each classifier
         gcv = GridSearchCV(estimator=est,
                            param_grid=pgrid,
@@ -100,11 +104,11 @@ def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, ou
                 
             # save results 
             results[table][fs_algo][pred_algo][outcome][nb_features]['features'] = sel_features
-            results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = gs_est.best_params_
-            results[table][fs_algo][pred_algo][outcome][nb_features]['train_auc'] = gs_est.best_score_
-            results[table][fs_algo][pred_algo][outcome][nb_features]['test_auc'] = test_auc
-            results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'] = sensitivity
-            results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'] = specificity
+            results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
+            results[table][fs_algo][pred_algo][outcome][nb_features]['train_auc'] = gs_est.best_score_ # score of best algo (based on cross validation search) trained again 
+            results[table][fs_algo][pred_algo][outcome][nb_features]['test_auc'].append(test_auc)
+            results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'].append(sensitivity)
+            results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'].append(specificity)
 
     return results
 

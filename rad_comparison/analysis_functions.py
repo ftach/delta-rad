@@ -139,13 +139,15 @@ def get_best_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: 
         results_list = []
         for feat_sel_algo in feat_sel_algo_list:
             for pred_algo in pred_algo_list:
-                values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features][metric]
+                all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features][metric]
                           for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
+                # 
+                mean_values = [np.mean(sublist) for sublist in all_values]
                 features = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features']
                             for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
                 params = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params']
                           for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                filtered_values = [x for x in values if (
+                filtered_values = [x for x in mean_values if (
                     x != 'N/A') and (x != 0) and (x != 'None')]
                 if len(filtered_values) > 0:
                     max_value = max(filtered_values)
@@ -164,9 +166,9 @@ def get_best_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: 
             top_results[table][outcome] = results_list
 
         # Display the top k results for each table and each outcome
-        print(f"Top {k} results for table {table}:")
+        print(f"Top {k} mean results for table {table}:")
         for result in results_list:
-            print(f"{metric}: {result[0]}, Prediction Algorithm: {result[1]}, Feature Selection Algorithm: {result[2]}, Features: {result[3]}")
+            print(f"Mean {metric}: {result[0]}, Prediction Algorithm: {result[1]}, Feature Selection Algorithm: {result[2]}, Features: {result[3]}")
         print("\n")
     return top_results
 
