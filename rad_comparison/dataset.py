@@ -79,16 +79,18 @@ def get_xy(rad_csv_path: str, outcome_csv_path: str, outcome: str = 'Décès', f
     """
 
     X = pd.read_csv(rad_csv_path) 
-    X = X.dropna() # delete nan values 
+    forbidden_patients = ['Patient ' + str(x) for x in forbidden_patients]
+    #drop patients for wich the column 0 value is in forbidden_patients
+    X = X[~X[X.columns[0]].isin(forbidden_patients)]
     X = X.drop(X.columns[0], axis=1) # drop first X column (Patient indexes)
-    X = X.drop(forbidden_patients, axis=0)    # drop forbidden patients
+    X = X.dropna() # delete nan values
 
     correlation_matrix = X.corr(method='pearson') 
     X = remove_highly_corr_features(get_highly_corr_features(correlation_matrix), X) #  drop features whom collinearity > 0.9 
 
     outcome_df = pd.read_csv(outcome_csv_path)
+    outcome_df = outcome_df[~outcome_df[outcome_df.columns[0]].isin(forbidden_patients)]# drop forbidden patients
     outcome_df = outcome_df.drop(outcome_df.columns[0], axis=1) # drop first column (Patient indexes)
-    outcome_df = outcome_df.drop(forbidden_patients, axis=0) # drop forbidden patients
     y = outcome_df.loc[outcome_df.index.isin(X.index)] # ensure same patients in X and y
 
     y = y.loc[:, [outcome]] # get the specific outcome column
