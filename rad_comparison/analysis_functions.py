@@ -117,6 +117,45 @@ def get_best_results_dict(results: dict, delta_rad_tables: list, feat_sel_algo_l
 
     return top_results
 
+def get_best_results_dict2(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, metric_list: list, outcome: str, k: int = 10):
+    """ 
+    Get the top k results for each table and each outcome in terms of sensitivity.
+    Args:
+        results (dict): A dictionary containing the results to be plotted.
+        delta_rad_tables (list): A list of the radiomic tables.
+        feat_sel_algo_list (list): A list of the feature selection algorithms.
+        pred_algo_list (list): A list of the prediction algorithms.
+        outcome (str): The outcome of interest.
+        k (int): The number of top results to be displayed.
+
+    Returns:
+        None
+    """
+
+    top_results = {}
+    for metric in metric_list:
+        top_results[metric] = {}
+        for table in delta_rad_tables:
+            top_results[metric][table] = {}
+            results_list = []
+            for feat_sel_algo in feat_sel_algo_list:
+                for pred_algo in pred_algo_list:
+                    values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features][metric]
+                              for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
+                    mean_values = [np.mean(sublist) for sublist in values]
+                    filtered_values = [x for x in mean_values if (
+                        x != 'N/A') and (x != 'None')]
+                    if filtered_values:
+                        max_value = max(filtered_values)
+                        results_list.append(max_value)
+
+            # Sort the results list by the max value in descending order and take the top k
+            results_list = sorted(
+                results_list, key=lambda x: x, reverse=True)[:k]
+            top_results[metric][table] = results_list
+
+    return top_results
+
 
 def get_best_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, outcome: str, metric: str, k: int = 3):
     """ 
@@ -467,7 +506,32 @@ def find_perf_alg(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, 
                                       AUC: {sub_outcome_results[nb_features]['roc_auc']}, Sensitivity: {sub_outcome_results[nb_features]['sensitivity']}, Specificity: {sub_outcome_results[nb_features]['specificity']}, '\n' \
                                       Features: {sub_outcome_results[nb_features]['features']}")
 
+def find_perf_alg2(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, pred_algo_list, threshold: float = 0.7):
+    '''Find the algorithms with good performance based on a given threshold.
+    Args:
+        results (dict): A dictionary containing the results to be plotted.
+        delta_rad_tables (list): A list of the radiomic tables.
+        outcomes_list (list): A list of the outcomes.
+        feat_sel_algo_list (list): A list of the feature selection algorithms.
+        pred_algo_list (list): A list of the prediction algorithms.
 
+    Returns:
+        None
+    '''
+
+    for table in delta_rad_tables:
+        for outcome in outcomes_list:
+            for feat_sel_algo in feat_sel_algo_list:
+                for pred_algo in pred_algo_list:
+                    # get performances for each number of features, save them in a list
+                    sub_outcome_results = results[table][feat_sel_algo][pred_algo][outcome]
+                    for nb_features in sub_outcome_results.keys():
+                        if sub_outcome_results[nb_features]['sensitivity'] != 'None':
+                            if (np.mean(sub_outcome_results[nb_features]['test_auc']) > threshold): # & (np.mean(sub_outcome_results[nb_features]['specificity']) > threshold):
+                                print(f"Table: {table}, Outcome: {outcome}, Feature Selection Algorithm: {feat_sel_algo}, Prediction Algorithm: {pred_algo}, Number of Features: {nb_features}, '\n' \
+                                      TEST AUC: {np.mean(sub_outcome_results[nb_features]['test_auc'])}, Sensitivity: {np.mean(sub_outcome_results[nb_features]['sensitivity'])}, Specificity: {np.mean(sub_outcome_results[nb_features]['specificity'])}, '\n' \
+                                      Features: {sub_outcome_results[nb_features]['features']}")
+                                
 def find_robust_alg(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, pred_algo_list, threshold: float = 0.8):
     '''Find the robust algorithms based on a given threshold.
     Args:
