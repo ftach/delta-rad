@@ -4,6 +4,23 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt 
 import numpy as np
 import os 
+import sys 
+import io 
+
+def capture_sitk_warnings(func, *args, **kwargs):
+    """Exécute une fonction et capture les warnings de SimpleITK."""
+    stderr_backup = sys.stderr  # Sauvegarde de stderr
+    sys.stderr = io.StringIO()  # Redirige stderr vers une variable temporaire
+
+    try:
+        result = func(*args, **kwargs)  # Exécute la fonction
+    except Exception as e:
+        raise RuntimeError(f"Erreur dans {func.__name__}: {e}")  # Capture les erreurs comme exception
+    finally:
+        warning_output = sys.stderr.getvalue()  # Récupère les warnings
+        sys.stderr = stderr_backup  # Restaure stderr
+
+    return result, warning_output
 
 def test_registration(): 
     # charger simu 
@@ -39,14 +56,14 @@ def test_registration():
     gtv_f5 = sitk.ReadImage('/home/tachennf/Documents/delta-rad/rad_maps/Data/Patient76/mask_dir/Patient76_mridian_ttt_5_gtv.nii') # charger gtv F5 
     gtv_f5 = sitk.GetArrayFromImage(gtv_f5)
 
-    mse_before = r.compute_dice(gtv_simu, gtv_f5)
-    print("Dice before registration: ", mse_before)
+    dice_before = r.compute_dice(gtv_simu, gtv_f5)
+    print("Dice before registration: ", dice_before)
 
     registered_gtv_f5 = r.apply_3D_transform2(gtv_f5, gtv_simu, T, mask=True)
 
     # comparer gtv simu et F5 
-    mse_after = r.compute_dice(gtv_simu, registered_gtv_f5)
-    print("Dice after registration:", mse_after)
+    dice_after = r.compute_dice(gtv_simu, registered_gtv_f5)
+    print("Dice after registration:", dice_after)
 
     # plt.figure()
     # plt.subplot(131), plt.imshow(gtv_simu[:, :, 36]), plt.title('Simu')
@@ -66,8 +83,11 @@ def test_registration():
     sitk.WriteImage(transformed_img, '/home/tachennf/Documents/delta-rad/rad_maps/Data/Patient76/mask_dir/registered_Patient76_mridian_ttt_5_gtv.nii')
 
 def main():
+    dice_before_list = []
+    dice_after_list = []
+
     patient_list = [p for p in os.listdir('/home/tachennf/Documents/delta-rad/rad_maps/Data/')]
-    patient_list = ['Patient76']
+    patient_list = ['Patient49']
     for p in patient_list:
         forbidden_patients = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80']
         if p in forbidden_patients:
@@ -80,7 +100,7 @@ def main():
         simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_IRM_simu_mridian.nii'
         if os.path.exists(simu_path) or os.path.exists(f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_IRM_MRIdian.nii'): # simu exists
             for i in range(1, 6): 
-                
+                print(f"Fraction {i}")
                 f_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_mridian_ttt_{i}.nii'
                 if os.path.exists(f_path) == False: # if fraction is missing 
                     continue
@@ -91,13 +111,14 @@ def main():
                 output_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/mask_dir/registered_{p}_mridian_ttt_{i}_gtv.nii'
 
                 if os.path.exists(simu_path): # standard path 
-                    mse_before, mse_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
+                    dice_before, dice_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
 
                 else: # MRIdian path 
                     simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_IRM_simu_MRIdian.nii'
                     gtv_simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/mask_dir/{p}_IRM_simu_MRIdian_gtv.nii'
-                    mse_before, mse_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
-
+                    dice_before, dice_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
+                dice_before_list.append(dice_before)
+                dice_after_list.append(dice_after)
         else: # simu does not exist 
             for i in range(2, 6): 
                 simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_mridian_ttt_1.nii' # simu is F1 
@@ -112,14 +133,17 @@ def main():
                 output_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/mask_dir/registered_{p}_mridian_ttt_{i}_gtv.nii'
 
                 if os.path.exists(simu_path): # standard path 
-                    mse_before, mse_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
+                    dice_before, dice_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
 
                 else: # MRIdian path 
                     simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_IRM_MRIdian.nii'
                     gtv_simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/mask_dir/{p}_IRM_MRIdian_gtv.nii'
-                    mse_before, mse_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
+                    dice_before, dice_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
     
-
+            
+    print(f"Average dice before registration: {np.mean(dice_before_list)}")
+    print(f"Average dice after registration: {np.mean(dice_after_list)}")
+    print(dice_after_list)
 if __name__ == '__main__': 
-    #main()
-    test_registration()
+    main()
+    # test_registration()

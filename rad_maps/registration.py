@@ -3,6 +3,12 @@
 import numpy as np 
 import SimpleITK as sitk 
 import matplotlib.pyplot as plt
+from scipy.ndimage import (
+    _ni_support,
+    binary_erosion,
+    distance_transform_edt,
+    generate_binary_structure,
+)
 
 def align_centers(mz_stack: np.ndarray, moving_mz_stack: np.ndarray, mask: bool = False): 
     ''' Align the physical centers of two images.
@@ -83,23 +89,26 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
         metric_values.append(registration_method.GetMetricValue())
 
     # Similarity metric settings.
-    registration_method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=100)
+    #registration_method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=100)
+    registration_method.SetMetricAsJointHistogramMutualInformation(numberOfHistogramBins=80)
     registration_method.SetMetricSamplingStrategy(registration_method.RANDOM)
-    registration_method.SetMetricSamplingPercentage(0.5)
+    registration_method.SetMetricSamplingPercentage(0.1)
 
     # Interpolator settings.
     registration_method.SetInterpolator(sitk.sitkLinear)
 
     # Optimizer settings.
-    registration_method.SetOptimizerAsGradientDescentLineSearch( #SetOptimizerAsGradientDescent 
-        learningRate=1,
-        numberOfIterations=100
-    )
+    # registration_method.SetOptimizerAsGradientDescentLineSearch( #SetOptimizerAsGradientDescent 
+    #     learningRate=1,
+    #     numberOfIterations=100
+    # )
+    registration_method.SetOptimizerAsLBFGS2(numberOfIterations=100)
     registration_method.SetOptimizerScalesFromPhysicalShift()
 
     # Setup for the multi-resolution framework.
     registration_method.SetShrinkFactorsPerLevel(shrinkFactors=[4, 2, 1])
     registration_method.SetSmoothingSigmasPerLevel(smoothingSigmas=[2, 1, 0])
+
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 # 
     # # Don't optimize in-place, we would possibly like to run this cell multiple times.
@@ -113,6 +122,124 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
     # final_transform = final_transform.GetBackTransform()
 
     return registration_method, final_transform, metric_values
+
+def compute_centroid(mask_array):
+    """
+    Compute the centroid of a 3D binary mask.
+    
+    Parameters:
+        mask_array (numpy.ndarray): 3D array of the binary mask.
+
+    Returns:
+        tuple: (x, y, z) centroid coordinates.
+    """
+    coords = np.argwhere(mask_array > 0)  # Get nonzero voxel coordinates
+    centroid = np.mean(coords, axis=0)  # Compute mean along each axis
+    return tuple(centroid)
+
+def compute_bounding_box_center(mask_array):
+    """
+    Compute the center of the bounding box of a 3D binary mask.
+    
+    Parameters:
+        mask_array (numpy.ndarray): 3D array of the binary mask.
+
+    Returns:
+        tuple: (x, y, z) center coordinates.
+    """
+    coords = np.argwhere(mask_array > 0)  # Get all nonzero voxel coordinates
+    min_bounds = coords.min(axis=0)
+    max_bounds = coords.max(axis=0)
+    center = (min_bounds + max_bounds) / 2.0  # Geometric center
+    return tuple(center)
+
+import scipy.ndimage
+
+def compute_distance_transform_centroid(mask_array):
+    """
+    Compute the centroid of a 3D binary mask using the distance transform.
+    
+    Parameters:
+        mask_array (numpy.ndarray): 3D array of the binary mask.
+
+    Returns:
+        tuple: (x, y, z) centroid coordinates.
+    """
+    distance_map = scipy.ndimage.distance_transform_edt(mask_array)
+    max_distance_coords = np.argwhere(distance_map == distance_map.max())  # Get max distance point
+    
+    return tuple(max_distance_coords[0])  # Return the most centered voxel
+
+def compute_distances(result, reference, connectivity=1, voxelspacing=None): 
+    ''' Compute the distances of the voxels in a mask to the center. 
+    
+    Parameters:
+        mask_array (np.ndarray): The mask array.
+        
+    Returns:
+        np.ndarray: The distance array (x, y, z) dimensions. 
+    '''
+    result = np.atleast_1d(result.astype(np.bool_))
+    reference = np.atleast_1d(reference.astype(np.bool_))
+    if voxelspacing is not None:
+        voxelspacing = _ni_support._normalize_sequence(voxelspacing, result.ndim)
+        voxelspacing = np.asarray(voxelspacing, dtype=np.float64)
+        if not voxelspacing.flags.contiguous:
+            voxelspacing = voxelspacing.copy()
+
+    # binary structure
+    footprint = generate_binary_structure(result.ndim, connectivity)
+
+    # test for emptiness
+    if 0 == np.count_nonzero(result):
+        raise RuntimeError(
+            "The first supplied array does not contain any binary object."
+        )
+    if 0 == np.count_nonzero(reference):
+        raise RuntimeError(
+            "The second supplied array does not contain any binary object."
+        )
+
+    # extract only 1-pixel border line of objects
+    result_border = result ^ binary_erosion(result, structure=footprint, iterations=1)
+    reference_border = reference ^ binary_erosion(
+        reference, structure=footprint, iterations=1
+    )
+    
+    dt_x = distance_transform_edt(~reference_border, sampling=(1, 0, 0))  # X distances
+    dt_y = distance_transform_edt(~reference_border, sampling=(0, 1, 0))  # Y distances
+    dt_z = distance_transform_edt(~reference_border, sampling=(0, 0, 1))  # Z distances
+
+    dx = dt_x[result_border]
+    dy = dt_y[result_border]
+    dz = dt_z[result_border]
+
+    tx = np.median(dx)
+    ty = np.median(dy)
+    tz = np.median(dz)
+    
+    return tx, ty, tz
+
+def initialize_transform_from_masks(fixed_mask, moving_mask):
+    """
+    Compute an initial Euler3DTransform from masks by aligning centroids.
+
+    Parameters:
+        fixed_mask (numpy.ndarray): Binary mask of the fixed image.
+        moving_mask (numpy.ndarray): Binary mask of the moving image.
+
+    Returns:
+        sitk.Euler3DTransform: Initial transformation.
+    """
+
+    # Compute translation vector
+    translation = compute_distances(moving_mask, fixed_mask)
+
+    # Create initial transform
+    init_transform = sitk.Euler3DTransform()
+    init_transform.SetTranslation(translation)
+
+    return init_transform
 
 def apply_3D_transform(moving_3D_array: np.ndarray, transform: sitk.Transform, mask: bool = False) -> np.ndarray: 
     ''' Apply a 3D transformation to an image.
@@ -240,7 +367,7 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
         float: The MSE before registration.
         float: The MSE after registration.
     '''
-    
+ 
     # charger simu 
     simu = sitk.ReadImage(simu_path)
     simu = sitk.GetArrayFromImage(simu)
@@ -262,22 +389,34 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
     else:
         pass
 
-    registration_method, T, metric_values = affine_registration(simu, fraction)
-
     # COMPARE GTVs 
     gtv_simu = sitk.ReadImage(gtv_simu_path) # charger gtv simu 
     gtv_simu = sitk.GetArrayFromImage(gtv_simu)
     gtv_fraction = sitk.ReadImage(gtv_f_path) # charger gtv F5 
     gtv_fraction = sitk.GetArrayFromImage(gtv_fraction)
+        
+    dice_before = compute_dice(gtv_simu, gtv_fraction)
+    # print("Dice before initialization: ", dice_before)
 
-    mse_before = compute_mse(gtv_simu, gtv_fraction)
+    init_transform = initialize_transform_from_masks(gtv_simu, gtv_fraction) # init registration based on GTV centroids
+
+    gtv_fraction = apply_3D_transform2(gtv_fraction, gtv_simu, init_transform, mask=True) # register fraction GTV to simu GTV
+
+    dice_init = compute_dice(gtv_simu, gtv_fraction)
+    # print("Dice before registration: ", dice_init)
+
+    # apply init transform to fraction image
+    fraction = apply_3D_transform2(fraction, simu, init_transform, mask=False)
+
+    registration_method, T, metric_values = affine_registration(simu, fraction) # register fraction image to simu (finer one)
+
     # print("MSE before registration: ", mse_before)
 
     registered_gtv_fraction = apply_3D_transform2(gtv_fraction, gtv_simu, T, mask=True)
 
     # comparer gtv simu et F5 
-    mse_after = compute_mse(gtv_simu, registered_gtv_fraction)
-    # print("MSE after registration:", mse_after)
+    dice_after = compute_dice(gtv_simu, registered_gtv_fraction)
+    # print("Dice after registration:", dice_after)
 
     # sauvegarder les images
     transformed_img = sitk.GetImageFromArray(registered_gtv_fraction)
@@ -285,7 +424,7 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
 # 
     sitk.WriteImage(transformed_img, output_path)
 
-    return mse_before, mse_after
+    return dice_before, dice_after
 
 def compute_mse(y_true, y_pred): 
     return np.mean((y_true - y_pred)**2)
