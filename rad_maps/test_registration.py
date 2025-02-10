@@ -140,7 +140,7 @@ def main():
                     gtv_simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/mask_dir/{p}_IRM_MRIdian_gtv.nii'
                     dice_before, dice_after = r.register_gtv(simu_path, f_path, gtv_simu_path, gtv_f_path, output_path, normalization='histogram')
     
-            
+    print("Registration is over. Here are the results: ")
     print(f"Average dice before registration: {np.mean(dice_before_list)}")
     print(f"Average dice after registration: {np.mean(dice_after_list)}")
     print(dice_after_list)

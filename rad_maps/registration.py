@@ -68,7 +68,7 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
         sitk.GetImageFromArray(fixed_img_array),
         sitk.GetImageFromArray(moving_img_array),
         sitk.Euler3DTransform(),
-        sitk.CenteredTransformInitializerFilter.GEOMETRY,
+        sitk.CenteredTransformInitializerFilter.GEOMETRY # MOMENTS,
     )
 
     moving_resampled = sitk.Resample(
@@ -122,53 +122,6 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
     # final_transform = final_transform.GetBackTransform()
 
     return registration_method, final_transform, metric_values
-
-def compute_centroid(mask_array):
-    """
-    Compute the centroid of a 3D binary mask.
-    
-    Parameters:
-        mask_array (numpy.ndarray): 3D array of the binary mask.
-
-    Returns:
-        tuple: (x, y, z) centroid coordinates.
-    """
-    coords = np.argwhere(mask_array > 0)  # Get nonzero voxel coordinates
-    centroid = np.mean(coords, axis=0)  # Compute mean along each axis
-    return tuple(centroid)
-
-def compute_bounding_box_center(mask_array):
-    """
-    Compute the center of the bounding box of a 3D binary mask.
-    
-    Parameters:
-        mask_array (numpy.ndarray): 3D array of the binary mask.
-
-    Returns:
-        tuple: (x, y, z) center coordinates.
-    """
-    coords = np.argwhere(mask_array > 0)  # Get all nonzero voxel coordinates
-    min_bounds = coords.min(axis=0)
-    max_bounds = coords.max(axis=0)
-    center = (min_bounds + max_bounds) / 2.0  # Geometric center
-    return tuple(center)
-
-import scipy.ndimage
-
-def compute_distance_transform_centroid(mask_array):
-    """
-    Compute the centroid of a 3D binary mask using the distance transform.
-    
-    Parameters:
-        mask_array (numpy.ndarray): 3D array of the binary mask.
-
-    Returns:
-        tuple: (x, y, z) centroid coordinates.
-    """
-    distance_map = scipy.ndimage.distance_transform_edt(mask_array)
-    max_distance_coords = np.argwhere(distance_map == distance_map.max())  # Get max distance point
-    
-    return tuple(max_distance_coords[0])  # Return the most centered voxel
 
 def compute_distances(result, reference, connectivity=1, voxelspacing=None): 
     ''' Compute the distances of the voxels in a mask to the center. 
@@ -408,14 +361,22 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
     # apply init transform to fraction image
     fraction = apply_3D_transform2(fraction, simu, init_transform, mask=False)
 
-    registration_method, T, metric_values = affine_registration(simu, fraction) # register fraction image to simu (finer one)
+    dice_after = 0
+    run_counter = 0
+    while dice_after <= dice_before:
+        registration_method, T, metric_values = affine_registration(simu, fraction) # register fraction image to simu (finer one)
 
     # print("MSE before registration: ", mse_before)
 
-    registered_gtv_fraction = apply_3D_transform2(gtv_fraction, gtv_simu, T, mask=True)
+        registered_gtv_fraction = apply_3D_transform2(gtv_fraction, gtv_simu, T, mask=True)
 
     # comparer gtv simu et F5 
-    dice_after = compute_dice(gtv_simu, registered_gtv_fraction)
+        dice_after = compute_dice(gtv_simu, registered_gtv_fraction)
+        run_counter += 1
+        if run_counter > 1:
+            print(f"Run {run_counter}, Dice before registration: {dice_before}, Dice after registration: {dice_after}")
+        if run_counter == 5:
+            break
     # print("Dice after registration:", dice_after)
 
     # sauvegarder les images
