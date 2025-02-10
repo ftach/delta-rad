@@ -29,7 +29,7 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc
 
 import utils.sklearn_utils as sku 
 
-SCORER = 'roc_auc' 
+SCORER = 'f1_score' # 'roc_auc' 
 
 def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, nb_features, outcome):
     '''Initialize the parameters for the prediction algorithms. 
