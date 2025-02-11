@@ -3,6 +3,7 @@
 import numpy as np 
 import SimpleITK as sitk 
 import matplotlib.pyplot as plt
+import os 
 from scipy.ndimage import (
     _ni_support,
     binary_erosion,
@@ -68,7 +69,7 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
         sitk.GetImageFromArray(fixed_img_array),
         sitk.GetImageFromArray(moving_img_array),
         sitk.Euler3DTransform(),
-        sitk.CenteredTransformInitializerFilter.GEOMETRY # MOMENTS,
+        sitk.CenteredTransformInitializerFilter.GEOMETRY
     )
 
     moving_resampled = sitk.Resample(
@@ -317,8 +318,8 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
         normalization (str): The normalization method to use. Options are 'zscore', 'histogram' and None.
 
     Returns:
-        float: The MSE before registration.
-        float: The MSE after registration.
+        float: The Dice before registration.
+        float: The Dice after registration.
     '''
  
     # charger simu 
@@ -365,19 +366,13 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
     run_counter = 0
     while dice_after <= dice_before:
         registration_method, T, metric_values = affine_registration(simu, fraction) # register fraction image to simu (finer one)
-
-    # print("MSE before registration: ", mse_before)
-
         registered_gtv_fraction = apply_3D_transform2(gtv_fraction, gtv_simu, T, mask=True)
-
-    # comparer gtv simu et F5 
         dice_after = compute_dice(gtv_simu, registered_gtv_fraction)
         run_counter += 1
         if run_counter > 1:
             print(f"Run {run_counter}, Dice before registration: {dice_before}, Dice after registration: {dice_after}")
         if run_counter == 5:
             break
-    # print("Dice after registration:", dice_after)
 
     # sauvegarder les images
     transformed_img = sitk.GetImageFromArray(registered_gtv_fraction)
@@ -386,6 +381,92 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
     sitk.WriteImage(transformed_img, output_path)
 
     return dice_before, dice_after
+
+
+def register_images(simu_path: str, f_path: str, output_path: str, normalization: str = 'zscore'):
+    ''' Register the fraction image to the simulation image.
+    
+    Parameters:
+        simu_path (str): The path to the simulation image.  
+        f_path (str): The path to the fraction image.
+        output_path (str): The path to save the registered fraction image.
+        normalization (str): The normalization method to use. Options are 'zscore', 'histogram' and None.
+
+    Returns:
+        float: The MSE before registration.
+        float: The MSE after registration.
+    '''
+ 
+    # charger simu 
+    simu = sitk.ReadImage(simu_path)
+    
+    # TEST version 1
+    # orient = sitk.DICOMOrientImageFilter()
+    # orient.SetDesiredCoordinateOrientation('LPS')
+    # simu = orient.Execute(simu)
+    # simu.SetOrigin((-226.0, -221.99998474121094, -109.5))
+    # print(simu.GetDirection(), simu.GetOrigin())
+
+    # TEST version 2
+    # original_spacing = simu.GetSpacing()
+    # original_size = simu.GetSize()
+    # simu = sitk.DICOMOrient(simu, 'LPS')
+    # resample = sitk.ResampleImageFilter()
+    # resample.SetOutputSpacing(original_spacing)
+    # resample.SetSize(original_size)
+    # resample.SetOutputDirection(simu.GetDirection())
+    # resample.SetOutputOrigin(simu.GetOrigin())
+    # resample.SetTransform(sitk.Transform())
+    # resample.SetDefaultPixelValue(simu.GetPixelIDValue())
+    # simu = resample.Execute(simu)
+
+    simu = sitk.GetArrayFromImage(simu)
+    
+    # charger image F5
+    fraction = sitk.ReadImage(f_path)
+    fraction = sitk.DICOMOrient(fraction, 'LPS')
+    fraction = sitk.GetArrayFromImage(fraction)
+
+    if simu.shape != fraction.shape:
+        print("Images have different shapes.")
+        return None, None 
+
+    # normalize images
+    if normalization == 'zscore':
+        simu = (simu - np.mean(simu)) / np.std(simu)
+        fraction = (fraction - np.mean(fraction)) / np.std(fraction)
+    elif normalization == 'histogram':
+        fraction = match_histograms(fraction, simu)
+    else:
+        pass
+
+    mse_before = compute_mse(simu, fraction)
+
+    mse_after = mse_before
+    run_counter = 0
+    while mse_after >= mse_before:
+        registration_method, T, metric_values = affine_registration(simu, fraction) # register fraction image to simu (finer one)
+        registered_fraction = apply_3D_transform2(fraction, simu, T, mask=False)
+        mse_after = compute_mse(simu, registered_fraction)
+        run_counter += 1
+        if run_counter > 1:
+            print(f"Run {run_counter}, MSE before registration: {mse_before}, MSE after registration: {mse_after}")
+        if run_counter == 5:
+            break
+
+    # sauvegarder les images
+    transformed_fraction = sitk.GetImageFromArray(registered_fraction)
+    transformed_fraction = sitk.TransformGeometry(transformed_fraction, T) 
+    sitk.WriteImage(transformed_fraction, output_path)
+
+    
+    # simu_path = simu_path.replace('.nii', '_oriented.nii')
+    # # if os.path.exists(simu_path) == False:
+    # # simu = np.transpose(simu, (2, 1, 0))
+    # transformed_simu = sitk.GetImageFromArray(simu)
+    # sitk.WriteImage(transformed_simu, simu_path)
+
+    return mse_before, mse_after
 
 def compute_mse(y_true, y_pred): 
     return np.mean((y_true - y_pred)**2)
