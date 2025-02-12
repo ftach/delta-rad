@@ -28,11 +28,11 @@ def compute_feature_maps(fractions, patients, params_path, enabled_features):
             if os.path.exists(image_path) == False: # if fraction is missing 
                 continue 
             # mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_' + f + '_gtv.nii' # fraction GTV path
-            mask_path = 'Data/' + p + '/mask_dir/' + p + 'IRM_simu_mridian_gtv.nii' # standard simu GTV path
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv.nii' # standard simu GTV path
             if os.path.exists(mask_path) == False:
-                mask_path = 'Data/' + p + '/mask_dir/' + p + 'IRM_simu_MRIdian_gtv.nii' # other way to write GTV path
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv.nii' # other way to write GTV path
                 if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
-                    continue 
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_' + f + '_gtv.nii' # use fraction 1 GTV otherwise 
              
             gm.generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/' + f + '/', enabled_features)
             assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
@@ -175,7 +175,8 @@ def main():
     patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
     patients_filtered = [p for p in patients if patients not in patients_to_remove]
     patients_filtered = ['Patient76'] # TODO: remove this line after first test 
-    enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
+    # enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
+    enabled_features = ['original_firstorder_Kurtosis', 'original_glcm_Imc1', 'original_gldm_DependenceEntropy']
 
     # COMPUTE SIMPLE FEATURE MAPS AND ANALYZE THEIR PARAMETERS 
     # compute_feature_maps(fractions, patients_filtered, params, enabled_features) 
