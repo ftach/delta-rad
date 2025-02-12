@@ -9,7 +9,8 @@ import pandas as pd
 import shutil
 
 def compute_feature_maps(fractions, patients, params_path, enabled_features):
-    '''Compute feature maps for all given patients and fractions.
+    '''Compute feature maps for all given patients and fractions. Save them as .nrrd files. 
+    Computations are made on fractions MRI that are registered to simulation MRI. Mask is GTV from simulation MRI. 
     Parameters:
     ----------
         fractions: list, list of fractions to compute feature maps for;
@@ -20,19 +21,22 @@ def compute_feature_maps(fractions, patients, params_path, enabled_features):
     Returns:    
     '''
     
-    errors = []
     for f in fractions:
         for p in patients:
-            image_path = 'Data/' + p + '/img_dir/' + p + '_mridian_' + f + '.nii'
-            mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_' + f + '_gtv.nii' 
-            try: 
-                gm.generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/' + f + '/', enabled_features)
-                assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
-            except ValueError: 
-                print('Error in ' + p + ' ' + f)
-                errors.append(p + ' ' + f)
-                continue
-    print(errors)
+            # if image == simu: modifications TODO 
+            image_path = 'Data/registered_' + p + '/img_dir/' + p + '_mridian_' + f + '.nii'
+            if os.path.exists(image_path) == False: # if fraction is missing 
+                continue 
+            # mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_' + f + '_gtv.nii' # fraction GTV path
+            mask_path = 'Data/' + p + '/mask_dir/' + p + 'IRM_simu_mridian_gtv.nii' # standard simu GTV path
+            if os.path.exists(mask_path) == False:
+                mask_path = 'Data/' + p + '/mask_dir/' + p + 'IRM_simu_MRIdian_gtv.nii' # other way to write GTV path
+                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
+                    continue 
+             
+            gm.generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/' + f + '/', enabled_features)
+            assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
+            
 
 def compute_delta_maps(fractions, patients, enabled_features):
     '''Compute delta feature maps for all given patients and fractions. Save them as .nrrd file. 
@@ -173,17 +177,17 @@ def main():
     patients_filtered = ['Patient76'] # TODO: remove this line after first test 
     enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
 
-    # COMPUTE SIMPLE FEATURE MAPS
-    #compute_feature_maps(fractions, patients_filtered, params, enabled_features)
-    #compute_params(fractions, patients_filtered, enabled_features) 
+    # COMPUTE SIMPLE FEATURE MAPS AND ANALYZE THEIR PARAMETERS 
+    # compute_feature_maps(fractions, patients_filtered, params, enabled_features) 
+    # compute_params(fractions, patients_filtered, enabled_features) 
 
     # COMPUTE DELTA FEATURES MAPS 
-    # compute_feature_maps(fractions, patients_filtered, params, enabled_features) # optional if already computed
-    compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
-    compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed
-    quit()
-    #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3/original_firstorder_Kurtosis.nrrd', 2)
-    compute_delta_params(fractions, patients_filtered, enabled_features)
+    # TODO: modify .yaml file to have same pre-processing as Gladis 
+    compute_feature_maps(fractions, patients_filtered, params, enabled_features) # optional if already computed 
+    # compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
+    # compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed
+    # #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3/original_firstorder_Kurtosis.nrrd', 2)
+    # compute_delta_params(fractions, patients_filtered, enabled_features)
 
 if __name__ == '__main__':
     main()

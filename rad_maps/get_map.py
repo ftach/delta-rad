@@ -24,8 +24,6 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled
     """
     start_time = time.time()
     extractor = featureextractor.RadiomicsFeatureExtractor(parameter_path, store_path)
-    # extractor.disableAllImageTypes()
-    # extractor.disableAllFeatures()
 
     # compute features
     result = extractor.execute(img_path, roi_path, voxelBased=True)
