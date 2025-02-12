@@ -506,7 +506,7 @@ def find_perf_alg(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, 
                                       AUC: {sub_outcome_results[nb_features]['roc_auc']}, Sensitivity: {sub_outcome_results[nb_features]['sensitivity']}, Specificity: {sub_outcome_results[nb_features]['specificity']}, '\n' \
                                       Features: {sub_outcome_results[nb_features]['features']}")
 
-def find_perf_alg2(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, pred_algo_list, threshold: float = 0.7):
+def find_perf_alg2(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, pred_algo_list, threshold: float = 0.7, metric: str = 'test_auc'):
     '''Find the algorithms with good performance based on a given threshold.
     Args:
         results (dict): A dictionary containing the results to be plotted.
@@ -527,11 +527,22 @@ def find_perf_alg2(results, delta_rad_tables, outcomes_list, feat_sel_algo_list,
                     sub_outcome_results = results[table][feat_sel_algo][pred_algo][outcome]
                     for nb_features in sub_outcome_results.keys():
                         if sub_outcome_results[nb_features]['sensitivity'] != 'None':
-                            if (np.mean(sub_outcome_results[nb_features]['test_auc']) > threshold): # & (np.mean(sub_outcome_results[nb_features]['specificity']) > threshold):
-                                print(f"Table: {table}, Outcome: {outcome}, Feature Selection Algorithm: {feat_sel_algo}, Prediction Algorithm: {pred_algo}, Number of Features: {nb_features}, '\n' \
-                                      TEST AUC: {np.mean(sub_outcome_results[nb_features]['test_auc'])}, Sensitivity: {np.mean(sub_outcome_results[nb_features]['sensitivity'])}, Specificity: {np.mean(sub_outcome_results[nb_features]['specificity'])}, '\n' \
-                                      Features: {sub_outcome_results[nb_features]['features']}")
-                                
+                            if metric == 'test_auc': 
+                                if (np.mean(sub_outcome_results[nb_features]['test_auc']) > threshold): # & (np.mean(sub_outcome_results[nb_features]['specificity']) > threshold):
+                                    print(f"Table: {table}, Outcome: {outcome}, Feature Selection Algorithm: {feat_sel_algo}, Prediction Algorithm: {pred_algo}, Number of Features: {nb_features}, '\n' \
+                                          TEST AUC: {np.mean(sub_outcome_results[nb_features]['test_auc'])}, Sensitivity: {np.mean(sub_outcome_results[nb_features]['sensitivity'])}, Specificity: {np.mean(sub_outcome_results[nb_features]['specificity'])}, '\n' \
+                                          Features: {sub_outcome_results[nb_features]['features']}")
+                            elif metric == 'sensitivity': 
+                                if np.mean(sub_outcome_results[nb_features]['sensitivity']) > threshold: 
+                                    print(f"Table: {table}, Outcome: {outcome}, Feature Selection Algorithm: {feat_sel_algo}, Prediction Algorithm: {pred_algo}, Number of Features: {nb_features}, '\n' \
+                                          TEST AUC: {np.mean(sub_outcome_results[nb_features]['test_auc'])}, Sensitivity: {np.mean(sub_outcome_results[nb_features]['sensitivity'])}, Specificity: {np.mean(sub_outcome_results[nb_features]['specificity'])}, '\n' \
+                                          Features: {sub_outcome_results[nb_features]['features']}")
+                            elif metric == 'specificity':
+                                if np.mean(sub_outcome_results[nb_features]['specificity']) > threshold: 
+                                    print(f"Table: {table}, Outcome: {outcome}, Feature Selection Algorithm: {feat_sel_algo}, Prediction Algorithm: {pred_algo}, Number of Features: {nb_features}, '\n' \
+                                          TEST AUC: {np.mean(sub_outcome_results[nb_features]['test_auc'])}, Sensitivity: {np.mean(sub_outcome_results[nb_features]['sensitivity'])}, Specificity: {np.mean(sub_outcome_results[nb_features]['specificity'])}, '\n' \
+                                          Features: {sub_outcome_results[nb_features]['features']}")
+                            
 def find_robust_alg(results, delta_rad_tables, outcomes_list, feat_sel_algo_list, pred_algo_list, threshold: float = 0.8):
     '''Find the robust algorithms based on a given threshold.
     Args:
