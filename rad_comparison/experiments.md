@@ -63,3 +63,6 @@ Re-run for outcome décès with random split.
 
 ## 06/02
 Implemented nested-cross validation with feature selection before cross-validation
+
+## 12/02
+Tested SMOTE to deal with imbalanced classes. 

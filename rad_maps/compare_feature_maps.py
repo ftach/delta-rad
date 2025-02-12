@@ -20,14 +20,16 @@ def compute_feature_maps(fractions, patients, params_path, enabled_features):
         
     Returns:    
     '''
-    
+    errors = []
     for f in fractions:
         for p in patients:
             # if image == simu: modifications TODO 
             image_path = 'Data/' + p + '/img_dir/registered_' + p + '_mridian_' + f + '.nii'
             if os.path.exists(image_path) == False: # if fraction is missing 
-                print('Image not found for ' + p + ' ' + f)
-                continue 
+                image_path = 'Data/' + p + '/img_dir/' + p + '_mridian_' + f + '_oriented.nii' # if there was no simu, we don't have registered in front of the name
+                if os.path.exists(image_path) == False:
+                    print('Image not found for ' + p + ' ' + f)
+                    continue 
             mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
             if os.path.exists(mask_path) == False:                
                 mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
@@ -40,7 +42,9 @@ def compute_feature_maps(fractions, patients, params_path, enabled_features):
                 assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
             except ValueError: 
                 print('Feature map not created for ', p, ' ', f)
+                errors.append(p)
                 continue
+    print('Feature maps not computed for ', errors)
             
 
 def compute_delta_maps(fractions, patients, enabled_features):

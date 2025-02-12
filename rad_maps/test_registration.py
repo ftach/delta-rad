@@ -59,6 +59,7 @@ def main():
     mse_after_list = []
 
     patient_list = [p for p in os.listdir('/home/tachennf/Documents/delta-rad/rad_maps/Data/')]
+    patient_list = ['Patient24']
     for p in patient_list:
         forbidden_patients = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80']
         if p in forbidden_patients:
@@ -68,14 +69,18 @@ def main():
         # check that we have patient folder 
         if os.path.exists(f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}') == False: 
             continue
+
+        # check that we have simu image 
         simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_IRM_simu_mridian.nii'
-        if os.path.exists(simu_path) or os.path.exists(f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_IRM_MRIdian.nii'): # simu exists
+        if os.path.exists(simu_path) or os.path.exists(f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_IRM_simu_MRIdian.nii'): # simu exists
             for i in range(1, 6): 
                 f_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_mridian_ttt_{i}.nii'
                 if os.path.exists(f_path) == False: # if fraction is missing 
                     continue
 
                 output_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/registered_{p}_mridian_ttt_{i}.nii'
+                if os.path.exists(output_path): # if image is already registered
+                    continue
 
                 if os.path.exists(simu_path): # standard path 
                     mse_before, mse_after = r.register_images(simu_path, f_path, output_path, normalization='histogram')
@@ -90,14 +95,14 @@ def main():
         else: # simu does not exist 
             for i in range(2, 6): 
                 simu_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_mridian_ttt_1.nii' # simu is F1 
-                
+
                 f_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/{p}_mridian_ttt_{i}.nii'
                 if os.path.exists(f_path) == False: # if fraction is missing 
                     continue
 
-                output_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/mask_dir/registered_{p}_mridian_ttt_{i}_gtv.nii'
+                output_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/registered_{p}_mridian_ttt_{i}.nii'
 
-                if os.path.exists(simu_path): # standard path 
+                if os.path.exists(simu_path):
                     mse_before, mse_after = r.register_images(simu_path, f_path, output_path, normalization='histogram')
 
                 else: # MRIdian path 
