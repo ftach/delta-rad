@@ -59,7 +59,6 @@ def main():
     mse_after_list = []
 
     patient_list = [p for p in os.listdir('/home/tachennf/Documents/delta-rad/rad_maps/Data/')]
-    patient_list = ['Patient24']
     for p in patient_list:
         forbidden_patients = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80']
         if p in forbidden_patients:
@@ -80,6 +79,7 @@ def main():
 
                 output_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/registered_{p}_mridian_ttt_{i}.nii'
                 if os.path.exists(output_path): # if image is already registered
+                    print('Image already registered')
                     continue
 
                 if os.path.exists(simu_path): # standard path 
@@ -101,6 +101,9 @@ def main():
                     continue
 
                 output_path = f'/home/tachennf/Documents/delta-rad/rad_maps/Data/{p}/img_dir/registered_{p}_mridian_ttt_{i}.nii'
+                if os.path.exists(output_path): # if image is already registered
+                    print('Image already registered')
+                    continue
 
                 if os.path.exists(simu_path):
                     mse_before, mse_after = r.register_images(simu_path, f_path, output_path, normalization='histogram')
