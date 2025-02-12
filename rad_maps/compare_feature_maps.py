@@ -35,8 +35,12 @@ def compute_feature_maps(fractions, patients, params_path, enabled_features):
                     print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
                     mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
              
-            gm.generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/' + f + '/', enabled_features)
-            assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
+            try: 
+                gm.generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/' + f + '/', enabled_features)
+                assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
+            except ValueError: 
+                print('Feature map not created for ', p, ' ', f)
+                continue
             
 
 def compute_delta_maps(fractions, patients, enabled_features):
@@ -184,10 +188,11 @@ def main():
     # get list of folders in Data/ if the name of the folder begins by Patient 
     folder_path = '/home/tachennf/Documents/delta-rad/rad_maps/Data/'
     patients_list = os.listdir(folder_path)
-
+    print(len(patients_list))
     # patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
     patients_to_remove = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80','Patient 85']
-    patients_filtered = [p for p in patients_list if patients_list not in patients_to_remove]
+    patients_filtered = [p for p in patients_list if p not in patients_to_remove]
+    print(len(patients_filtered))
     # enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
     enabled_features = ['original_firstorder_Kurtosis', 'original_gldm_DependenceEntropy'] # 'original_glcm_Imc1', # TODO/ deal size issue witg glcm_Imc1 features
 
