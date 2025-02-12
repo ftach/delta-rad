@@ -58,8 +58,7 @@ def main():
     mse_before_list = []
     mse_after_list = []
 
-    # patient_list = [p for p in os.listdir('/home/tachennf/Documents/delta-rad/rad_maps/Data/')]
-    patient_list = ['Patient76']
+    patient_list = [p for p in os.listdir('/home/tachennf/Documents/delta-rad/rad_maps/Data/')]
     for p in patient_list:
         forbidden_patients = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80']
         if p in forbidden_patients:

@@ -51,19 +51,21 @@ def compute_delta_maps(fractions, patients, enabled_features):
 
     '''
     for p in patients: 
+        print(p)
         for f in enabled_features:
-            try: 
-                gm.generate_delta_map(mask_paths=['Data/' + p + '/mask_dir/' + p + '_mridian_' + fractions[0] + '_gtv.nii', 'Data/' + p + '/mask_dir/' + p + '_mridian_' + fractions[1] + '_gtv.nii'],  
-                    map_paths=['Data/' + p + '/rad_maps/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + fractions[1] + '/' + f + '.nrrd'], 
-                                      store_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f)
-            except RuntimeError: 
-                continue
-            except ValueError: 
-                print('Shape Error in ' + p + ' ' + f)
-                continue
-            except FileNotFoundError: 
-                print('File not found in ' + p + ' ' + f)
-                continue
+            print(f)
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            if os.path.exists(mask_path) == False:    
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
+                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
+                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
+            
+            gm.generate_delta_map2(mask_path=mask_path,  
+                map_paths=['Data/' + p + '/rad_maps/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + fractions[1] + '/' + f + '.nrrd'], 
+                                  store_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f)
+        print('Delta maps computed for ', p)
+    
 
 def compute_clustered_delta_maps(fractions, patients, enabled_features, k):
     '''Compute clustered delta feature maps for all given patients and fractions. Save them as .nrrd file. 
@@ -81,10 +83,19 @@ def compute_clustered_delta_maps(fractions, patients, enabled_features, k):
     '''
     for p in patients: 
         for f in enabled_features:
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            if os.path.exists(mask_path) == False:    
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
+                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
+                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
+            
             cl.gen_clustered_map(delta_map_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '.nrrd', 
-                                    mask_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '_mask.npy', 
+                                    mask_path=mask_path, 
                                     store_path='Data/' + p + '/rad_maps/clustered_delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f, k=k)
                 
+            print('Clustered delta maps computed for ', p)
+            
 def compute_params(fractions, patients, enabled_features): 
     '''Compute intensity parameters for each feature map and save in a csv file.
     Parameters:
@@ -179,7 +190,7 @@ def main():
     patients_filtered = [p for p in patients_list if patients_list not in patients_to_remove]
     patients_filtered = ['Patient76'] # TODO: remove this line after first test 
     # enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
-    enabled_features = ['original_firstorder_Kurtosis', 'original_glcm_Imc1', 'original_gldm_DependenceEntropy']
+    enabled_features = ['original_firstorder_Kurtosis', 'original_gldm_DependenceEntropy'] # 'original_glcm_Imc1', # TODO/ deal size issue witg glcm_Imc1 features
 
     # COMPUTE SIMPLE FEATURE MAPS AND ANALYZE THEIR PARAMETERS 
     # compute_feature_maps(fractions, patients_filtered, params, enabled_features) 
@@ -187,9 +198,10 @@ def main():
 
     # COMPUTE DELTA FEATURES MAPS 
     # TODO: modify .yaml file to have same pre-processing as Gladis 
-    compute_feature_maps(fractions, patients_filtered, params, enabled_features) # optional if already computed 
+    # compute_feature_maps(fractions, patients_filtered, params, enabled_features) # optional if already computed 
+    
     # compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
-    # compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed
+    compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed
     # #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3/original_firstorder_Kurtosis.nrrd', 2)
     # compute_delta_params(fractions, patients_filtered, enabled_features)
 

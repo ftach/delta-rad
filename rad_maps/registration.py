@@ -410,7 +410,6 @@ def register_images(simu_path: str, f_path: str, output_path: str, normalization
     if ('Patient20' not in simu_path) or ('Patient32' not in simu_path):
         simu = np.transpose(simu, (0, 2, 1)) # invert x and y 
         fraction = np.transpose(fraction, (0, 2, 1)) # invert x and y
-        print(sitk.GetImageFromArray(fraction).GetDirection(), sitk.GetImageFromArray(fraction).GetOrigin())
 
     if simu.shape != fraction.shape:
         print("Images have different shapes.")

@@ -61,8 +61,10 @@ def gen_clustered_map(delta_map_path, mask_path, store_path, feature_name, k=3):
     clustered_map = otsu_cluster_map(delta_map, k)
     clustered_map[clustered_map == 0] = -1 # change the cluster 0 to -1 - decrease 
 
-    mask = np.load(mask_path) # load mask 
-
+    # mask = np.load(mask_path) # load mask 
+    mask = sitk.GetArrayFromImage(sitk.ReadImage(mask_path)) # load mask nrrd
+    mask = np.transpose(mask, (2, 1, 0))
+    
     clustered_map = clustered_map.astype(float)
     clustered_map[mask == 0] = np.nan # mask the clustered map 
 
