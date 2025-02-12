@@ -15,6 +15,9 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
+from imblearn.over_sampling import SMOTE
+from collections import Counter
+
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -88,17 +91,23 @@ def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_
     
     return gridcvs, results
 
-def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features):
+def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote: bool = False):
     for c, (outer_train_idx, outer_valid_idx) in enumerate(skfold.split(X_filtered, y)):
         for pred_algo, gs_est in sorted(gridcvs.items()):
             # print('outer fold %d/5 | tuning %-8s' % (c, pred_algo), end='')
-
+            X_train = X_filtered.iloc[outer_train_idx]
+            y_train = y.iloc[outer_train_idx]
+            X_test = X_filtered.iloc[outer_valid_idx]
+            y_test = y.iloc[outer_valid_idx]
+            if smote: # use smote to balance the dataset
+                sm = SMOTE(random_state=42, sampling_strategy='minority')
+                X_train, y_train = sm.fit_resample(X_train, y_train) 
             # The inner loop for hyperparameter tuning
-            gs_est.fit(X_filtered.iloc[outer_train_idx], y.iloc[outer_train_idx]) # hyperparameter tuning
-            optimal_threshold = compute_opt_threshold(gs_est, X_filtered.iloc[outer_train_idx], y.iloc[outer_train_idx]) # compute optimal threshold
+            gs_est.fit(X_train, y_train) # hyperparameter tuning
+            optimal_threshold = compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold
 
             # Computing the test metrics
-            test_auc, sensitivity, specificity = compute_test_metrics(gs_est, X_filtered.iloc[outer_valid_idx], y.iloc[outer_valid_idx], optimal_threshold)
+            test_auc, sensitivity, specificity = compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
             # print(' | Train AUC: %.2f%% Test AUC: %.2f%% sens: %.2f%% spec: %.2f%%' % (
             #     100 * gs_est.best_score_, 100 * test_auc, 100 * sensitivity, 100 * specificity))
                 

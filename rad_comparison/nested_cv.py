@@ -24,11 +24,12 @@ def main():
 
     ###################### INITIALIZATION ##############################
     folder_path = '/home/tachennf/Documents/delta-rad/extracted_radiomics/'
-    delta_rad_tables = ['f3_gtv.csv', 'simu_gtv.csv', 'f1_gtv.csv', 'f5_gtv.csv', 'rd_simu_f1_gtv.csv', 'rd_simu_f3_gtv.csv', 'rd_simu_f5_gtv.csv', 'rd_f1_f3_gtv.csv', 'rd_f1_f5_gtv.csv']
-    feat_sel_algo_list = ['ANOVA_PERC', 'RDM_SEL', 'NO_SEL', 'RF']  ## , 'ADABOOST', , 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO'
+    delta_rad_tables = ['rd_f1_f5_gtv.csv'] # 'f3_gtv.csv', 'simu_gtv.csv', 'f1_gtv.csv', 'f5_gtv.csv', 'rd_simu_f1_gtv.csv', 'rd_simu_f3_gtv.csv', 'rd_simu_f5_gtv.csv', 'rd_f1_f3_gtv.csv', 
+    feat_sel_algo_list = ['ANOVA_PERC', 'RDM_SEL', 'NO_SEL', 'RF']  # # , 'ADABOOST', , 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO'
     outcome_csv = 'outcomes.csv'
-    results_file = 'json_results/results_ncv_test2.json'
-    pred_algo_list = ['RF', 'ADABOOST', 'LOGREGRIDGE', 'PSVM', 'KNN',  'BAGG', 'MLP', 'QDA']
+    smote = True
+    results_file = 'json_results/results_ncv_smote.json'
+    pred_algo_list = ['RF', 'ADABOOST', 'LOGREGRIDGE', 'PSVM', 'KNN',  'BAGG', 'MLP', 'QDA'] # 
     MAX_FEATURES = 3
     outcomes_list = ['Récidive Locale'] # 'Récidive Méta', 
     results = {
@@ -76,7 +77,7 @@ def main():
                         skfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42) # outer folds
 
                         # OUTER LOOP FOR ALGORITHM SELECTION 
-                        results = p.make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features)
+                        results = p.make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote)
                         print("Predictions done for ", nb_features, " features.")
 
                 else: # no selection 
@@ -86,7 +87,7 @@ def main():
                     skfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42) # outer folds
  
                     # OUTER LOOP FOR ALGORITHM SELECTION  
-                    results = p.make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features)
+                    results = p.make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote)
                     print("Predictions done for ", nb_features, " features.")
 
     results_ser = dataset.convert_to_list(results)
