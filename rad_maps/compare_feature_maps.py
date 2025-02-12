@@ -24,15 +24,16 @@ def compute_feature_maps(fractions, patients, params_path, enabled_features):
     for f in fractions:
         for p in patients:
             # if image == simu: modifications TODO 
-            image_path = 'Data/registered_' + p + '/img_dir/' + p + '_mridian_' + f + '.nii'
+            image_path = 'Data/' + p + '/img_dir/registered_' + p + '_mridian_' + f + '.nii'
             if os.path.exists(image_path) == False: # if fraction is missing 
+                print('Image not found for ' + p + ' ' + f)
                 continue 
-            # mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_' + f + '_gtv.nii' # fraction GTV path
-            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv.nii' # standard simu GTV path
-            if os.path.exists(mask_path) == False:
-                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv.nii' # other way to write GTV path
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            if os.path.exists(mask_path) == False:                
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
                 if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
-                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_' + f + '_gtv.nii' # use fraction 1 GTV otherwise 
+                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
              
             gm.generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/' + f + '/', enabled_features)
             assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
@@ -170,10 +171,12 @@ def main():
 
     fractions = ['ttt_1', 'ttt_5'] # 
     # get list of folders in Data/ if the name of the folder begins by Patient 
-    patients = os.listdir('Data/')
-    patients = [p for p in patients if p.startswith('Patient')]
-    patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
-    patients_filtered = [p for p in patients if patients not in patients_to_remove]
+    folder_path = '/home/tachennf/Documents/delta-rad/rad_maps/Data/'
+    patients_list = os.listdir(folder_path)
+
+    # patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
+    patients_to_remove = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80','Patient 85']
+    patients_filtered = [p for p in patients_list if patients_list not in patients_to_remove]
     patients_filtered = ['Patient76'] # TODO: remove this line after first test 
     # enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
     enabled_features = ['original_firstorder_Kurtosis', 'original_glcm_Imc1', 'original_gldm_DependenceEntropy']

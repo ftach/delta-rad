@@ -410,6 +410,7 @@ def register_images(simu_path: str, f_path: str, output_path: str, normalization
     if ('Patient20' not in simu_path) or ('Patient32' not in simu_path):
         simu = np.transpose(simu, (0, 2, 1)) # invert x and y 
         fraction = np.transpose(fraction, (0, 2, 1)) # invert x and y
+        print(sitk.GetImageFromArray(fraction).GetDirection(), sitk.GetImageFromArray(fraction).GetOrigin())
 
     if simu.shape != fraction.shape:
         print("Images have different shapes.")
@@ -440,9 +441,7 @@ def register_images(simu_path: str, f_path: str, output_path: str, normalization
             
 
     # sauvegarder les images
-    transformed_fraction = sitk.GetImageFromArray(registered_fraction)
-    transformed_fraction = sitk.TransformGeometry(transformed_fraction, T) 
-    sitk.WriteImage(transformed_fraction, output_path)
+    sitk.WriteImage(sitk.GetImageFromArray(registered_fraction), output_path)
 
     # save well oriented simu image
     simu = sitk.GetImageFromArray(simu)
