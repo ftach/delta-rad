@@ -399,33 +399,17 @@ def register_images(simu_path: str, f_path: str, output_path: str, normalization
  
     # charger simu 
     simu = sitk.ReadImage(simu_path)
-    
-    # TEST version 1
-    # orient = sitk.DICOMOrientImageFilter()
-    # orient.SetDesiredCoordinateOrientation('LPS')
-    # simu = orient.Execute(simu)
-    # simu.SetOrigin((-226.0, -221.99998474121094, -109.5))
-    # print(simu.GetDirection(), simu.GetOrigin())
-
-    # TEST version 2
-    # original_spacing = simu.GetSpacing()
-    # original_size = simu.GetSize()
-    # simu = sitk.DICOMOrient(simu, 'LPS')
-    # resample = sitk.ResampleImageFilter()
-    # resample.SetOutputSpacing(original_spacing)
-    # resample.SetSize(original_size)
-    # resample.SetOutputDirection(simu.GetDirection())
-    # resample.SetOutputOrigin(simu.GetOrigin())
-    # resample.SetTransform(sitk.Transform())
-    # resample.SetDefaultPixelValue(simu.GetPixelIDValue())
-    # simu = resample.Execute(simu)
-
+    simu = sitk.Cast(simu, sitk.sitkFloat32)
     simu = sitk.GetArrayFromImage(simu)
     
     # charger image F5
     fraction = sitk.ReadImage(f_path)
-    fraction = sitk.DICOMOrient(fraction, 'LPS')
+    fraction = sitk.Cast(fraction, sitk.sitkFloat32)
     fraction = sitk.GetArrayFromImage(fraction)
+
+    if ('Patient20' not in simu_path) or ('Patient32' not in simu_path):
+        simu = np.transpose(simu, (0, 2, 1)) # invert x and y 
+        fraction = np.transpose(fraction, (0, 2, 1)) # invert x and y
 
     if simu.shape != fraction.shape:
         print("Images have different shapes.")
@@ -453,18 +437,17 @@ def register_images(simu_path: str, f_path: str, output_path: str, normalization
             print(f"Run {run_counter}, MSE before registration: {mse_before}, MSE after registration: {mse_after}")
         if run_counter == 5:
             break
+            
 
     # sauvegarder les images
     transformed_fraction = sitk.GetImageFromArray(registered_fraction)
     transformed_fraction = sitk.TransformGeometry(transformed_fraction, T) 
     sitk.WriteImage(transformed_fraction, output_path)
 
-    
-    # simu_path = simu_path.replace('.nii', '_oriented.nii')
-    # # if os.path.exists(simu_path) == False:
-    # # simu = np.transpose(simu, (2, 1, 0))
-    # transformed_simu = sitk.GetImageFromArray(simu)
-    # sitk.WriteImage(transformed_simu, simu_path)
+    # save well oriented simu image
+    simu = sitk.GetImageFromArray(simu)
+    simu_path = simu_path.replace('.nii', '_oriented.nii')
+    sitk.WriteImage(simu, simu_path)
 
     return mse_before, mse_after
 
