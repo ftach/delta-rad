@@ -10,11 +10,13 @@ def main():
         forbidden_patients = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80', 'Patient20', 'Patient32']
         if p in forbidden_patients:
             continue
-        mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv.nii' # standard simu GTV path
+        mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv.nii' 
+        # mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv.nii' # standard simu GTV path
         if os.path.exists(mask_path) == False:
-            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv.nii' # other way to write GTV path
-            if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
-                continue 
+            continue
+            # mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv.nii' # other way to write GTV path
+            # if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
+            #     continue 
         gtv_simu = sitk.ReadImage(mask_path)
         gtv_simu_array = sitk.GetArrayFromImage(gtv_simu)
         gtv_simu_array = np.transpose(gtv_simu_array, (0, 2, 1))# orient GTV in the right direction
