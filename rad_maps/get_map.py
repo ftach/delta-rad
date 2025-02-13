@@ -8,6 +8,7 @@ import SimpleITK as sitk
 import time
 import six 
 import os 
+from skimage.morphology import ball, erosion
 
 def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled_features):
     """
@@ -128,7 +129,8 @@ def generate_delta_map2(mask_path, map_paths, feature_name, store_path):
 
     mini_map2_img = sitk.ReadImage(map_paths[1])
     mini_map2_array = sitk.GetArrayFromImage(mini_map2_img)
-    mini_map2 = np.transpose(mini_map2_array, (2, 1, 0)) # z, y, x -> x, y, z
+    mini_map2 = np.transpose(mini_map2_array, (2, 1, 0)) # z, y, x -> x, y, z*
+    
 
     # Retrieve original image shape
     map1 = full_size_mask.copy()
@@ -136,11 +138,19 @@ def generate_delta_map2(mask_path, map_paths, feature_name, store_path):
     map1[np.where(full_size_mask == 1)] = mini_map1[np.where(mini_map1 != 0)]
     map2[np.where(full_size_mask == 1)] = mini_map2[np.where(mini_map2 != 0)]
 
+    # # normalize the maps to 0 - 1 range 
+    map1 = (map1 - np.nanmin(map1)) / (np.nanmax(map1) - np.nanmin(map1))
+    map2 = (map2 - np.nanmin(map2)) / (np.nanmax(map2) - np.nanmin(map2))
+
     # check if the two maps have the same shape, otherwise use padding
     if map1.shape != map2.shape: 
         map1, map2 = pad_img(map1, map2)
 
+    map2 = map2 + 1e-5 # add a small value to avoid division by zero
+
     full_size_delta_map = (map1 - map2) / map2 # compute delta map 
+
+    full_size_delta_map = (full_size_delta_map - np.nanmin(full_size_delta_map)) / (np.nanmax(full_size_delta_map) - np.nanmin(full_size_delta_map)) # normalize
 
     full_size_delta_map[np.abs(full_size_delta_map) == 1] = np.nan # we set to nan valus that are on the border of the delta-rad map 
 

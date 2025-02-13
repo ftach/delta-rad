@@ -59,6 +59,7 @@ def gen_clustered_map(delta_map_path, mask_path, store_path, feature_name, k=3):
     
     # clustered_map = kmeans_cluster_map(delta_map, k)
     clustered_map = otsu_cluster_map(delta_map, k)
+    
     clustered_map[clustered_map == 0] = -1 # change the cluster 0 to -1 - decrease 
 
     # mask = np.load(mask_path) # load mask 
