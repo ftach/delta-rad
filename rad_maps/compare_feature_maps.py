@@ -178,7 +178,8 @@ def compute_delta_params(fractions, patients, enabled_features):
         stored_params_df = pd.DataFrame(index=patients, columns=['mean', 'std', 'min', 'max', 'cv', 'skewness', 'kurtosis']) # create df with patient ID as index
 
         for p in patients:
-            rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + feature + '.nrrd')
+            print(p)
+            rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + feature + '.npy')
             if rad_params is not None:
                 stored_params_df.loc[p] = rad_params
         if not os.path.exists('Data/intensity_params/' + fractions[0] + '_' + fractions[1] + '/'):
@@ -196,13 +197,11 @@ def main():
     fractions = ['ttt_1', 'ttt_5'] # 
     # get list of folders in Data/ if the name of the folder begins by Patient 
     folder_path = '/home/tachennf/Documents/delta-rad/rad_maps/Data/'
-    patients_list = os.listdir(folder_path)
-    print(len(patients_list))
+    patients_list = [p for p in os.listdir(folder_path) if p.startswith('Patient')]
     # patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
     patients_to_remove = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80','Patient 85', 'Patient79', 'Patient54', 'Patient86', 'Patient20', 'Patient64', 'Patient61', 'Patient71'] # 54, 61, 64, 66, 71, 79, 86 don't have F5
     patients_filtered = [p for p in patients_list if p not in patients_to_remove]
     # patients_filtered = ['Patient83']
-    # print(len(patients_filtered))
 
     # enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
     enabled_features = ['original_firstorder_Kurtosis', 'original_gldm_DependenceEntropy'] # 'original_glcm_Imc1', # TODO/ deal size issue witg glcm_Imc1 features
@@ -214,10 +213,9 @@ def main():
     # COMPUTE DELTA FEATURES MAPS 
     # TODO: modify .yaml file to have same pre-processing as Gladis 
     # compute_feature_maps(fractions, patients_filtered, params, enabled_features) # optional if already computed 
-    compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
-    compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed
-    # #gm.disp_map('Data/Patient77/rad_maps/delta/ttt_1_ttt_3/original_firstorder_Kurtosis.nrrd', 2)
-    # compute_delta_params(fractions, patients_filtered, enabled_features)
+    # compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
+    # compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed
+    compute_delta_params(fractions, patients_filtered, enabled_features)
 
 if __name__ == '__main__':
     main()

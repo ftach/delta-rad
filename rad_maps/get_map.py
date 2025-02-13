@@ -237,25 +237,24 @@ def compute_feature_map_params(feature_map_path):
         Compute intensity parameters of a given feature map.
     Parameters
     ----------
-    feature_map_path: str, feature map path to .nrrd file;
+    feature_map_path: str, feature map path to .npy file;
 
     Returns
     mean, std, min, max, coefficient of variation, skewness, kurtosis
     -------
     """
     try: 
-        feature_map = sitk.ReadImage(feature_map_path)
-        feature_map = sitk.GetArrayFromImage(feature_map)
+        feature_map = np.load(feature_map_path)
     except RuntimeError:
         print('Feature map not found. File path: ' + feature_map_path)
         return None
     
-    mean = np.mean(feature_map)
-    std = np.std(feature_map)
-    max_val = np.max(feature_map)
-    min_val = np.min(feature_map)
+    mean = np.nanmean(feature_map) # we use the maps with nan so that the 0 values are not taken into account
+    std = np.nanstd(feature_map)
+    max_val = np.nanmax(feature_map)
+    min_val = np.nanmin(feature_map)
     cv = std / mean
-    skewness = np.mean(((feature_map - mean) / std) ** 3)
-    kurtosis = np.mean(((feature_map - mean) / std) ** 4)
+    skewness = np.nanmean(((feature_map - mean) / std) ** 3)
+    kurtosis = np.nanmean(((feature_map - mean) / std) ** 4)
 
     return mean, std, min_val, max_val, cv, skewness, kurtosis
