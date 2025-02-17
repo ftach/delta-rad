@@ -50,7 +50,7 @@ def align_centers(mz_stack: np.ndarray, moving_mz_stack: np.ndarray, mask: bool 
 
     return initial_transform, sitk.GetArrayFromImage(moving_resampled)
 
-def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarray, mask: bool = False):
+def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarray, mask: bool = False, transformation: str = 'rigid', metric: str = 'mi'):
     '''
     Register two images using an affine transformation.
 
@@ -69,10 +69,15 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
     else:
         interp = sitk.sitkLinear
 
+    if transformation == 'rigid':
+        sitk_transformation = sitk.Euler3DTransform()
+    elif transformation == 'affine':
+        sitk_transformation = sitk.AffineTransform(3)
+
     initial_transform = sitk.CenteredTransformInitializer(
         sitk.GetImageFromArray(fixed_img_array),
         sitk.GetImageFromArray(moving_img_array),
-        sitk.Euler3DTransform(),
+        sitk_transformation,
         sitk.CenteredTransformInitializerFilter.GEOMETRY
     )
 
@@ -95,7 +100,12 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
 
     # Similarity metric settings.
     #registration_method.SetMetricAsMattesMutualInformation(numberOfHistogramBins=100)
-    registration_method.SetMetricAsJointHistogramMutualInformation(numberOfHistogramBins=80)
+    if metric == 'mi':
+        registration_method.SetMetricAsJointHistogramMutualInformation(numberOfHistogramBins=80)
+
+    elif metric == 'pcc':
+        registration_method.SetMetricAsCorrelation()
+    
     registration_method.SetMetricSamplingStrategy(registration_method.RANDOM)
     registration_method.SetMetricSamplingPercentage(0.1)
 
@@ -117,7 +127,11 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
     registration_method.SmoothingSigmasAreSpecifiedInPhysicalUnitsOn()
 # 
     # # Don't optimize in-place, we would possibly like to run this cell multiple times.
-    final_transform = sitk.Euler3DTransform(initial_transform)
+    if transformation == 'rigid':
+        final_transform = sitk.Euler3DTransform(initial_transform)
+    elif transformation == 'affine':
+        final_transform = sitk.AffineTransform(initial_transform)
+
     registration_method.SetInitialTransform(final_transform) # , inPlace=False
 
     registration_method.AddCommand(sitk.sitkIterationEvent, update_metric)
@@ -387,34 +401,47 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
     return dice_before, dice_after
 
 
-def register_images(simu_path: str, f_path: str, output_path: str, normalization: str = 'zscore'):
-    ''' Register the fraction image to the simulation image.
+def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path: str, output_path: str, normalization: str = 'zscore', transformation: str = 'rigid', metric: str = 'mi'):
+    ''' Register the fraction image to the simulation image. Evaluate the registration using the Dice computed on GTV masks. 
     
     Parameters:
         simu_path (str): The path to the simulation image.  
         f_path (str): The path to the fraction image.
+        simu_gtv_path (str): The path to the GTV of the simulation image.
+        f_gtv_path (str): The path to the GTV of the fraction image.
         output_path (str): The path to save the registered fraction image.
         normalization (str): The normalization method to use. Options are 'zscore', 'histogram' and None.
+        transformation (str): The transformation to use. Options are 'rigid' and 'affine'.
+        metric (str): The metric to use. Options are 'mi' and 'pcc'.
 
     Returns:
         float: The MSE before registration.
         float: The MSE after registration.
     '''
  
-    # charger simu 
+    # load simu 
     simu = sitk.ReadImage(simu_path)
     simu = sitk.Cast(simu, sitk.sitkFloat32)
     simu = sitk.GetArrayFromImage(simu)
     
-    # charger image F5
+    # load image F5
     fraction = sitk.ReadImage(f_path)
     fraction = sitk.Cast(fraction, sitk.sitkFloat32)
     fraction = sitk.GetArrayFromImage(fraction)
 
+    # load GTV simu
+    gtv_simu = sitk.ReadImage(simu_gtv_path)
+    gtv_simu = sitk.GetArrayFromImage(gtv_simu)
+
+    # load GTV F5
+    gtv_f = sitk.ReadImage(f_gtv_path)
+    gtv_f = sitk.GetArrayFromImage(gtv_f)
+
     if ('Patient20' not in simu_path) or ('Patient32' not in simu_path):
         simu = np.transpose(simu, (0, 2, 1)) # invert x and y 
+        gtv_simu = np.transpose(gtv_simu, (0, 2, 1)) # invert x and y
         fraction = np.transpose(fraction, (0, 2, 1)) # invert x and y
-        print('Inverted x and y axis.')
+        gtv_f = np.transpose(gtv_f, (0, 2, 1)) # invert x and y
 
     if simu.shape != fraction.shape:
         print("Images have different shapes.")
@@ -429,30 +456,31 @@ def register_images(simu_path: str, f_path: str, output_path: str, normalization
     else:
         pass
 
-    mse_before = compute_mse(simu, fraction)
+    dice_before = compute_dice(gtv_simu, gtv_f)
 
-    mse_after = mse_before
+    dice_after = dice_before
     run_counter = 0
-    while mse_after >= mse_before:
-        registration_method, T, metric_values = affine_registration(simu, fraction) # register fraction image to simu (finer one)
+    while dice_after <= dice_before:
+        registration_method, T, metric_values = affine_registration(simu, fraction, mask=False, transformation=transformation, metric=metric) # register fraction image to simu (finer one)
         registered_fraction = apply_3D_transform2(fraction, simu, T, mask=False)
-        mse_after = compute_mse(simu, registered_fraction)
+        registered_f_gtv = apply_3D_transform2(gtv_f, gtv_simu, T, mask=True)
+        dice_after = compute_dice(gtv_simu, registered_f_gtv)
         run_counter += 1
         if run_counter > 1:
-            print(f"Run {run_counter}, MSE before registration: {mse_before}, MSE after registration: {mse_after}")
+            print(f"Run {run_counter}, Dice before registration: {dice_before}, Dice after registration: {dice_after}")
         if run_counter == 5:
             break
             
 
-    # sauvegarder les images
-    sitk.WriteImage(sitk.GetImageFromArray(registered_fraction), output_path)
+    # # sauvegarder les images
+    # sitk.WriteImage(sitk.GetImageFromArray(registered_fraction), output_path)
+# 
+    # # save well oriented simu image
+    # simu = sitk.GetImageFromArray(simu)
+    # simu_path = simu_path.replace('.nii', '_oriented.nii')
+    # sitk.WriteImage(simu, simu_path)
 
-    # save well oriented simu image
-    simu = sitk.GetImageFromArray(simu)
-    simu_path = simu_path.replace('.nii', '_oriented.nii')
-    sitk.WriteImage(simu, simu_path)
-
-    return mse_before, mse_after
+    return dice_before, dice_after
 
 def compute_mse(y_true, y_pred): 
     return np.mean((y_true - y_pred)**2)
