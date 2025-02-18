@@ -472,13 +472,13 @@ def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path:
             break
             
 
-    # # sauvegarder les images
-    # sitk.WriteImage(sitk.GetImageFromArray(registered_fraction), output_path)
-# 
-    # # save well oriented simu image
-    # simu = sitk.GetImageFromArray(simu)
-    # simu_path = simu_path.replace('.nii', '_oriented.nii')
-    # sitk.WriteImage(simu, simu_path)
+    # sauvegarder les images
+    sitk.WriteImage(sitk.GetImageFromArray(registered_fraction), output_path)
+ 
+    # save well oriented simu image
+    simu = sitk.GetImageFromArray(simu)
+    simu_path = simu_path.replace('.nii', '_oriented.nii')
+    sitk.WriteImage(simu, simu_path)
 
     return dice_before, dice_after
 

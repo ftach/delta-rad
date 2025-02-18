@@ -54,7 +54,7 @@ def test_registration():
     # print(f"origin before: {f5_img.GetOrigin()}\norigin after: {transformed_img.GetOrigin()}")
     # print(f"direction cosine before: {f5_img.GetDirection()}\ndirection cosine after: {transformed_img.GetDirection()}")
 
-def compare_methods(transformation='affine', metric='mi'): 
+def compare_methods(transformation='rigid', metric='pcc'): 
     dice_after_list = []
 
     patient_list = [p for p in os.listdir('/home/tachennf/Documents/delta-rad/rad_maps/Data/')]
@@ -179,4 +179,4 @@ def main():
 if __name__ == '__main__': 
     # main()
     # test_registration()
-    compare_methods(transformation='rigid', metric='mi')
+    compare_methods(transformation='rigid', metric='pcc')
