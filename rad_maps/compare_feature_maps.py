@@ -99,13 +99,13 @@ def compute_clustered_delta_maps(fractions, patients, enabled_features, k):
                     print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
                     mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
             
-            #try: 
-            cl.gen_clustered_map(delta_map_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '.nrrd', 
+            try: 
+                cl.gen_clustered_map(delta_map_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '.nrrd', 
                                     mask_path=mask_path, 
                                     store_path='Data/' + p + '/rad_maps/clustered_delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f, k=k)
-            # except ValueError: 
-            #     print('Clustered delta map not created for ', p)
-            #     continue
+            except ValueError: 
+                print('Clustered {} delta maps NOT computed for {}'.format(f, p))
+                continue
                 
             print('Clustered {} delta maps computed for {}'.format(f, p))
 
@@ -161,7 +161,10 @@ def compare_params(outcomes, outcomes_df, fractions, enabled_features):
                     # normality = gs.assess_normality(x1, x2) # assess normality
                     result, pval = gs.compare_groups(x1, x2) # compare between patients using pingouin
                     if result: 
-                        print('Significant difference between groups for ' + i + ' in ' + o + ' patients for ' + f + ' in ' + ttt + ' fraction. P-value: ', pval)
+                        print('Significant difference between groups for ' + i + ' in ' + o + ' patients for ' + f + ' in ' + ttt + ' fraction.')
+                        print('Mean: {} and std: {} for group 1: '.format(np.mean(x1), np.std(x1)))
+                        print('Mean: {} and std: {} for group 2: '.format(np.mean(x2), np.std(x2)))
+                        print('P-value: ', pval)
 
 def compute_delta_params(fractions, patients, enabled_features):
     '''Compute statistics for each delta feature map and save in a csv file.
@@ -201,7 +204,6 @@ def main():
     # patients_to_remove = ['Patient' + str(n) for n in [57, 32, 74, 82, 84, 85, 56, 63]]
     patients_to_remove = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80','Patient 85', 'Patient79', 'Patient54', 'Patient86', 'Patient20', 'Patient64', 'Patient61', 'Patient71'] # 54, 61, 64, 66, 71, 79, 86 don't have F5
     patients_filtered = [p for p in patients_list if p not in patients_to_remove]
-    # patients_filtered = ['Patient83']
 
     # enabled_features = ['original_firstorder_Entropy', 'original_gldm_DependenceEntropy', 'original_glrlm_GrayLevelNonUniformity']
     enabled_features = ['original_firstorder_Kurtosis', 'original_gldm_DependenceEntropy'] # 'original_glcm_Imc1', # TODO/ deal size issue witg glcm_Imc1 features
@@ -211,7 +213,6 @@ def main():
     # compute_params(fractions, patients_filtered, enabled_features) 
 
     # COMPUTE DELTA FEATURES MAPS 
-    # TODO: modify .yaml file to have same pre-processing as Gladis 
     # compute_feature_maps(fractions, patients_filtered, params, enabled_features) # optional if already computed 
     # compute_delta_maps(fractions, patients_filtered, enabled_features) # optional if already computed
     # compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3) # optional if already computed

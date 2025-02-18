@@ -131,7 +131,6 @@ def generate_delta_map2(mask_path, map_paths, feature_name, store_path):
     mini_map2_array = sitk.GetArrayFromImage(mini_map2_img)
     mini_map2 = np.transpose(mini_map2_array, (2, 1, 0)) # z, y, x -> x, y, z*
     
-
     # Retrieve original image shape
     map1 = full_size_mask.copy()
     map2 = full_size_mask.copy()
