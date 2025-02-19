@@ -23,18 +23,18 @@ def test_registration():
     gtv_f5 = sitk.ReadImage('/home/tachennf/Documents/delta-rad/rad_maps/Data/Patient76/mask_dir/Patient76_mridian_ttt_5_gtv.nii') # charger gtv F5 
     gtv_f5 = sitk.GetArrayFromImage(gtv_f5)
 
-    registration_method, T, metric_values = r.affine_registration(simu, f5, mask=False, transformation='affine', metric='pcc')
+    registration_method, T, metric_values = r.affine_registration(simu, f5, mask=False, transformation='rigid', metric='pcc')
 
-    # # Plot the metric evolution
-    # plt.plot(metric_values, marker='o')
-    # plt.xlabel("Iteration")
-    # plt.ylabel("Metric Value (Mutual Information)")
-    # plt.title("Convergence of Registration")
-    # plt.show()
-    # print(f"Final metric value: {registration_method.GetMetricValue()}")
-    # print(
-    #     f"Optimizer's stopping condition, {registration_method.GetOptimizerStopConditionDescription()}"
-    # )
+    # Plot the metric evolution
+    plt.plot(metric_values, marker='o')
+    plt.xlabel("Iteration")
+    plt.ylabel("Metric Value (Mutual Information)")
+    plt.title("Convergence of Registration")
+    plt.show()
+    print(f"Final metric value: {registration_method.GetMetricValue()}")
+    print(
+        f"Optimizer's stopping condition, {registration_method.GetOptimizerStopConditionDescription()}"
+    )
 
     registered_f5_gtv = r.apply_3D_transform2(gtv_f5, gtv_simu, T, mask=True)
 
@@ -178,5 +178,5 @@ def main():
 
 if __name__ == '__main__': 
     # main()
-    # test_registration()
-    compare_methods(transformation='rigid', metric='pcc')
+    test_registration()
+    #compare_methods(transformation='rigid', metric='pcc')
