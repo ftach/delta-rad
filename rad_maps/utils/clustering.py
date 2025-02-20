@@ -5,8 +5,6 @@ from sklearn.cluster import KMeans
 from skimage.filters import threshold_multiotsu
 import SimpleITK as sitk
 import os 
-import matplotlib.pyplot as plt
-import nibabel as nib   
 
 def kmeans_cluster_map(map, k=3): 
     '''Function to cluster a radiomics map based on KMeans algorithm. 

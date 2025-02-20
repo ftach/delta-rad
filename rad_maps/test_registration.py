@@ -1,11 +1,8 @@
-import registration as r
-import nibabel as nib  
+import utils.registration as r
 import SimpleITK as sitk 
 import matplotlib.pyplot as plt 
 import numpy as np
 import os 
-import sys 
-import io 
 
 
 def test_registration(): 

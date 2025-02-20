@@ -7,7 +7,6 @@ Adapted from https://insightsoftwareconsortium.github.io/SimpleITK-Notebooks/
 import numpy as np 
 import SimpleITK as sitk 
 import matplotlib.pyplot as plt
-import os 
 from scipy.ndimage import (
     _ni_support,
     binary_erosion,

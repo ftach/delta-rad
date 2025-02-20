@@ -1,6 +1,6 @@
 '''Script to test for delta radiomic maps functions. '''
 from get_map import generate_delta_map
-import clustering as cl
+import utils.clustering as cl
 
 import numpy as np 
 import matplotlib.pyplot as plt

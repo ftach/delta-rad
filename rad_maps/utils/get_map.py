@@ -8,7 +8,111 @@ import SimpleITK as sitk
 import time
 import six 
 import os 
-from skimage.morphology import ball, erosion
+
+import rad_maps.utils.clustering as cl 
+
+
+
+def compute_feature_maps(fractions, patients, params_path, enabled_features):
+    '''Compute feature maps for all given patients and fractions. Save them as .nrrd files. 
+    Computations are made on fractions MRI that are registered to simulation MRI. Mask is GTV from simulation MRI. 
+    Parameters:
+    ----------
+        fractions: list, list of fractions to compute feature maps for;
+        patients: list, list of patients to compute feature maps for;
+        params_path: str, path to the parameters file;
+        enabled_features: list, list of enabled features;
+        
+    Returns:    
+    '''
+    errors = []
+    for f in fractions:
+        for p in patients:
+            # if image == simu: modifications TODO 
+            image_path = 'Data/' + p + '/img_dir/registered_' + p + '_mridian_' + f + '.nii'
+            if os.path.exists(image_path) == False: # if fraction is missing 
+                image_path = 'Data/' + p + '/img_dir/' + p + '_mridian_' + f + '_oriented.nii' # if there was no simu, we don't have registered in front of the name
+                if os.path.exists(image_path) == False:
+                    print('Image not found for ' + p + ' ' + f)
+                    continue 
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            if os.path.exists(mask_path) == False:                
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
+                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
+                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
+             
+            try: 
+                generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/' + f + '/', enabled_features)
+                assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
+            except ValueError: 
+                print('Feature map not created for ', p, ' ', f)
+                errors.append(p)
+                continue
+    print('Feature maps not computed for ', errors)
+            
+
+def compute_delta_maps(fractions, patients, enabled_features):
+    '''Compute delta feature maps for all given patients and fractions. Save them as .nrrd file. 
+    Parameters:
+    ----------
+        fractions: list, list of the 2 fractions to compute delta feature maps for;
+        patients: list, list of patients to compute feature maps for;
+        enabled_features: list, list of enabled features;
+        
+        Returns: None 
+
+    '''
+    for p in patients: 
+        print(p)
+        for f in enabled_features:
+            print(f)
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            if os.path.exists(mask_path) == False:    
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
+                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
+                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
+            
+            generate_delta_map2(mask_path=mask_path,  
+                map_paths=['Data/' + p + '/rad_maps/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + fractions[1] + '/' + f + '.nrrd'], 
+                                  store_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f)
+        print('Delta maps computed for ', p)
+    
+
+def compute_clustered_delta_maps(fractions, patients, enabled_features, k):
+    '''Compute clustered delta feature maps for all given patients and fractions. Save them as .nrrd file. 
+    
+    Parameters:
+    ----------
+    
+    fractions: list, list of the 2 fractions to compute delta feature maps for;
+    patients: list, list of patients to compute feature maps for;
+    enabled_features: list, list of enabled features;
+    k: int, number of clusters;
+    
+    Returns: None 
+    
+    '''
+    for p in patients: 
+        for f in enabled_features:
+            print(f)
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            if os.path.exists(mask_path) == False:    
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
+                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
+                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
+            
+            try: 
+                cl.gen_clustered_map(delta_map_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '.nrrd', 
+                                    mask_path=mask_path, 
+                                    store_path='Data/' + p + '/rad_maps/clustered_delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f, k=k)
+            except ValueError: 
+                print('Clustered {} delta maps NOT computed for {}'.format(f, p))
+                continue
+                
+            print('Clustered {} delta maps computed for {}'.format(f, p))
 
 def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled_features):
     """
