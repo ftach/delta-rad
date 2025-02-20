@@ -6,7 +6,7 @@ from skimage.filters import threshold_multiotsu
 import SimpleITK as sitk
 import os 
 
-def kmeans_cluster_map(map, k=3): 
+def kmeans_cluster_map(map: np.ndarray, k: int = 3) -> np.ndarray: 
     '''Function to cluster a radiomics map based on KMeans algorithm. 
     Parameters
     ----------
@@ -21,7 +21,7 @@ def kmeans_cluster_map(map, k=3):
 
     return clustered_map
 
-def otsu_cluster_map(map, k=3):
+def otsu_cluster_map(map: np.ndarray, k: int = 3):
     '''Function to cluster a radiomics map based on Otsu algorithm. 
     Parameters
     ----------
@@ -36,7 +36,7 @@ def otsu_cluster_map(map, k=3):
 
     return clustered_map
 
-def gen_clustered_map(delta_map_path, mask_path, store_path, feature_name, k=3): 
+def gen_clustered_map(delta_map_path: str, mask_path: str, store_path: str, feature_name: str, k: int = 3) -> None: 
     '''Function to generate a clustered map based on a delta radiomic map. The clustered map is saved as npy(with nan) and nrrd (without nan).
 
     Parameters

@@ -7,8 +7,9 @@ import numpy as np
 
 import get_map as gm
 
-def compute_params(fractions, patients, enabled_features): 
+def compute_params(fractions: list, patients: list, enabled_features: list): 
     '''Compute intensity parameters for each feature map and save in a csv file.
+    
     Parameters:
     ----------
         fractions: list, list of fractions to compute feature maps for;
@@ -34,8 +35,9 @@ def compute_params(fractions, patients, enabled_features):
 
             stored_params_df.to_csv('Data/intensity_params/' + fraction + '/' + feature + '_params.csv')
 
-def compare_params(outcomes, outcomes_df, fractions, enabled_features):
+def compare_params(outcomes: list, outcomes_df: pd.DataFrame, fractions: list, enabled_features: list) -> None:
     '''Compare intensity parameters between patients of different outcome-group with Mann-Whitney U test.
+
     Parameters:
     ----------
         outcomes: list, list of outcomes to compare;
@@ -43,7 +45,7 @@ def compare_params(outcomes, outcomes_df, fractions, enabled_features):
         fractions: list, list of fractions to compare;
         enabled_features: list, list of enabled features;
         
-        Returns:
+    Returns:
     '''
 
     outcomes_df = outcomes_df[outcomes]    # keep only columns of interest
@@ -65,22 +67,26 @@ def compare_params(outcomes, outcomes_df, fractions, enabled_features):
                         print('P-value: ', pval)
 
 
-def compute_delta_params(fractions, patients, enabled_features):
+def compute_delta_params(fractions: list, patients: list, enabled_features: list, mask_type: str = 'gtv') -> None:
     '''Compute statistics for each delta feature map and save in a csv file.
+
     Parameters:
     ----------
         fractions: list, list of the 2 fractions to compute delta feature maps for;
         patients: list, list of patients to compute feature maps for;
         enabled_features: list, list of enabled features;
+        mask_type: str, type of mask to use for the feature maps;
         
-        Returns:
+    Returns:
     '''
     for feature in enabled_features: 
         stored_params_df = pd.DataFrame(index=patients, columns=['mean', 'std', 'min', 'max', 'cv', 'skewness', 'kurtosis']) # create df with patient ID as index
 
         for p in patients:
-            print(p)
-            rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + feature + '.npy')
+            if os.path.exists('Data/' + p + '/rad_maps/' + mask_type + '/delta/' + fractions[0] + '_' + fractions[1] + '/' + feature + '.npy'):
+                rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/' + mask_type + '/delta/' + fractions[0] + '_' + fractions[1] + '/' + feature + '.npy')
+            
+            # print("Computed delta params for ", p)
             if rad_params is not None:
                 stored_params_df.loc[p] = rad_params
         if not os.path.exists('Data/intensity_params/' + fractions[0] + '_' + fractions[1] + '/'):
@@ -91,14 +97,16 @@ def compute_delta_params(fractions, patients, enabled_features):
 
         stored_params_df.to_csv('Data/intensity_params/' + fractions[0] + '_' + fractions[1] + '/' + feature + '_params.csv') # save to csv
 
-def separate_groups(df, outcomes_df, outcome, intensity_param):
+def separate_groups(df: pd.DataFrame, outcomes_df: pd.DataFrame, outcome: str, intensity_param: str) -> tuple:
     '''Separate data into two groups based on the outcome selected.
+
     Parameters
     ----------
     df: pandas.DataFrame, dataframe with data;
     outcomes_df: pandas.DataFrame, dataframe with outcomes;
     outcome: str, name of the outcome selected;
     intensity_param: str, name of the intensity parameter to compare;
+
     Returns
     -------
     x1: numpy.array, data for group 1;
@@ -119,12 +127,14 @@ def separate_groups(df, outcomes_df, outcome, intensity_param):
 
     return x1, x2 
 
-def assess_normality(x1, x2):
+def assess_normality(x1: np.ndarray, x2: np.ndarray) -> bool:
     '''Assess normality of two sets of data for student tests.
+
     Parameters
     ----------
     x1: numpy.array, data for group 1;
     x2: numpy.array, data for group 2;
+
     Returns
     -------
     normality: bool, True if both groups are normal;
@@ -136,12 +146,14 @@ def assess_normality(x1, x2):
     else:
         return False
 
-def compare_groups(x1, x2):
+def compare_groups(x1: np.ndarray, x2: np.ndarray) -> tuple:
     '''Compare two groups of data using a Mann-Whitney U test.
+
     Parameters
     ----------
     x1: numpy.array, data for group 1;
     x2: numpy.array, data for group 2;
+
     Returns
     -------
     result: bool, True if the two groups are significantly different;

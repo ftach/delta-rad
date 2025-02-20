@@ -9,21 +9,23 @@ import time
 import six 
 import os 
 
-import rad_maps.utils.clustering as cl 
+import utils.clustering as cl 
 
-
-
-def compute_feature_maps(fractions, patients, params_path, enabled_features):
+def compute_feature_maps(fractions: list, patients: list, params_path: str, enabled_features: str, mask_type: str = 'gtv') -> list:
     '''Compute feature maps for all given patients and fractions. Save them as .nrrd files. 
-    Computations are made on fractions MRI that are registered to simulation MRI. Mask is GTV from simulation MRI. 
+    Computations are made on fractions MRI that are registered to simulation MRI. Mask is GTV or PTV from simulation MRI. 
+
     Parameters:
     ----------
-        fractions: list, list of fractions to compute feature maps for;
-        patients: list, list of patients to compute feature maps for;
-        params_path: str, path to the parameters file;
-        enabled_features: list, list of enabled features;
+        fractions: list, list of fractions to compute feature maps for
+        patients: list, list of patients to compute feature maps for
+        params_path: str, path to the parameters file
+        enabled_features: list, list of enabled features
+        mask_type: str, type of mask to use. Options are 'gtv' or 'ptv'
         
     Returns:    
+    ----------
+        computed_features: list, list of computed features
     '''
     errors = []
     for f in fractions:
@@ -33,54 +35,58 @@ def compute_feature_maps(fractions, patients, params_path, enabled_features):
             if os.path.exists(image_path) == False: # if fraction is missing 
                 image_path = 'Data/' + p + '/img_dir/' + p + '_mridian_' + f + '_oriented.nii' # if there was no simu, we don't have registered in front of the name
                 if os.path.exists(image_path) == False:
-                    print('Image not found for ' + p + ' ' + f)
+                    #print('Image not found for ' + p + ' ' + f)
                     continue 
-            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_' + mask_type + '_oriented.nii' # standard simu mask path
             if os.path.exists(mask_path) == False:                
-                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
-                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
-                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
-                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
-             
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_' + mask_type + '_oriented.nii' # other way to write mask path
+                if os.path.exists(mask_path) == False: # means that simu mask does not exists 
+                    #print('Mask not found for ' + p, 'Use fraction 1 mask instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_' + mask_type + '_oriented.nii' # use fraction 1 mask otherwise (fractions were registered to F1 in this case)
             try: 
-                generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/' + f + '/', enabled_features)
-                assert os.path.exists('Data/' + p + '/rad_maps/' + f + '/'), 'Feature map not created'
+                computed_features = generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/'  + mask_type + '/' + f + '/', enabled_features)
+                assert os.path.exists('Data/' + p + '/rad_maps/' + mask_type + '/' + f + '/'), 'Feature map not created'
             except ValueError: 
-                print('Feature map not created for ', p, ' ', f)
+                #print('Feature map not created for ', p, ' ', f)
                 errors.append(p)
                 continue
-    print('Feature maps not computed for ', errors)
+    #print('Feature maps not computed for ', errors)
+
+    return computed_features
             
 
-def compute_delta_maps(fractions, patients, enabled_features):
+def compute_delta_maps(fractions: list, patients: list, enabled_features: list, mask_type: str = 'gtv') -> None:
     '''Compute delta feature maps for all given patients and fractions. Save them as .nrrd file. 
     Parameters:
     ----------
         fractions: list, list of the 2 fractions to compute delta feature maps for;
         patients: list, list of patients to compute feature maps for;
         enabled_features: list, list of enabled features;
+        mask_type: str, type of mask to use. Options are 'gtv' or 'ptv';
         
         Returns: None 
 
     '''
     for p in patients: 
-        print(p)
         for f in enabled_features:
-            print(f)
-            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_' + mask_type + '_oriented.nii' # standard simu mask path
             if os.path.exists(mask_path) == False:    
-                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
-                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
-                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
-                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_' + mask_type + '_oriented.nii' # other way to write mask path
+                if os.path.exists(mask_path) == False: # means that simu mask does not exists 
+                    #print('Mask not found for ' + p, 'Use fraction 1 mask instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_' + mask_type + '_oriented.nii' # use fraction 1 mask otherwise (fractions were registered to F1 in this case)
             
-            generate_delta_map2(mask_path=mask_path,  
-                map_paths=['Data/' + p + '/rad_maps/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + fractions[1] + '/' + f + '.nrrd'], 
-                                  store_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f)
-        print('Delta maps computed for ', p)
+            try: 
+                generate_delta_map2(mask_path=mask_path,  
+                map_paths=['Data/' + p + '/rad_maps/' + mask_type + '/' + fractions[0] + '/' + f + '.nrrd', 'Data/' + p + '/rad_maps/' + mask_type + '/' + fractions[1] + '/' + f + '.nrrd'], 
+                                  store_path='Data/' + p + '/rad_maps/' + mask_type + '/delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f)
+            except ValueError:
+                #print('Delta maps NOT computed for ', p, ' ', f)
+                continue
+        #print('Delta maps computed for ', p)
     
 
-def compute_clustered_delta_maps(fractions, patients, enabled_features, k):
+def compute_clustered_delta_maps(fractions: list, patients: list, enabled_features: list, k: int, mask_type: str = 'gtv') -> None:
     '''Compute clustered delta feature maps for all given patients and fractions. Save them as .nrrd file. 
     
     Parameters:
@@ -90,40 +96,44 @@ def compute_clustered_delta_maps(fractions, patients, enabled_features, k):
     patients: list, list of patients to compute feature maps for;
     enabled_features: list, list of enabled features;
     k: int, number of clusters;
+    mask_type: str, type of mask to use. Options are 'gtv' or 'ptv';
     
     Returns: None 
     
     '''
     for p in patients: 
         for f in enabled_features:
-            print(f)
-            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_gtv_oriented.nii' # standard simu GTV path
+            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_' + mask_type + '_oriented.nii' # standard simu mask path
             if os.path.exists(mask_path) == False:    
-                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_gtv_oriented.nii' # other way to write GTV path
-                if os.path.exists(mask_path) == False: # means that simu GTV does not exists 
-                    print('Mask not found for ' + p, 'Use fraction 1 GTV instead. ')
-                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_gtv_oriented.nii' # use fraction 1 GTV otherwise (fractions were registered to F1 in this case)
+                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_' + mask_type + '_oriented.nii' # other way to write mask path
+                if os.path.exists(mask_path) == False: # means that simu mask does not exists 
+                    # print('Mask not found for ' + p, 'Use fraction 1 mask instead. ')
+                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_' + mask_type + '_oriented.nii' # use fraction 1 mask otherwise (fractions were registered to F1 in this case)
             
             try: 
-                cl.gen_clustered_map(delta_map_path='Data/' + p + '/rad_maps/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '.nrrd', 
-                                    mask_path=mask_path, 
-                                    store_path='Data/' + p + '/rad_maps/clustered_delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f, k=k)
+                cl.gen_clustered_map(delta_map_path='Data/' + p + '/rad_maps/' + mask_type + '/delta/' + fractions[0] + '_' + fractions[1] + '/' + f + '.nrrd', 
+                                    mask_path=mask_path, store_path='Data/' + p + '/rad_maps/' + mask_type + '/clustered_delta/' + fractions[0] + '_' + fractions[1] + '/', feature_name=f, k=k)
             except ValueError: 
-                print('Clustered {} delta maps NOT computed for {}'.format(f, p))
+                #print('Clustered {} delta maps NOT computed for {}'.format(f, p))
+                continue
+            except RuntimeError:
+                #print('No delta maps was found for {}. NOT computed clustering'.format(f))
                 continue
                 
-            print('Clustered {} delta maps computed for {}'.format(f, p))
+            # print('Clustered {} delta maps computed for {}'.format(f, p))
 
-def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled_features):
-    """
-        Generate specific feature map based on kernel Radius.
+def generate_feature_map(img_path: str, roi_path: str, parameter_path: str, store_path: str, enabled_features: list) -> None:
+    """Generate specific feature map based on kernel Radius.
+
     Parameters
     ----------
+
     img_path: str, candidate image path;
     roi_path: str, candidate ROI path;
     parameter_path: str, .yaml parameter path;
     store_path: str, directory where to store the feature maps;
-    enabled_features: list, list of enabled features;
+    enabled_features: list, list of enabled features. Compute all features if None;
+
     Returns
     -------
     """
@@ -137,13 +147,17 @@ def generate_feature_map(img_path, roi_path, parameter_path, store_path, enabled
     if os.path.exists(store_path) is False:
         os.makedirs(store_path)
     for key, val in six.iteritems(result):
+        if 'all' in enabled_features: 
+            enabled_features = [f for f in result.keys() if f.startswith('original')] # we save all the features
         if isinstance(val, sitk.Image) and key in enabled_features:
             sitk.WriteImage(val, os.path.join(store_path, key + '.nrrd'), True)
-    print('Elapsed time: {} s'.format(time.time() - start_time))
 
-def generate_delta_map(mask_paths, map_paths, feature_name, store_path):
+    print('Elapsed time: {} s'.format(time.time() - start_time))
+    return enabled_features
+
+def generate_delta_map(mask_paths: list, map_paths: list, feature_name: list, store_path: str) -> None:
     """
-        Generate delta-radiomics feature map with two different GTVs. 
+        Generate delta-radiomics feature map with two different masks. 
 
     Parameters
     ----------
@@ -209,13 +223,13 @@ def generate_delta_map(mask_paths, map_paths, feature_name, store_path):
     full_size_mask = np.logical_and(full_size_mask1, full_size_mask2).astype(np.uint8)
     np.save(os.path.join(store_path, feature_name + '_mask.npy'), full_size_mask) # save the mask as npy to keep nan and inf values
 
-def generate_delta_map2(mask_path, map_paths, feature_name, store_path):
+def generate_delta_map2(mask_path: str, map_paths: list, feature_name: list, store_path: str) -> None:
     """
         Generate delta-radiomics feature map with one same GTV. 
 
     Parameters
     ----------
-    mask_paths: list, mask paths to .nii files, length=2;
+    mask_path: str, mask path to .nii file, length=2;
     map_paths: list, map paths to .nrrd files, length=2;
     feature_name: str, name of the feature computed;
     store_path: str, directory where to store the delta map;
@@ -278,7 +292,7 @@ def generate_delta_map2(mask_path, map_paths, feature_name, store_path):
     sitk.WriteImage(nii_delta_map_sitk, os.path.join(store_path, feature_name + '.nrrd'), True)
 
 
-def pad_img(X1, X2): 
+def pad_img(X1: np.ndarray, X2: np.ndarray) -> np.ndarray: 
     '''Pad the images to the biggest size of both 
 
     Parameters
@@ -319,7 +333,7 @@ def pad_img(X1, X2):
     return X1, X2
 
 
-def disp_map(map_path, slice_num):
+def disp_map(map_path: str, slice_num: int) -> None:
     """
         Display the map.
     Parameters
@@ -335,7 +349,7 @@ def disp_map(map_path, slice_num):
     plt.colorbar()
     plt.show()
 
-def compute_feature_map_params(feature_map_path):
+def compute_feature_map_params(feature_map_path: str) -> tuple:
     """
         Compute intensity parameters of a given feature map.
     Parameters

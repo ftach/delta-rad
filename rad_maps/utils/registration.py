@@ -191,7 +191,7 @@ def compute_distances(result, reference, connectivity=1, voxelspacing=None):
     
     return tx, ty, tz
 
-def initialize_transform_from_masks(fixed_mask, moving_mask):
+def initialize_transform_from_masks(fixed_mask: np.ndarray, moving_mask: np.ndarray) -> sitk.Euler3DTransform:
     """
     Compute an initial Euler3DTransform from masks by aligning centroids.
 
@@ -269,7 +269,7 @@ def apply_3D_transform2(moving_3D_array: np.ndarray, fixed_3D_array: np.ndarray,
 
     return sitk.GetArrayFromImage(moving_resampled)
 
-def match_histograms(image: np.ndarray, reference: np.ndarray):
+def match_histograms(image: np.ndarray, reference: np.ndarray) -> np.ndarray:
     ''' Match the histogram of an image to a reference image.
     
     Parameters:
@@ -287,8 +287,8 @@ def match_histograms(image: np.ndarray, reference: np.ndarray):
     
     return sitk.GetArrayFromImage(matched)
 
-def resize_image(image, new_size, interpolator=sitk.sitkLinear):
-    """
+def resize_image(image: sitk.Image, new_size: tuple, interpolator=sitk.sitkLinear) -> sitk.Image:
+    """ 
     Resizes a SimpleITK image to the specified new_size.
 
     Parameters:
@@ -323,7 +323,7 @@ def resize_image(image, new_size, interpolator=sitk.sitkLinear):
 
     return resampled_image
 
-def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: str, output_path: str, normalization: str = 'zscore'):
+def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: str, output_path: str, normalization: str = 'zscore') -> tuple:
     ''' Register the GTVs of a fraction image to the simulation image.
     
     Parameters:
@@ -400,7 +400,7 @@ def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: st
     return dice_before, dice_after
 
 
-def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path: str, output_path: str, normalization: str = 'zscore', transformation: str = 'rigid', metric: str = 'mi'):
+def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path: str, output_path: str, normalization: str = 'zscore', transformation: str = 'rigid', metric: str = 'mi') -> tuple:
     ''' Register the fraction image to the simulation image. Evaluate the registration using the Dice computed on GTV masks. 
     
     Parameters:
@@ -481,10 +481,10 @@ def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path:
 
     return dice_before, dice_after
 
-def compute_mse(y_true, y_pred): 
+def compute_mse(y_true: np.ndarray, y_pred: np.ndarray) -> float: 
     return np.mean((y_true - y_pred)**2)
 
-def compute_dice(y_true, y_pred):
+def compute_dice(y_true: np.ndarray, y_pred: np.ndarray) -> float: 
     intersection = np.sum(y_true * y_pred)
     return 2 * intersection / (np.sum(y_true) + np.sum(y_pred))
 
