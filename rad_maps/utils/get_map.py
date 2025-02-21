@@ -151,6 +151,7 @@ def generate_feature_map(img_path: str, roi_path: str, parameter_path: str, stor
             enabled_features = [f for f in result.keys() if f.startswith('original')] # we save all the features
         if isinstance(val, sitk.Image) and key in enabled_features:
             sitk.WriteImage(val, os.path.join(store_path, key + '.nrrd'), True)
+            np.save(os.path.join(store_path, key + '.npy'), sitk.GetArrayFromImage(val))
 
     print('Elapsed time: {} s'.format(time.time() - start_time))
     return enabled_features
@@ -195,7 +196,7 @@ def generate_delta_map(mask_paths: list, map_paths: list, feature_name: list, st
 
     full_size_delta_map = (map1 - map2) / map2 # compute delta map 
 
-    full_size_delta_map[np.abs(full_size_delta_map) == 1] = np.nan # we set to nan valus that are on the border of the delta-rad map 
+    full_size_delta_map[np.abs(full_size_delta_map) == 1] = np.nan # we set to nan values that are on the border of the delta-rad map 
 
     # SAVE DELTA MAPs
     if os.path.exists(store_path) is False:
@@ -370,8 +371,8 @@ def compute_feature_map_params(feature_map_path: str) -> tuple:
     std = np.nanstd(feature_map)
     max_val = np.nanmax(feature_map)
     min_val = np.nanmin(feature_map)
-    cv = std / mean
-    skewness = np.nanmean(((feature_map - mean) / std) ** 3)
-    kurtosis = np.nanmean(((feature_map - mean) / std) ** 4)
+    cv = std / (mean + 1e-6)
+    skewness = np.nanmean(((feature_map - mean) / (std+1e-6)) ** 3)
+    kurtosis = np.nanmean(((feature_map - mean) / (std+1e-6)) ** 4)
 
     return mean, std, min_val, max_val, cv, skewness, kurtosis

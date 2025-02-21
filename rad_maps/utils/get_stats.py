@@ -4,10 +4,11 @@ import pingouin as pg
 import pandas as pd 
 import os 
 import numpy as np 
+import matplotlib.pyplot as plt
 
-import get_map as gm
+import utils.get_map as gm
 
-def compute_params(fractions: list, patients: list, enabled_features: list): 
+def compute_params(fractions: list, patients: list, enabled_features: list, mask_type: str = 'gtv') -> None: 
     '''Compute intensity parameters for each feature map and save in a csv file.
     
     Parameters:
@@ -15,6 +16,7 @@ def compute_params(fractions: list, patients: list, enabled_features: list):
         fractions: list, list of fractions to compute feature maps for;
         patients: list, list of patients to compute feature maps for;
         enabled_features: list, list of enabled features;
+        mask_type: str, type of mask to use for the feature maps; 
         
         Returns: None 
     '''
@@ -24,7 +26,7 @@ def compute_params(fractions: list, patients: list, enabled_features: list):
             # create df with patient ID as index
             stored_params_df = pd.DataFrame(index=patients, columns=['mean', 'std', 'min', 'max', 'cv', 'skewness', 'kurtosis'])
             for p in patients:
-                rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/' + fraction + '/' + feature + '.nrrd')
+                rad_params = gm.compute_feature_map_params('Data/' + p + '/rad_maps/' + mask_type + '/' + fraction + '/' + feature + '.npy')
                 if rad_params is not None:
                     stored_params_df.loc[p] = rad_params
             if not os.path.exists('Data/intensity_params/' + fraction + '/'):
@@ -65,6 +67,32 @@ def compare_params(outcomes: list, outcomes_df: pd.DataFrame, fractions: list, e
                         print('Mean: {} and std: {} for group 1: '.format(np.mean(x1), np.std(x1)))
                         print('Mean: {} and std: {} for group 2: '.format(np.mean(x2), np.std(x2)))
                         print('P-value: ', pval)
+                        plot_comparison(o, outcomes_df, fractions, f, i) # plot comparison between groups
+
+def plot_comparison(outcome: str, outcomes_df: pd.DataFrame, fractions: list, feature: str, intensity_param: str) -> None:
+    '''Plot intensity parameter for a given feature map.
+
+    Parameters:
+    ----------
+        outcomes: list, list of outcomes to compare;
+        outcomes_df: pandas.DataFrame, dataframe with outcomes;
+        fractions: list, list of fractions to compare;
+        feature: str, name of feature to be plot;
+        intensity_param: str, name of intensity parameter to be plot;
+        
+    Returns:
+    '''
+
+    for ttt in fractions: 
+        df = pd.read_csv('Data/intensity_params/' + ttt + '/' + feature + '_params.csv', index_col=0) # load csv file 
+        x1, x2 = separate_groups(df, outcomes_df, outcome, intensity_param)  # separate groups of patients based on outcome and intensity parameter
+        plt.figure()
+        plt.scatter(np.zeros_like(x1), x1, label=r'${outcome} = 1$', color='blue', marker='x')
+        plt.scatter(np.zeros_like(x2), x2, label=r'${outcome} = 0$', color='red', marker='x')
+        plt.ylabel('Value of ' + intensity_param)
+        plt.legend()
+        plt.show()
+
 
 
 def compute_delta_params(fractions: list, patients: list, enabled_features: list, mask_type: str = 'gtv') -> None:
@@ -148,6 +176,8 @@ def assess_normality(x1: np.ndarray, x2: np.ndarray) -> bool:
 
 def compare_groups(x1: np.ndarray, x2: np.ndarray) -> tuple:
     '''Compare two groups of data using a Mann-Whitney U test.
+    The Mann–Whitney U test (also called Wilcoxon rank-sum test) is a non-parametric test of the null hypothesis 
+    that it is equally likely that a randomly selected value from one sample will be less than or greater than a randomly selected value from a second sample. 
 
     Parameters
     ----------
