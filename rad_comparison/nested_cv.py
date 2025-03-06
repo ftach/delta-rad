@@ -24,11 +24,11 @@ def main():
 
     ###################### INITIALIZATION ##############################
     folder_path = '/home/tachennf/Documents/delta-rad/extracted_radiomics/'
-    delta_rad_tables = ['rd_f1_f5_gtv.csv'] # 'f3_gtv.csv', 'simu_gtv.csv', 'f1_gtv.csv', 'f5_gtv.csv', 'rd_simu_f1_gtv.csv', 'rd_simu_f3_gtv.csv', 'rd_simu_f5_gtv.csv', 'rd_f1_f3_gtv.csv', 
+    delta_rad_tables = ['simu_gie_gtv.csv', 'rd_simu_onemth_gtv.csv', 'simu_onemth_gtv.csv'] # ['rd_f1_f5_gtv.csv'] # 'f3_gtv.csv', 'simu_gtv.csv', 'f1_gtv.csv', 'f5_gtv.csv', 'rd_simu_f1_gtv.csv', 'rd_simu_f3_gtv.csv', 'rd_simu_f5_gtv.csv', 'rd_f1_f3_gtv.csv', 
     feat_sel_algo_list = ['ANOVA_PERC', 'RDM_SEL', 'NO_SEL', 'RF']  # # , 'ADABOOST', , 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO'
     outcome_csv = 'outcomes.csv'
-    smote = True
-    results_file = 'json_results/results_ncv_smote.json'
+    smote = False
+    results_file = 'json_results/results_ncv_simu_gie.json'
     pred_algo_list = ['RF', 'ADABOOST', 'LOGREGRIDGE', 'PSVM', 'KNN',  'BAGG', 'MLP', 'QDA'] # 
     MAX_FEATURES = 3
     outcomes_list = ['Récidive Locale'] # 'Récidive Méta', 
@@ -55,7 +55,6 @@ def main():
             print("Training for outcome ", outcome)
             # Load the dataset 
             X, y, features_list = dataset.get_xy(os.path.join(folder_path, table), os.path.join(folder_path, outcome_csv), outcome)
-
             X_train, _, y_train, _ = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y[outcome])
             
             ###################### FEATURE SELECTION WITHOUT CVAL ##############################

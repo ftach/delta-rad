@@ -93,6 +93,9 @@ def get_xy(rad_csv_path: str, outcome_csv_path: str, outcome: str = 'Décès', f
     outcome_df = outcome_df.drop(outcome_df.columns[0], axis=1) # drop first column (Patient indexes)
     y = outcome_df.loc[outcome_df.index.isin(X.index)] # ensure same patients in X and y
 
+    # remove patients from X that are not in y
+    X = X.loc[X.index.isin(y.index)]
+
     y = y.loc[:, [outcome]] # get the specific outcome column
 
     return X, y, X.columns
