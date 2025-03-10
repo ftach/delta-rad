@@ -121,6 +121,58 @@ def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, ou
 
     return results
 
+def make_predictions_with_roc(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote: bool = False):
+    '''Make predictions with ROC curve. 
+    
+    Parameters:
+    ----------------
+    skfold (object): The StratifiedKFold object.
+    gridcvs (dict): A dictionary containing the GridSearchCV objects for each classifier.
+    X_filtered (pd.DataFrame): The filtered training data features.
+    y (pd.DataFrame): The target labels for the training data.
+    table (str): The name of the table.
+    fs_algo (str): The name of the feature selection algorithm.
+    results (dict): The dictionary containing the results of the prediction algorithms.
+    outcome (str): The name of the outcome to predict.
+    nb_features (int): The number of features selected.
+    sel_features (list): The list of selected features.
+    smote (bool): Whether to use SMOTE to balance the dataset.
+    
+    Returns:
+    ----------------
+    results (dict): The updated results dictionary that will contain the results of the prediction algorithms.
+    fpr (list): The false positive rate.
+    tpr (list): The true positive rate.
+    '''
+
+    for c, (outer_train_idx, outer_valid_idx) in enumerate(skfold.split(X_filtered, y)):
+        for pred_algo, gs_est in sorted(gridcvs.items()):
+            # print('outer fold %d/5 | tuning %-8s' % (c, pred_algo), end='')
+            X_train = X_filtered.iloc[outer_train_idx]
+            y_train = y.iloc[outer_train_idx]
+            X_test = X_filtered.iloc[outer_valid_idx]
+            y_test = y.iloc[outer_valid_idx]
+            if smote: # use smote to balance the dataset
+                sm = SMOTE(random_state=42, sampling_strategy='minority')
+                X_train, y_train = sm.fit_resample(X_train, y_train) 
+            # The inner loop for hyperparameter tuning
+            gs_est.fit(X_train, y_train) # hyperparameter tuning
+            optimal_threshold = compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold
+
+            # Computing the test metrics
+            test_auc, sensitivity, specificity, fpr, tpr = compute_and_plot_test_metrics(gs_est, X_test, y_test, optimal_threshold)
+        
+            # plot r
+            # save results 
+            results[table][fs_algo][pred_algo][outcome][nb_features]['features'] = sel_features
+            results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
+            results[table][fs_algo][pred_algo][outcome][nb_features]['train_auc'] = gs_est.best_score_ # score of best algo (based on cross validation search) trained again 
+            results[table][fs_algo][pred_algo][outcome][nb_features]['test_auc'].append(test_auc)
+            results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'].append(sensitivity)
+            results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'].append(specificity)
+
+    return results, fpr, tpr # return what's needed for roc curve plotting: y_test, model, X_test, 
+
 
 def get_param_grids(pred_algo_list: list): 
     """
@@ -541,3 +593,34 @@ def compute_test_metrics(gs_est, X_test, y_test, optimal_threshold):
     specificity = tn / (tn + fp)
 
     return test_auc, sensitivity, specificity
+
+def compute_and_plot_test_metrics(gs_est, X_test, y_test, optimal_threshold):
+    '''
+    Compute the test metrics for a given model.
+
+    Parameters:
+    gs_est (GridSearchCV): The GridSearchCV object containing the best estimator.
+    X_test (pd.DataFrame): The test data features.
+    y_test (pd.Series): The test data labels.
+    optimal_threshold (float): The optimal threshold for the model.
+
+    Returns:
+    float: The test AUC.
+    float: The sensitivity.
+    float: The specificity.
+    list: The false positive rate.
+    list: The true positive rate.
+    '''
+
+    # compute outer auc
+    outer_y_prob = gs_est.best_estimator_.predict_proba(X_test)[:, 1]
+    fpr, tpr, _ = roc_curve(y_test, outer_y_prob)
+    test_auc = auc(fpr, tpr)
+
+    # compute sensitivity and specificity based on y_pred 
+    outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
+    tn, fp, fn, tp = confusion_matrix(y_test, outer_y_pred).ravel()
+    sensitivity = tp / (tp + fn)
+    specificity = tn / (tn + fp)
+
+    return test_auc, sensitivity, specificity, fpr, tpr
