@@ -24,11 +24,11 @@ def main():
 
     ###################### INITIALIZATION ##############################
     folder_path = '/home/tachennf/Documents/delta-rad/extracted_radiomics/'
-    delta_rad_tables = ['simu_gie_gtv.csv', 'rd_simu_onemth_gtv.csv', 'gie_1month_gtv.csv'] # ['rd_f1_f5_gtv.csv'] # 'f3_gtv.csv', 'simu_gtv.csv', 'f1_gtv.csv', 'f5_gtv.csv', 'rd_simu_f1_gtv.csv', 'rd_simu_f3_gtv.csv', 'rd_simu_f5_gtv.csv', 'rd_f1_f3_gtv.csv', 
+    delta_rad_tables = ['all_simu_gie_gtv.csv', 'simu_gtv.csv'] # ['rd_f1_f5_gtv.csv'] # 'f3_gtv.csv', 'simu_gtv.csv', 'f1_gtv.csv', 'f5_gtv.csv', 'rd_simu_f1_gtv.csv', 'rd_simu_f3_gtv.csv', 'rd_simu_f5_gtv.csv', 'rd_f1_f3_gtv.csv', 
     feat_sel_algo_list = ['ANOVA_PERC', 'RDM_SEL', 'NO_SEL', 'RF']  # # , 'ADABOOST', , 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO'
     outcome_csv = 'outcomes.csv'
-    smote = False
-    results_file = 'json_results/results_ncv_simu_gie.json'
+    smote = True
+    results_file = 'json_results/smote_results_ncv_gie_mridian_comparison.json'
     pred_algo_list = ['RF', 'ADABOOST', 'LOGREGRIDGE', 'PSVM', 'KNN',  'BAGG', 'MLP', 'QDA'] # 
     MAX_FEATURES = 3
     outcomes_list = ['Récidive Locale'] # 'Récidive Méta', 
