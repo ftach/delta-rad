@@ -2,10 +2,28 @@
 
 import pandas as pd 
 import numpy as np
+import yaml 
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.gaussian_process.kernels import ConstantKernel
+
+def load_config(config_path: str) -> dict:
+    '''Load a yaml config file and return the content as a dictionary.
+
+    Parameters:
+    config_path (str): path to the yaml config file
+
+    Returns:
+    dict: content of the yaml config file
+    '''
+
+    with open(config_path, 'r') as stream:
+        try:
+            return yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+            return None
 
 
 def get_highly_corr_features(correlation_matrix: pd.DataFrame, threshold: float = 0.9):

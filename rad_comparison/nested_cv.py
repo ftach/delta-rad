@@ -6,6 +6,7 @@ import os
 import time
 import numpy as np 
 import random 
+import yaml 
 
 import feature_selection as fsa 
 import dataset 
@@ -19,19 +20,22 @@ from sklearn.model_selection import train_test_split
 np.random.seed(42)
 random.seed(42)
 
-def main(): 
+def main(param_file: str): 
     start_time = time.time()
 
     ###################### INITIALIZATION ##############################
-    folder_path = '/home/tachennf/Documents/delta-rad/extracted_radiomics/'
-    delta_rad_tables = ['all_simu_gie_gtv.csv', 'simu_gtv.csv'] # ['rd_f1_f5_gtv.csv'] # 'f3_gtv.csv', 'simu_gtv.csv', 'f1_gtv.csv', 'f5_gtv.csv', 'rd_simu_f1_gtv.csv', 'rd_simu_f3_gtv.csv', 'rd_simu_f5_gtv.csv', 'rd_f1_f3_gtv.csv', 
-    feat_sel_algo_list = ['ANOVA_PERC', 'RDM_SEL', 'NO_SEL', 'RF']  # # , 'ADABOOST', , 'MI_PERC', 'MI_K_BEST', 'NO_SEL', 'RDM_SEL', 'LASSO'
-    outcome_csv = 'outcomes.csv'
-    smote = True
-    results_file = 'json_results/smote_results_ncv_gie_mridian_comparison.json'
-    pred_algo_list = ['RF', 'ADABOOST', 'LOGREGRIDGE', 'PSVM', 'KNN',  'BAGG', 'MLP', 'QDA'] # 
-    MAX_FEATURES = 3
-    outcomes_list = ['Récidive Locale'] # 'Récidive Méta', 
+    params = dataset.load_config(param_file)
+    folder_path = params['paths']['data_folder_path']
+    outcome_csv = params['paths']['outcome_csv_file']
+    results_file = params['paths']['results_file']   
+    delta_rad_tables = params['paths']['delta_rad_tables']
+
+    outcomes_list = params['parameters']['outcomes_list']
+    feat_sel_algo_list = params['parameters']['feat_sel_algo_list']
+    pred_algo_list = params['parameters']['pred_algo_list']
+    max_features = params['parameters']['max_features']
+    smote = params['parameters']['smote']
+
     results = {
         table: {
             feat_sel_algo: {
@@ -65,11 +69,11 @@ def main():
                 else:     
                     znorm_scaler = StandardScaler()
                     X_train = znorm_scaler.fit_transform(X_train)
-                best_features, best_feat_sel_model = fsa.get_best_features(X_train, y_train, fs_algo, features_list=features_list, max_features=MAX_FEATURES)
+                best_features, best_feat_sel_model = fsa.get_best_features(X_train, y_train, fs_algo, features_list=features_list, max_features=max_features)
                 print("Feature selection done for ", fs_algo)
                 print("Training...")
                 if fs_algo != 'NO_SEL': # if no feature selection, we don't need to train the model for each number of features 
-                    for nb_features in range(1, MAX_FEATURES+1): # number of features selected
+                    for nb_features in range(1, max_features+1): # number of features selected
                         
                         sel_features, X_filtered = fsa.filter_dataset2(X, best_features, nb_features, features_list)
                         gridcvs, results = p.init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, nb_features, outcome) # init pred algo
@@ -78,8 +82,6 @@ def main():
                         # OUTER LOOP FOR ALGORITHM SELECTION 
                         results = p.make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote)
                         print("Predictions done for ", nb_features, " features.")
-
-                        # SAVE ROC CURVES FOR BEST ALGORITHMS
 
                 else: # no selection 
                     best_feat_sel_model = None 
@@ -100,4 +102,4 @@ def main():
     print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == "__main__": 
-    main()
+    main('settings.yaml')
