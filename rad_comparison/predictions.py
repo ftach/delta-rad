@@ -2,6 +2,7 @@
 
 import pandas as pd 
 import numpy as np 
+from scipy.stats import entropy
 
 from statsmodels.stats.contingency_tables import mcnemar
 from sklearn.metrics import brier_score_loss
@@ -110,7 +111,7 @@ def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, ou
             optimal_threshold = compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold
 
             # Computing the test metrics
-            test_auc, sensitivity, specificity, brier_loss = compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
+            test_auc, sensitivity, specificity, brier_loss, uncertain_preds = compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
             # print(' | Train AUC: %.2f%% Test AUC: %.2f%% sens: %.2f%% spec: %.2f%%' % (
             #     100 * gs_est.best_score_, 100 * test_auc, 100 * sensitivity, 100 * specificity))
                 
@@ -122,6 +123,7 @@ def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, ou
             results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'].append(sensitivity)
             results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'].append(specificity)
             results[table][fs_algo][pred_algo][outcome][nb_features]['brier_loss'].append(brier_loss)
+            results[table][fs_algo][pred_algo][outcome][nb_features]['uncertain_preds'].append(uncertain_preds)
 
     return results
 
@@ -584,6 +586,7 @@ def compute_test_metrics(gs_est, X_test, y_test, optimal_threshold):
     float: The sensitivity.
     float: The specificity.
     float: The Brier loss.
+    int: number of uncertain predictions (entropy > 0.5) 
     '''
 
     # compute outer auc
@@ -592,13 +595,20 @@ def compute_test_metrics(gs_est, X_test, y_test, optimal_threshold):
     fpr, tpr, _ = roc_curve(y_test, outer_y_prob)
     test_auc = auc(fpr, tpr)
 
+    # uncertainty computation 
+    rf_model = gs_est.best_estimator_
+    tree_probs = np.array([tree.predict_proba(X_test) for tree in rf_model.estimators_])
+    mean_probs = np.mean(tree_probs, axis=0)
+    entropies = np.array([entropy(prob) for prob in mean_probs])
+    uncertain_preds = np.sum(entropies > 0.5)
+
     # compute sensitivity and specificity based on y_pred 
     outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
     tn, fp, fn, tp = confusion_matrix(y_test, outer_y_pred).ravel()
     sensitivity = tp / (tp + fn)
     specificity = tn / (tn + fp)
 
-    return test_auc, sensitivity, specificity, brier_loss
+    return test_auc, sensitivity, specificity, brier_loss, uncertain_preds
 
 def compute_uncertainty_test_metrics(gs_est, X_test, y_test, optimal_threshold):
     '''
