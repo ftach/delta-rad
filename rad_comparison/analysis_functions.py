@@ -189,7 +189,10 @@ def get_best_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: 
                 filtered_values = [x for x in mean_values if (
                     x != 'N/A') and (x != 0) and (x != 'None')]
                 if len(filtered_values) > 0:
-                    max_value = max(filtered_values)
+                    if metric == 'brier_loss':
+                        max_value = min(filtered_values)
+                    else:   
+                        max_value = max(filtered_values)
                     # get index in the list of the max value
                     index = filtered_values.index(max_value)
                     params = params[index]
@@ -200,8 +203,12 @@ def get_best_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: 
 
         # Sort the results list by the max value in descending order and take the top k
         if len(results_list) > 0:
-            results_list = sorted(
-                results_list, key=lambda x: x[0], reverse=True)[:k]
+            if metric == 'brier_loss':
+                results_list = sorted(
+                    results_list, key=lambda x: x[0], reverse=False)[:k]
+            else:
+                results_list = sorted(
+                    results_list, key=lambda x: x[0], reverse=True)[:k]
             top_results[table][outcome] = results_list
 
         # Display the top k results for each table and each outcome

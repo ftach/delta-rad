@@ -82,7 +82,7 @@ def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_
             results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'] = []
             results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'] = []
             results[table][fs_algo][pred_algo][outcome][nb_features]['brier_loss'] = []
-            results[table][fs_algo][pred_algo][outcome][nb_features]['uncertain_preds'] = []
+            # results[table][fs_algo][pred_algo][outcome][nb_features]['uncertain_preds'] = []
 
         # init gridsearch of each classifier
         gcv = GridSearchCV(estimator=est,
@@ -112,7 +112,7 @@ def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, ou
             optimal_threshold = compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold
 
             # Computing the test metrics
-            test_auc, sensitivity, specificity, brier_loss, uncertain_preds = compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
+            test_auc, sensitivity, specificity, brier_loss = compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
             # print(' | Train AUC: %.2f%% Test AUC: %.2f%% sens: %.2f%% spec: %.2f%%' % (
             #     100 * gs_est.best_score_, 100 * test_auc, 100 * sensitivity, 100 * specificity))
                 
@@ -124,7 +124,7 @@ def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, ou
             results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'].append(sensitivity)
             results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'].append(specificity)
             results[table][fs_algo][pred_algo][outcome][nb_features]['brier_loss'].append(brier_loss)
-            results[table][fs_algo][pred_algo][outcome][nb_features]['uncertain_preds'].append(uncertain_preds)
+            # results[table][fs_algo][pred_algo][outcome][nb_features]['uncertain_preds'].append(uncertain_preds)
 
     return results
 
@@ -194,24 +194,24 @@ def get_param_grids(pred_algo_list: list):
     param_grids = []
     for pred_algo in pred_algo_list:
         if pred_algo == 'RF': 
-            param_grid = [{'classifier__max_depth': range(1, 5, 4), 'classifier__n_estimators' : range(25, 50, 25)}]
+            param_grid = [{'RF__max_depth': range(1, 5, 4), 'RF__n_estimators' : range(25, 50, 25)}]
         elif pred_algo == 'ADABOOST':
-            param_grid = [{'classifier__n_estimators' : range(25, 50, 25)}]
+            param_grid = [{'ADABOOST__n_estimators' : range(25, 50, 25)}]
         elif pred_algo == 'LOGREGRIDGE':
-            param_grid = [{'classifier__penalty': ['l2'],
-                        'classifier__C': np.power(10., np.arange(-4, 4))}]
+            param_grid = [{'LOGREGRIDGE__penalty': ['l2'],
+                        'LOGREGRIDGE__C': np.power(10., np.arange(-4, 4))}]
         elif pred_algo =='PSVM':
-            param_grid = [{'classifier__C' : list(np.arange(0.01, 0.11, 0.01)), 'PSVM__degree': range(2, 5, 1)}]
+            param_grid = [{'PSVM__C' : list(np.arange(0.01, 0.11, 0.01)), 'PSVM__degree': range(2, 5, 1)}]
         elif pred_algo == 'KNN':
-            param_grid = [{'classifier__n_neighbors': range(1, 10)}]
+            param_grid = [{'KNN__n_neighbors': range(1, 10)}]
         elif pred_algo == 'BAGG':
-            param_grid = [{'classifier__n_estimators' : range(25, 1001, 25)}]
+            param_grid = [{'BAGG__n_estimators' : range(25, 1001, 25)}]
         elif pred_algo == 'MLP':
             param_grid = [{
-                'classifier__alpha' : 10.0 ** -np.arange(2, 5), 
-                'classifier__learning_rate_init': 10.0 ** -np.arange(2, 5)            }]
+                'MLP__alpha' : 10.0 ** -np.arange(2, 5), 
+                'MLP__learning_rate_init': 10.0 ** -np.arange(2, 5)            }]
         elif pred_algo == 'QDA':
-            param_grid = [{'classifier__reg_param': list(np.arange(0.01, 0.11, 0.01))}]
+            param_grid = [{'QDA__reg_param': list(np.arange(0.01, 0.11, 0.01))}]
         param_grids.append(param_grid)
 
     return param_grids
@@ -229,21 +229,21 @@ def get_pipelines(pred_algo_list: list):
     pipelines = []
     for pred_algo in pred_algo_list:
         if pred_algo == 'RF':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('classifier', RandomForestClassifier(random_state=42))])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('RF', RandomForestClassifier(random_state=42))])
         elif pred_algo == 'ADABOOST':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('classifier', AdaBoostClassifier(random_state=42, algorithm='SAMME'))])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('ADABOOST', AdaBoostClassifier(random_state=42, algorithm='SAMME'))])
         elif pred_algo == 'LOGREGRIDGE':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('classifier', LogisticRegression(multi_class='multinomial', solver='newton-cg', random_state=42))])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('LOGREGRIDGE', LogisticRegression(multi_class='multinomial', solver='newton-cg', random_state=42))])
         elif pred_algo == 'PSVM':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('classifier', SVC(kernel='poly', coef0=0, gamma=1.0, probability=True, random_state=42))])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('PSVM', SVC(kernel='poly', coef0=0, gamma=1.0, probability=True, random_state=42))])
         elif pred_algo == 'KNN':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('classifier', KNeighborsClassifier())])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('KNN', KNeighborsClassifier())])
         elif pred_algo == 'BAGG':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('classifier', BaggingClassifier(oob_score=True))])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('BAGG', BaggingClassifier(oob_score=True))])
         elif pred_algo == 'MLP':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('classifier', MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling'))])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('MLP', MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling'))])
         elif pred_algo == 'QDA':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('classifier', QuadraticDiscriminantAnalysis())])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('QDA', QuadraticDiscriminantAnalysis())])
         pipelines.append(pipeline)
 
     return pipelines
@@ -596,13 +596,15 @@ def compute_test_metrics(gs_est, X_test, y_test, optimal_threshold):
     fpr, tpr, _ = roc_curve(y_test, outer_y_prob)
     test_auc = auc(fpr, tpr)
 
-    # uncertainty computation 
-    rf_model = gs_est.best_estimator_.named_steps['classifier']
-
-    tree_probs = np.array([tree.predict_proba(X_test) for tree in rf_model.estimators_])
-    mean_probs = np.mean(tree_probs, axis=0)
-    entropies = np.array([entropy(prob) for prob in mean_probs])
-    uncertain_preds = np.sum(entropies > 0.5)
+    # # uncertainty computation 
+    # try: 
+    #     rf_model = gs_est.best_estimator_.named_steps['classifier']
+    #     tree_probs = np.array([tree.predict_proba(X_test) for tree in rf_model.estimators_])
+    #     mean_probs = np.mean(tree_probs, axis=0)
+    #     entropies = np.array([entropy(prob) for prob in mean_probs])
+    #     uncertain_preds = np.sum(entropies > 0.5)
+    # except AttributeError:
+    #     uncertain_preds = None 
 
     # compute sensitivity and specificity based on y_pred 
     outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
@@ -610,7 +612,7 @@ def compute_test_metrics(gs_est, X_test, y_test, optimal_threshold):
     sensitivity = tp / (tp + fn)
     specificity = tn / (tn + fp)
 
-    return test_auc, sensitivity, specificity, brier_loss, uncertain_preds
+    return test_auc, sensitivity, specificity, brier_loss #, uncertain_preds
 
 def compute_uncertainty_test_metrics(gs_est, X_test, y_test, optimal_threshold):
     '''
