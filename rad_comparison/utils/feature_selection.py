@@ -10,7 +10,7 @@ import numpy as np
 import random 
 from typing import Sequence
 
-import predictions as p 
+import utils.train as train
 
 SCORER = 'roc_auc' # 'f1'
 
@@ -57,7 +57,7 @@ def rf_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: int 
 
     #print("Beginning feature selection with Random Forest...")
 
-    best_model = p.train_rf(znorm_scaled_x_train, y_train)
+    best_model = train.train_rf(znorm_scaled_x_train, y_train)
     selected_features = select_best_features(best_model.feature_importances_, features_list, n_features=max_features)
     
     #print("Feature selection with Random Forest ended.")
@@ -82,7 +82,7 @@ def adaboost_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features
 
     #print("Beginning feature selection with AdaBoost...") 
 
-    best_model = p.train_adaboost(znorm_scaled_x_train, y_train)
+    best_model = train.train_adaboost(znorm_scaled_x_train, y_train)
     selected_features = select_best_features(best_model.feature_importances_, features_list, n_features=max_features)
 
     #print("Feature selection with AdaBoost ended.")
@@ -162,7 +162,6 @@ def gus_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: int
     features_list (list): List of feature names corresponding to the columns in znorm_scaled_x_train.
     max_features (int, optional): The maximum number of features to select. Default is 5.
     method (str, optional): The feature selection method to use. Options are 'ANOVA', 'CHI2', and 'MI'. Default is 'ANOVA'.
-    mode (str, optional): The mode of feature selection. Options are 'percentile' and 'k_best'. Default is 'percentile'. 
 
     Returns:
     tuple: A tuple containing:
@@ -184,7 +183,11 @@ def gus_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: int
     elif method == 'MI':
         score_func = mutual_info_classif 
 
-    selector = GenericUnivariateSelect(score_func=score_func, mode=mode, param=max_features)
+    if mode == 'percentile':
+        selector = GenericUnivariateSelect(score_func=score_func, mode=mode)
+
+    elif mode == 'k_best':
+        selector = GenericUnivariateSelect(score_func=score_func, mode=mode, param=max_features)
 
     try: 
         X_selected = selector.fit_transform(znorm_scaled_x_train, y_train)
@@ -248,16 +251,10 @@ def get_best_features(X_train: np.ndarray, y_train: np.ndarray, feat_sel_algo: s
     elif feat_sel_algo == 'NZV_001':
         best_features, best_model = nzv_feat_sel(X_train, features_list, threshold=0.01)
 
-    elif feat_sel_algo == 'ANOVA_PERC':
-        best_features, best_model = gus_feat_sel(X_train, y_train, features_list, max_features, method='ANOVA', mode='percentile')
     elif feat_sel_algo == 'ANOVA_K_BEST':
         best_features, best_model = gus_feat_sel(X_train, y_train, features_list, max_features, method='ANOVA', mode='k_best')
-    elif feat_sel_algo == 'CHI2_PERC':
-        best_features, best_model = gus_feat_sel(X_train, y_train, features_list, max_features, method='CHI2', mode='percentile')
     elif feat_sel_algo == 'CHI2_K_BEST':
         best_features, best_model = gus_feat_sel(X_train, y_train, features_list, max_features, method='CHI2', mode='k_best')
-    elif feat_sel_algo == 'MI_PERC':
-        best_features, best_model = gus_feat_sel(X_train, y_train, features_list, max_features, method='MI', mode='percentile')
     elif feat_sel_algo == 'MI_K_BEST':
         best_features, best_model = gus_feat_sel(X_train, y_train, features_list, max_features, method='MI', mode='k_best')
 
@@ -270,7 +267,8 @@ def get_best_features(X_train: np.ndarray, y_train: np.ndarray, feat_sel_algo: s
     elif feat_sel_algo == 'RDM_SEL':
         best_features, best_model =  random.sample(list(features_list), max_features), None 
 
-    #print("Feature selection with {} ended.".format(feat_sel_algo))
+    if feat_sel_algo != 'NO_SEL':
+        assert len(best_features) == max_features, print("Error, the number of selected features is not equal to the chosen number of features. ", len(best_features), max_features, best_features, feat_sel_algo)
 
     return best_features, best_model
 
@@ -314,7 +312,7 @@ def filter_dataset(X_train: np.ndarray, X_val: np.ndarray, best_features: Sequen
 
     return selected_features, X_train_filtered, X_val_filtered
 
-def filter_dataset2(X: np.ndarray, best_features: Sequence, nb_features: int, feature_names: list): 
+def filter_dataset2(X: np.ndarray, best_features: Sequence, nb_features: int): 
     """
     Filters the dataset to retain only the features selected by the algorithms.
 
@@ -322,7 +320,6 @@ def filter_dataset2(X: np.ndarray, best_features: Sequence, nb_features: int, fe
     X (pd.DataFrame): Features array.
     best_features (Sequence): Sequence of best features, can be a list or a dictionary.
     nb_features (int): Number of top features to select.
-    feature_names (list): List of feature names corresponding to the columns in X_train and X_val.
 
     Returns:
     tuple: A tuple containing:
@@ -340,5 +337,7 @@ def filter_dataset2(X: np.ndarray, best_features: Sequence, nb_features: int, fe
     
     # Use indices to filter the arrays
     X_filtered = X[selected_features]
+
+    assert len(selected_features) == nb_features, print(len(selected_features), nb_features, selected_features, best_features)
 
     return selected_features, X_filtered

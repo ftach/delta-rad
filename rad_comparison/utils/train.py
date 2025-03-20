@@ -1,11 +1,9 @@
-'''Functions to predict outcome with filtered dataset after feature selection. '''
+'''Functions to train ML models. '''
 
 import pandas as pd 
 import numpy as np 
-from scipy.stats import entropy
 
-from statsmodels.stats.contingency_tables import mcnemar
-from sklearn.metrics import brier_score_loss
+from sklearn.metrics import brier_score_loss, roc_curve, auc
 
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
@@ -18,8 +16,6 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
-from imblearn.over_sampling import SMOTE
-from collections import Counter
 
 
 import warnings
@@ -31,14 +27,12 @@ from sklearn.gaussian_process.kernels import RBF
 from sklearn.naive_bayes import GaussianNB
 
 
-from sklearn.metrics import confusion_matrix, roc_curve, auc
-
 import utils.sklearn_utils as sku 
 
 SCORER = 'f1' # 'roc_auc' 
 
-def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, nb_features, outcome):
-    '''Initialize the parameters for the prediction algorithms. 
+def init_for_prediction(results: dict, table: str, fs_algo: str, best_feat_sel_model: object, pred_algo_list: list, nb_features: int, outcome: str):
+    '''Initialize the structures and parameters for the prediction algorithms. 
     
     Parameters:
     ----------------
@@ -58,14 +52,13 @@ def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_
     '''
     # INIT PRED ALGO RESULTS
     if best_feat_sel_model is not None:
-        try: 
+        try: # TODO: see how to handle this 
             results[table][fs_algo]['params'] = best_feat_sel_model.best_params_
         except AttributeError:
             results[table][fs_algo]['params'] = best_feat_sel_model.get_params()
     else: 
         results[table][fs_algo]['params'] = 'no_feature_selection'
 
-    ###################### PREDICTION ####################################
     # INITIALIZATION 
     param_grids = get_param_grids(pred_algo_list) # Get parameter grids and pipelines
     pipes = get_pipelines(pred_algo_list) # Setting up the pipelines
@@ -73,18 +66,8 @@ def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_
     for pgrid, est, pred_algo in zip(param_grids, # one iteration for each classifier
                                 pipes,
                                 pred_algo_list):
-        # init results dict
-        if not nb_features in results[table][fs_algo][pred_algo][outcome].keys():
-            results[table][fs_algo][pred_algo][outcome][nb_features] = {}
-            results[table][fs_algo][pred_algo][outcome][nb_features]['features'] = []
-            results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = []
-            results[table][fs_algo][pred_algo][outcome][nb_features]['test_auc'] = [] 
-            results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'] = []
-            results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'] = []
-            results[table][fs_algo][pred_algo][outcome][nb_features]['brier_loss'] = []
-            # results[table][fs_algo][pred_algo][outcome][nb_features]['uncertain_preds'] = []
 
-        # init gridsearch of each classifier
+        # init gridsearch for cross validation (hyper-parameter tuning)
         gcv = GridSearchCV(estimator=est,
                            param_grid=pgrid,
                            scoring='roc_auc',
@@ -95,90 +78,6 @@ def init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_
         gridcvs[pred_algo] = gcv
     
     return gridcvs, results
-
-def make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote: bool = False):
-    for c, (outer_train_idx, outer_valid_idx) in enumerate(skfold.split(X_filtered, y)):
-        for pred_algo, gs_est in sorted(gridcvs.items()):
-            # print('outer fold %d/5 | tuning %-8s' % (c, pred_algo), end='')
-            X_train = X_filtered.iloc[outer_train_idx]
-            y_train = y.iloc[outer_train_idx]
-            X_test = X_filtered.iloc[outer_valid_idx]
-            y_test = y.iloc[outer_valid_idx]
-            if smote: # use smote to balance the dataset
-                sm = SMOTE(random_state=42, sampling_strategy='minority')
-                X_train, y_train = sm.fit_resample(X_train, y_train) 
-            # The inner loop for hyperparameter tuning
-            gs_est.fit(X_train, y_train) # hyperparameter tuning
-            optimal_threshold = compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold
-
-            # Computing the test metrics
-            test_auc, sensitivity, specificity, brier_loss = compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
-            # print(' | Train AUC: %.2f%% Test AUC: %.2f%% sens: %.2f%% spec: %.2f%%' % (
-            #     100 * gs_est.best_score_, 100 * test_auc, 100 * sensitivity, 100 * specificity))
-                
-            # save results 
-            results[table][fs_algo][pred_algo][outcome][nb_features]['features'] = sel_features
-            results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
-            results[table][fs_algo][pred_algo][outcome][nb_features]['train_auc'] = gs_est.best_score_ # score of best algo (based on cross validation search) trained again 
-            results[table][fs_algo][pred_algo][outcome][nb_features]['test_auc'].append(test_auc)
-            results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'].append(sensitivity)
-            results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'].append(specificity)
-            results[table][fs_algo][pred_algo][outcome][nb_features]['brier_loss'].append(brier_loss)
-            # results[table][fs_algo][pred_algo][outcome][nb_features]['uncertain_preds'].append(uncertain_preds)
-
-    return results
-
-def make_predictions_with_roc(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote: bool = False):
-    '''Make predictions with ROC curve. 
-    
-    Parameters:
-    ----------------
-    skfold (object): The StratifiedKFold object.
-    gridcvs (dict): A dictionary containing the GridSearchCV objects for each classifier.
-    X_filtered (pd.DataFrame): The filtered training data features.
-    y (pd.DataFrame): The target labels for the training data.
-    table (str): The name of the table.
-    fs_algo (str): The name of the feature selection algorithm.
-    results (dict): The dictionary containing the results of the prediction algorithms.
-    outcome (str): The name of the outcome to predict.
-    nb_features (int): The number of features selected.
-    sel_features (list): The list of selected features.
-    smote (bool): Whether to use SMOTE to balance the dataset.
-    
-    Returns:
-    ----------------
-    results (dict): The updated results dictionary that will contain the results of the prediction algorithms.
-    fpr (list): The false positive rate.
-    tpr (list): The true positive rate.
-    '''
-
-    for c, (outer_train_idx, outer_valid_idx) in enumerate(skfold.split(X_filtered, y)):
-        for pred_algo, gs_est in sorted(gridcvs.items()):
-            # print('outer fold %d/5 | tuning %-8s' % (c, pred_algo), end='')
-            X_train = X_filtered.iloc[outer_train_idx]
-            y_train = y.iloc[outer_train_idx]
-            X_test = X_filtered.iloc[outer_valid_idx]
-            y_test = y.iloc[outer_valid_idx]
-            if smote: # use smote to balance the dataset
-                sm = SMOTE(random_state=42, sampling_strategy='minority')
-                X_train, y_train = sm.fit_resample(X_train, y_train) 
-            # The inner loop for hyperparameter tuning
-            gs_est.fit(X_train, y_train) # hyperparameter tuning
-            optimal_threshold = compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold
-
-            # Computing the test metrics
-            test_auc, sensitivity, specificity, fpr, tpr = compute_and_plot_test_metrics(gs_est, X_test, y_test, optimal_threshold)
-        
-            # plot r
-            # save results 
-            results[table][fs_algo][pred_algo][outcome][nb_features]['features'] = sel_features
-            results[table][fs_algo][pred_algo][outcome][nb_features]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
-            results[table][fs_algo][pred_algo][outcome][nb_features]['train_auc'] = gs_est.best_score_ # score of best algo (based on cross validation search) trained again 
-            results[table][fs_algo][pred_algo][outcome][nb_features]['test_auc'].append(test_auc)
-            results[table][fs_algo][pred_algo][outcome][nb_features]['sensitivity'].append(sensitivity)
-            results[table][fs_algo][pred_algo][outcome][nb_features]['specificity'].append(specificity)
-
-    return results, fpr, tpr # return what's needed for roc curve plotting: y_test, model, X_test, 
 
 
 def get_param_grids(pred_algo_list: list): 
@@ -495,63 +394,9 @@ def train_model(pred_algo: str, X_train_filtered: pd.DataFrame, y_train: pd.Data
     #print("Training with {} ended.".format(pred_algo))
     return best_model 
 
-def compute_metric(X_val: np.ndarray, y_val: np.ndarray, model):
-    y_pred = model.predict(X_val) # get predictions 
-
-    y_val = y_val.astype('int64')
-
-    # get sensitivity, specificity
-    confmat = confusion_matrix(y_val, y_pred)
-    try: 
-        tn, fp, fn, tp = confmat.ravel()
-    except ValueError:
-        print("Confusion matrix is not well formatted.")
-        return 0, 0, 0, []
-    if tp+fn == 0: 
-        print("Division by zero")
-        return 0, 0, 0, []
-    if tn+fp == 0:
-        print("Division by zero")
-        return 0, 0, 0, []
-    else: 
-        sens = tp/(tp+fn)
-        spec = tn/(tn+fp)
-
-    # Get ROC AUC
-    try:
-        y_prob = model.predict_proba(X_val)[:, 1]
-        x_axis, y_axis, _ = roc_curve(y_val, y_prob)
-        roc_auc = auc(x_axis, y_axis)
-    except AttributeError: 
-        roc_auc = 'N/A'
-    # Get mispredictions
-    mispreds = []
-    for idx, (true, pred) in enumerate(zip(y_val, y_pred)):
-        if true != pred: 
-            mispreds.append(idx)
-
-    return sens, spec, roc_auc, mispreds
-
-def compute_pvalue(binary_preds1, binary_preds2, y_test): 
-    # the algorithm needs to be trained again!! find the params and features in the json file. That avoids to save ALL the outcomes 
-    # https://www.statology.org/mcnemars-test-python/ 
-
-    # Create a contingency table
-    contingency_table = [[0, 0], [0, 0]]
-    for true, p1, p2 in zip(y_test, binary_preds1, binary_preds2):
-        if p1 == true and p2 != true:
-            contingency_table[0][1] += 1
-        elif p1 != true and p2 == true:
-            contingency_table[1][0] += 1
-
-    # McNemar's test
-    result = mcnemar(contingency_table, exact=True)
-
-    return result.pvalue 
-
 def compute_opt_threshold(gs_est, X_train, y_train): 
     '''
-    Compute the optimal threshold for a given model based on Youden's J statistic.
+    Compute the optimal threshold for a given model based on Youden's J statistic. Also reports the train AUC and Brier loss.
 
     Parameters:
     gs_est (GridSearchCV): The GridSearchCV object containing the best estimator.
@@ -560,116 +405,19 @@ def compute_opt_threshold(gs_est, X_train, y_train):
 
     Returns:
     float: The optimal threshold for the model. 
+    float: The train AUC.
+    float: The train Brier loss.
     '''
+    
     best_model = gs_est.best_estimator_  # Best model from inner CV
     y_prob = best_model.predict_proba(X_train)[:, 1]  # Inner validation set probabilities
     fpr, tpr, thresholds = roc_curve(y_train, y_prob)
+    train_auc = auc(fpr, tpr)
+    train_brier_loss = brier_score_loss(y_train, y_prob)
 
     # Determine the optimal threshold using Youden's J statistic
     J_scores = tpr - fpr
     optimal_idx = J_scores.argmax()
     optimal_threshold = thresholds[optimal_idx] 
 
-    return optimal_threshold
-
-def compute_test_metrics(gs_est, X_test, y_test, optimal_threshold):
-    '''
-    Compute the test metrics for a given model.
-
-    Parameters:
-    gs_est (GridSearchCV): The GridSearchCV object containing the best estimator.
-    X_test (pd.DataFrame): The test data features.
-    y_test (pd.Series): The test data labels.
-    optimal_threshold (float): The optimal threshold for the model.
-
-    Returns:
-    float: The test AUC.
-    float: The sensitivity.
-    float: The specificity.
-    float: The Brier loss.
-    int: number of uncertain predictions (entropy > 0.5) 
-    '''
-
-    # compute outer auc
-    outer_y_prob = gs_est.best_estimator_.predict_proba(X_test)[:, 1]
-    brier_loss = brier_score_loss(y_test, outer_y_prob)
-    fpr, tpr, _ = roc_curve(y_test, outer_y_prob)
-    test_auc = auc(fpr, tpr)
-
-    # # uncertainty computation 
-    # try: 
-    #     rf_model = gs_est.best_estimator_.named_steps['classifier']
-    #     tree_probs = np.array([tree.predict_proba(X_test) for tree in rf_model.estimators_])
-    #     mean_probs = np.mean(tree_probs, axis=0)
-    #     entropies = np.array([entropy(prob) for prob in mean_probs])
-    #     uncertain_preds = np.sum(entropies > 0.5)
-    # except AttributeError:
-    #     uncertain_preds = None 
-
-    # compute sensitivity and specificity based on y_pred 
-    outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
-    tn, fp, fn, tp = confusion_matrix(y_test, outer_y_pred).ravel()
-    sensitivity = tp / (tp + fn)
-    specificity = tn / (tn + fp)
-
-    return test_auc, sensitivity, specificity, brier_loss #, uncertain_preds
-
-def compute_uncertainty_test_metrics(gs_est, X_test, y_test, optimal_threshold):
-    '''
-    Compute the test metrics for a given model using uncertainty thresholding.
-
-    Parameters:
-    gs_est (GridSearchCV): The GridSearchCV object containing the best estimator.
-    X_test (pd.DataFrame): The test data features.
-    y_test (pd.Series): The test data labels.
-    optimal_threshold (float): The optimal threshold for the model.
-
-    Returns:
-    float: The test AUC.
-    float: The sensitivity.
-    float: The specificity.
-    '''
-
-    # compute outer auc
-    outer_y_prob = gs_est.best_estimator_.predict_proba(X_test)[:, 1]
-    fpr, tpr, _ = roc_curve(y_test, outer_y_prob)
-    test_auc = auc(fpr, tpr)
-
-    # compute sensitivity and specificity based on y_pred 
-    outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
-    tn, fp, fn, tp = confusion_matrix(y_test, outer_y_pred).ravel()
-    sensitivity = tp / (tp + fn)
-    specificity = tn / (tn + fp)
-
-    return test_auc, sensitivity, specificity
-
-def compute_and_plot_test_metrics(gs_est, X_test, y_test, optimal_threshold):
-    '''
-    Compute the test metrics for a given model.
-
-    Parameters:
-    gs_est (GridSearchCV): The GridSearchCV object containing the best estimator.
-    X_test (pd.DataFrame): The test data features.
-    y_test (pd.Series): The test data labels.
-    optimal_threshold (float): The optimal threshold for the model.
-
-    Returns:
-    float: The test AUC.
-    float: The sensitivity.
-    float: The specificity.
-    list: The false positive rate.
-    list: The true positive rate.
-    '''
-
-    # compute outer auc
-    outer_y_prob = gs_est.best_estimator_.predict_proba(X_test)[:, 1]
-    fpr, tpr, _ = roc_curve(y_test, outer_y_prob)
-    test_auc = auc(fpr, tpr)
-
-    # compute sensitivity and specificity based on y_pred 
-    outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
-    tn, fp, fn, tp = confusion_matrix(y_test, outer_y_pred).ravel()
-    sensitivity = tp / (tp + fn)
-    specificity = tn / (tn + fp)
-
-    return test_auc, sensitivity, specificity, fpr, tpr
+    return optimal_threshold, train_auc, train_brier_loss

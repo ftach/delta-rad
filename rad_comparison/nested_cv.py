@@ -8,17 +8,19 @@ import numpy as np
 import random 
 import yaml 
 
-import feature_selection as fsa 
-import dataset 
-import predictions as p 
+import utils.feature_selection as fsa 
+import utils.dataset as dataset
+import utils.test as test
+import utils.train as train
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
-
+from sklearn.model_selection import StratifiedKFold
+from imblearn.over_sampling import SMOTE
 
 np.random.seed(42)
 random.seed(42)
+print("Seed example: ", random.randint(0, 100))
 
 def main(param_file: str): 
     start_time = time.time()
@@ -36,25 +38,11 @@ def main(param_file: str):
     max_features = params['parameters']['max_features']
     smote = params['parameters']['smote']
 
-    results = {
-        table: {
-            feat_sel_algo: {
-                pred_algo: {
-                    outcome: {}
-                    for outcome in outcomes_list
-                }
-                for pred_algo in pred_algo_list
-            }
-            for feat_sel_algo in feat_sel_algo_list
-        }
-        for table in delta_rad_tables
-    }
+    results = test.def_results_dict(delta_rad_tables, feat_sel_algo_list, pred_algo_list, outcomes_list, max_features)
 
     ###################### MAIN LOOP ##############################
     for table in delta_rad_tables:
         print('Training on table ', table)
-        if not table in results.keys():
-            results[table] = {} 
         for outcome in outcomes_list: 
             print("Training for outcome ", outcome)
             # Load the dataset 
@@ -71,27 +59,30 @@ def main(param_file: str):
                     X_train = znorm_scaler.fit_transform(X_train)
                 best_features, best_feat_sel_model = fsa.get_best_features(X_train, y_train, fs_algo, features_list=features_list, max_features=max_features)
                 print("Feature selection done for ", fs_algo)
+                
+                # PREDICTIONS
                 print("Training...")
-                if fs_algo != 'NO_SEL': # if no feature selection, we don't need to train the model for each number of features 
-                    for nb_features in range(1, max_features+1): # number of features selected
-                        
-                        sel_features, X_filtered = fsa.filter_dataset2(X, best_features, nb_features, features_list)
-                        gridcvs, results = p.init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, nb_features, outcome) # init pred algo
-                        skfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42) # outer folds
-
-                        # OUTER LOOP FOR ALGORITHM SELECTION 
-                        results = p.make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote)
-                        print("Predictions done for ", nb_features, " features.")
-
-                else: # no selection 
-                    best_feat_sel_model = None 
-                    sel_features, X_filtered = fsa.filter_dataset2(X, best_features, nb_features, features_list)
-                    gridcvs, results = p.init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, nb_features, outcome) # init pred algo  
+                for nb_features in range(1, max_features+1): # number of features selected
+                    
+                    sel_features, X_filtered = fsa.filter_dataset2(X, best_features, nb_features)
+                    gridcvs, results = train.init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, len(sel_features), outcome) # init pred algo
+                    
+                    # NESTED CV LOOP
                     skfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42) # outer folds
- 
-                    # OUTER LOOP FOR ALGORITHM SELECTION  
-                    results = p.make_predictions(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote)
-                    print("Predictions done for ", nb_features, " features.")
+                    for c, (outer_train_idx, outer_valid_idx) in enumerate(skfold.split(X_filtered, y)):
+                        for pred_algo, gs_est in sorted(gridcvs.items()):
+                            X_train = X_filtered.iloc[outer_train_idx]
+                            y_train = y.iloc[outer_train_idx]
+                            X_test = X_filtered.iloc[outer_valid_idx]
+                            y_test = y.iloc[outer_valid_idx]
+                            if smote: # use smote to balance the dataset
+                                sm = SMOTE(random_state=42, sampling_strategy='minority')
+                                X_train, y_train = sm.fit_resample(X_train, y_train) 
+                            gs_est.fit(X_train, y_train) # work on grid search: hyperparameter tuning
+                            optimal_threshold, train_auc, train_brier_loss = train.compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold based on train set results
+                            brier_loss, brier_loss_ci, test_auc, test_auc_ci, sensitivity, sensitivity_ci, specificity, specificity_ci = test.compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
+                            results = test.save_results(results, table, fs_algo, pred_algo, outcome, sel_features, gs_est, train_auc, train_brier_loss, test_auc, sensitivity, specificity, brier_loss, test_auc_ci, sensitivity_ci, specificity_ci, brier_loss_ci)
+                    print("Predictions done for ", len(sel_features), " features.")
 
     results_ser = dataset.convert_to_list(results)
 
