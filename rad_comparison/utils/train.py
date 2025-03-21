@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np 
 
 from sklearn.metrics import brier_score_loss, roc_curve, auc
-
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -16,10 +15,6 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
-
-
-import warnings
-warnings.filterwarnings('ignore')
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.gaussian_process import GaussianProcessClassifier
@@ -27,6 +22,8 @@ from sklearn.gaussian_process.kernels import RBF
 from sklearn.naive_bayes import GaussianNB
 
 
+import warnings
+warnings.filterwarnings('ignore')
 import utils.sklearn_utils as sku 
 
 SCORER = 'f1' # 'roc_auc' 

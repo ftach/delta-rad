@@ -8,9 +8,10 @@ import numpy as np
 import random 
 import matplotlib.pyplot as plt
 
-import feature_selection as fsa 
-import dataset 
-import predictions as p 
+import utils.feature_selection as fsa 
+import utils.dataset as dataset 
+import utils.train as train
+import utils.test as test 
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import StratifiedKFold

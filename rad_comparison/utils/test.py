@@ -246,7 +246,22 @@ def compute_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFr
     results (dict): The updated results dictionary that will contain the results of the prediction algorithms.
     '''
     outer_y_prob = gs_est.best_estimator_.predict_proba(X_test)[:, 1]
+    # transform y_test to a numpy array
+    y_test = y_test.to_numpy().flatten()
+    assert y_test.shape == outer_y_prob.shape, "Shapes are not the same"
     idx = np.arange(y_test.shape[0])
+
+    # Diagnostic checks
+    unique_probs = np.unique(outer_y_prob)
+    if len(unique_probs) == 1:
+        print("Warning: All predictions are the same.")
+
+    unique_classes = np.unique(y_test)
+    if len(unique_classes) == 1:
+        print("Warning: y_test contains only one class.")
+
+    if np.isnan(outer_y_prob).any():
+        print("Warning: outer_y_prob contains NaN values.")
 
     brier_loss_list = []
     test_auc_list = []
@@ -256,33 +271,46 @@ def compute_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFr
     for i in range(200): 
         pred_idx = np.random.choice(idx, size=idx.shape[0], replace=True)
 
-        brier_loss = brier_score_loss(y_test.iloc[pred_idx], outer_y_prob[pred_idx]) # TODO: compute confidence interval 
-        fpr, tpr, _ = roc_curve(y_test.iloc[pred_idx], outer_y_prob[pred_idx]) # TODO: compute confidence interval 
-        test_auc = auc(fpr, tpr) # TODO: compute confidence interval 
+        brier_loss = brier_score_loss(y_test[pred_idx], outer_y_prob[pred_idx]) 
+        fpr, tpr, _ = roc_curve(y_test[pred_idx], outer_y_prob[pred_idx]) 
+        test_auc = auc(fpr, tpr) 
+        if np.isnan(test_auc) == False:
+            test_auc_list.append(test_auc)
+
 
         # compute sensitivity and specificity based on y_pred 
         outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
         tn, fp, fn, tp = confusion_matrix(y_test, outer_y_pred).ravel()
-        sensitivity = tp / (tp + fn) # TODO: compute confidence interval 
-        specificity = tn / (tn + fp) # TODO: compute confidence interval 
+        sensitivity = tp / (tp + fn) 
+        specificity = tn / (tn + fp)  
 
-        brier_loss_list.append(brier_loss)
-        test_auc_list.append(test_auc)
-        sensitivity_list.append(sensitivity)
-        specificity_list.append(specificity)
-
+        if np.isnan(sensitivity) == False:
+            sensitivity_list.append(sensitivity)
+        if np.isnan(specificity) == False:
+            specificity_list.append(specificity)
+        if np.isnan(brier_loss) == False:
+            brier_loss_list.append(brier_loss)
+            
+    if len(test_auc_list) == 0: 
+        raise ValueError("No AUC values were computed.")
+    elif len(sensitivity_list) == 0:
+        raise ValueError("No sensitivity values were computed.")
+    elif len(specificity_list) == 0:
+        raise ValueError("No specificity values were computed.")
+    elif len(brier_loss_list) == 0:
+        raise ValueError("No Brier loss values were computed.")
+    else: 
+        brier_loss = np.mean(brier_loss_list)
+        brier_loss_ci = (np.percentile(brier_loss_list, 2.5), np.percentile(brier_loss_list, 97.5))
+        
+        test_auc = np.mean(test_auc_list)
+        test_auc_ci = (np.percentile(test_auc_list, 2.5), np.percentile(test_auc_list, 97.5))
     
-    brier_loss = np.mean(brier_loss_list)
-    brier_loss_ci = (np.percentile(brier_loss_list, 2.5), np.percentile(brier_loss_list, 97.5))
+        sensitivity = np.mean(sensitivity_list)
+        sensitivity_ci = (np.percentile(sensitivity_list, 2.5), np.percentile(sensitivity_list, 97.5))
     
-    test_auc = np.mean(test_auc_list)
-    test_auc_ci = (np.percentile(test_auc_list, 2.5), np.percentile(test_auc_list, 97.5))
-
-    sensitivity = np.mean(sensitivity_list)
-    sensitivity_ci = (np.percentile(sensitivity_list, 2.5), np.percentile(sensitivity_list, 97.5))
-
-    specificity = np.mean(specificity_list)
-    specificity_ci = (np.percentile(specificity_list, 2.5), np.percentile(specificity_list, 97.5))
+        specificity = np.mean(specificity_list)
+        specificity_ci = (np.percentile(specificity_list, 2.5), np.percentile(specificity_list, 97.5))
 
     return brier_loss, brier_loss_ci, test_auc, test_auc_ci, sensitivity, sensitivity_ci, specificity, specificity_ci
 
