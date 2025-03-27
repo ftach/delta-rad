@@ -414,8 +414,8 @@ def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path:
         metric (str): The metric to use. Options are 'mi' and 'pcc'.
 
     Returns:
-        float: The MSE before registration.
-        float: The MSE after registration.
+        float: The Dice score before registration.
+        float: The Dice score after registration.
     '''
  
     # load simu 
@@ -469,7 +469,6 @@ def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path:
             print(f"Run {run_counter}, Dice before registration: {dice_before}, Dice after registration: {dice_after}")
         if run_counter == 5:
             break
-            
 
     # sauvegarder les images
     sitk.WriteImage(sitk.GetImageFromArray(registered_fraction), output_path)

@@ -1,4 +1,4 @@
-import utils.registration as r
+import rad_maps.utils.registration as r
 import SimpleITK as sitk 
 import matplotlib.pyplot as plt 
 import numpy as np
@@ -6,11 +6,15 @@ import os
 
 
 def test_registration(): 
-    # charger simu 
+    '''Test the registration function on a single fraction (F5).
+    Plots metrics evolution according to iterations to observe convergence. 
+    Display Dice score computed between GTV after registration. '''
+
+    # load simu 
     simu = sitk.ReadImage('/home/tachennf/Documents/delta-rad/rad_maps/Data/Patient76/img_dir/Patient76_IRM_simu_mridian.nii')
     simu = sitk.GetArrayFromImage(simu)
 
-    # charger image F5
+    # load F5 image
     f5 = sitk.ReadImage('/home/tachennf/Documents/delta-rad/rad_maps/Data/Patient76/img_dir/Patient76_mridian_ttt_5.nii')
     f5 = sitk.GetArrayFromImage(f5)
 
@@ -52,6 +56,17 @@ def test_registration():
     # print(f"direction cosine before: {f5_img.GetDirection()}\ndirection cosine after: {transformed_img.GetDirection()}")
 
 def compare_methods(transformation='rigid', metric='pcc'): 
+    '''Performs the registration between simulation image (fixed) and fractions (moving) using the given metrics and transformations.
+    Displays the average Dice score before and after registration.
+
+    Parameters:
+    transformation: str, transformation to use for registration. Options are 'rigid' and 'affine'. 
+    metric: str, metric to use for registration. Options are 'pcc' and 'mi'. 
+
+    Returns:
+    None
+    '''
+
     dice_after_list = []
 
     patient_list = [p for p in os.listdir('/home/tachennf/Documents/delta-rad/rad_maps/Data/')]
@@ -108,6 +123,9 @@ def compare_methods(transformation='rigid', metric='pcc'):
     print(dice_after_list)
 
 def main():
+    '''Performs registration between the simulation image (fixed) and the fraction images (moving) using MI metric and rigid transformation.
+    Computes the average Dice score before and after registration.'''
+
     dice_before_list = []
     dice_after_list = []
 
@@ -169,8 +187,8 @@ def main():
                 dice_after_list.append(dice_after)
     
     print("Registration is over. Here are the results: ")
-    print(f"Average MSE before registration: {np.mean(dice_before_list)}")
-    print(f"Average MSE after registration: {np.mean(dice_after_list)}")
+    print(f"Average Dice before registration: {np.mean(dice_before_list)}")
+    print(f"Average Dice after registration: {np.mean(dice_after_list)}")
     print(dice_after_list)
 
 if __name__ == '__main__': 
