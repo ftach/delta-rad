@@ -2,10 +2,9 @@
 from sklearn.linear_model import Lasso
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.feature_selection import GenericUnivariateSelect, f_classif, chi2, mutual_info_classif
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-import train as train
-import sklearn_utils as sku 
+from .train import *
+from .sklearn_utils import *
 import pandas as pd 
 import numpy as np 
 import random 
@@ -108,7 +107,7 @@ def lasso_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: i
     #print("Beginning feature selection with Lasso...")
     param_grid = {'alpha' : list(np.arange(0.01, 0.11, 0.01))} # regularizer tuning
     estimator = Lasso(random_state=42) 
-    grid_lasso = sku.hyper_parameters_search(estimator, znorm_scaled_x_train, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_lasso = hyper_parameters_search(estimator, znorm_scaled_x_train, y_train, param_grid, scorer=SCORER, cv=5)
 
     selected_features = select_best_features(grid_lasso.best_estimator_.coef_, features_list, n_features=max_features)        
 
@@ -337,7 +336,38 @@ def filter_dataset2(X: np.ndarray, best_features: Sequence, nb_features: int):
     
     # Use indices to filter the arrays
     X_filtered = X[selected_features]
+    assert len(selected_features) == nb_features, print(len(selected_features), nb_features, selected_features, best_features)
 
+    return selected_features, X_filtered
+
+def filter_dataset3(X: np.ndarray, best_features: Sequence, nb_features: int, features_list: list): 
+    """
+    Filters the dataset to retain only the features selected by the algorithms.
+
+    Parameters:
+    X (pd.DataFrame): Features array.
+    best_features (Sequence): Sequence of best features, can be a list or a dictionary.
+    nb_features (int): Number of top features to select.
+    features_list (list): List of feature names corresponding to the columns in X.
+
+    Returns:
+    tuple: A tuple containing:
+        - selected_features (list): List of selected feature names.
+        - X_filtered (pd.DataFrame): Filtered data array.
+        
+    """
+
+    if type(best_features) == dict: 
+        best_features_dict = best_features
+        best_features = list(best_features_dict.keys())
+    elif type(best_features) == list: 
+        pass 
+    selected_features = best_features[:nb_features] # select only i best features 
+    
+    # Use indices to filter the arrays
+    X = pd.DataFrame(X, columns=features_list)
+    X_filtered = X.drop(columns=selected_features, axis=1)
+    
     assert len(selected_features) == nb_features, print(len(selected_features), nb_features, selected_features, best_features)
 
     return selected_features, X_filtered

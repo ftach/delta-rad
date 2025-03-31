@@ -75,6 +75,12 @@ def main(param_file: str):
                             y_train = y.iloc[outer_train_idx]
                             X_test = X_filtered.iloc[outer_valid_idx]
                             y_test = y.iloc[outer_valid_idx]
+                            
+                            y_train = np.array(y_train) # convert to numpy array
+                            y_train = y_train.reshape(-1, 1).ravel() # to avoid errors
+                            y_test = np.array(y_test) # convert to numpy array
+                            y_test = y_test.reshape(-1, 1).ravel()
+                            
                             if smote: # use smote to balance the dataset
                                 sm = SMOTE(random_state=42, sampling_strategy='minority')
                                 X_train, y_train = sm.fit_resample(X_train, y_train) 
@@ -93,4 +99,4 @@ def main(param_file: str):
     print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == "__main__": 
-    main('settings.yaml')
+    main('/home/tachennf/Documents/delta-rad/1D_radiomics/nested_cv_settings.yaml')

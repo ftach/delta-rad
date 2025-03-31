@@ -24,7 +24,7 @@ from sklearn.naive_bayes import GaussianNB
 
 import warnings
 warnings.filterwarnings('ignore')
-import sklearn_utils as sku 
+from .sklearn_utils import * 
 
 SCORER = 'f1' # 'roc_auc' 
 
@@ -68,7 +68,7 @@ def init_for_prediction(results: dict, table: str, fs_algo: str, best_feat_sel_m
         gcv = GridSearchCV(estimator=est,
                            param_grid=pgrid,
                            scoring='roc_auc',
-                           n_jobs=1,
+                           n_jobs=-1,
                            cv=4, # inner folds
                            verbose=0,
                            refit=True) # refit the best model with the entire dataset

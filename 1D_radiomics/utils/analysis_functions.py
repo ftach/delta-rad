@@ -1,25 +1,8 @@
 '''Functions for analyzing radiomics model performances. '''
 
 import math
-from typing import Sequence
-from dataset import get_dataset, min_max_scaling
-from train import train_model
 
-from sklearn.naive_bayes import GaussianNB
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.metrics import roc_curve, auc, confusion_matrix
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import BaggingClassifier
-from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import confusion_matrix
 
 import matplotlib.pyplot as plt
 import numpy as np

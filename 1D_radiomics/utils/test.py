@@ -126,6 +126,36 @@ def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcom
 
     return results
 
+def save_train_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcome: str, sel_features: list, gs_est: object, train_auc: float, train_brier_loss: float):
+    '''Save the results of the prediction algorithms made only on the training set.
+
+    Parameters:
+    ----------------
+    results (dict): The dictionary containing the results of the prediction algorithms.
+    table (str): The name of the table.
+    fs_algo (str): The name of the feature selection algorithm.
+    pred_algo (str): The name of the prediction algorithm.
+    outcome (str): The name of the outcome to predict.
+    sel_features (list): The list of selected features.
+    gs_est (object): The GridSearchCV object containing the best estimator.
+    train_auc (float): The train AUC.
+    train_brier_loss (float): The train Brier loss.
+    
+    Returns:
+    ----------------
+    results (dict): The updated results dictionary that will contain the results of the prediction algorithms
+    '''
+
+    # MODEL PARAMETERS
+    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['features'] = sel_features
+    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
+
+    # TRAIN SCORES
+    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['train_metrics']['auc']['values'].append(train_auc) 
+    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['train_metrics']['brier_loss']['values'].append(train_brier_loss)
+    
+    return results
+
 def make_predictions_with_roc(skfold, gridcvs, X_filtered, y, table, fs_algo, results, outcome, nb_features, sel_features, smote: bool = False):
     '''Make predictions with ROC curve. 
     
@@ -247,8 +277,7 @@ def compute_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFr
     results (dict): The updated results dictionary that will contain the results of the prediction algorithms.
     '''
     outer_y_prob = gs_est.best_estimator_.predict_proba(X_test)[:, 1]
-    # transform y_test to a numpy array
-    y_test = y_test.to_numpy().flatten()
+    
     assert y_test.shape == outer_y_prob.shape, "Shapes are not the same"
     idx = np.arange(y_test.shape[0])
 
