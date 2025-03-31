@@ -7,12 +7,17 @@ Adapted from https://insightsoftwareconsortium.github.io/SimpleITK-Notebooks/
 import numpy as np 
 import SimpleITK as sitk 
 import matplotlib.pyplot as plt
+import nibabel as nib
 from scipy.ndimage import (
     _ni_support,
     binary_erosion,
     distance_transform_edt,
     generate_binary_structure,
 )
+
+from dipy.align import affine_registration
+from scipy.ndimage import affine_transform
+from dipy.align.imaffine import AffineMap
 
 def align_centers(mz_stack: np.ndarray, moving_mz_stack: np.ndarray, mask: bool = False): 
     ''' Align the physical centers of two images.
@@ -49,13 +54,17 @@ def align_centers(mz_stack: np.ndarray, moving_mz_stack: np.ndarray, mask: bool 
 
     return initial_transform, sitk.GetArrayFromImage(moving_resampled)
 
-def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarray, mask: bool = False, transformation: str = 'rigid', metric: str = 'mi'):
+def sitk_affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarray, mask: bool = False, transformation: str = 'rigid', metric: str = 'mi'):
     '''
     Register two images using an affine transformation.
 
     Parameters:
         fixed_img_array (np.ndarray): The fixed image.
         moving_img_array (np.ndarray): The moving image.
+        mask (bool): Whether the image is a mask. Changes the interpolation method.
+        transformation (str): The transformation to use. Options are 'rigid' and 'affine'.
+        metric (str): The metric to use. Options are 'mi' and 'pcc'.
+
 
     Returns:
         registration_method: sitk.ImageRegistrationMethod: The registration method.
@@ -141,76 +150,80 @@ def affine_registration(fixed_img_array: np.ndarray, moving_img_array: np.ndarra
 
     return registration_method, final_transform, metric_values
 
-def compute_distances(result, reference, connectivity=1, voxelspacing=None): 
-    ''' Compute the distances of the voxels in a mask to the center. 
-    
-    Parameters:
-        mask_array (np.ndarray): The mask array.
-        
-    Returns:
-        np.ndarray: The distance array (x, y, z) dimensions. 
+
+def dipy_registration(fixed_img: np.ndarray, moving_img: np.ndarray, transformation: str = 'rigid'):
+    '''Register the images in the stack to the reference image.
+
+    Parameters
+    ----------
+    fixed_img : nibabel.nifti1.Nifti1Image, fixed image
+    moving_img : nibabel.nifti1.Nifti1Image, moving image
+    transformation : str, type of transformation to apply. Options are 'rigid' and 'affine'.
+
+    Returns
+    -------
+    registered_img: list, list of registered nibabel.nifti1.Nifti1Image
+    reg_affine: numpy.ndarray, affine transformation matrix
+    fopt: float, final cost function value
     '''
-    result = np.atleast_1d(result.astype(np.bool_))
-    reference = np.atleast_1d(reference.astype(np.bool_))
-    if voxelspacing is not None:
-        voxelspacing = _ni_support._normalize_sequence(voxelspacing, result.ndim)
-        voxelspacing = np.asarray(voxelspacing, dtype=np.float64)
-        if not voxelspacing.flags.contiguous:
-            voxelspacing = voxelspacing.copy()
-
-    # binary structure
-    footprint = generate_binary_structure(result.ndim, connectivity)
-
-    # test for emptiness
-    if 0 == np.count_nonzero(result):
-        raise RuntimeError(
-            "The first supplied array does not contain any binary object."
-        )
-    if 0 == np.count_nonzero(reference):
-        raise RuntimeError(
-            "The second supplied array does not contain any binary object."
-        )
-
-    # extract only 1-pixel border line of objects
-    result_border = result ^ binary_erosion(result, structure=footprint, iterations=1)
-    reference_border = reference ^ binary_erosion(
-        reference, structure=footprint, iterations=1
+    
+    pipeline = ["center_of_mass", "translation"] # "center_of_mass", "translation", "rigid", 
+    pipeline.append("rigid") #we always want to apply rigid registration
+    if transformation == 'affine':
+        pipeline.append("affine")
+    level_iters = [10000, 1000, 100] # 10000 at the coarsest resolution, 1000 at the medium resolution and 100 at the finest.
+    sigmas = [3.0, 1.0, 0.0] # smoothing gaussian kernel 
+    factors = [4, 2, 1]
+    nbins = 80
+    
+    # Register the image
+    registered_f_label_array, reg_affine, _, fopt = affine_registration(
+        moving_img,
+        fixed_img,
+        nbins=nbins,
+        metric="MI",
+        pipeline=pipeline,
+        level_iters=level_iters,
+        sigmas=sigmas,
+        factors=factors,
+        ret_metric=True, 
+        sampling_proportion=0.1
     )
-    
-    dt_x = distance_transform_edt(~reference_border, sampling=(1, 0, 0))  # X distances
-    dt_y = distance_transform_edt(~reference_border, sampling=(0, 1, 0))  # Y distances
-    dt_z = distance_transform_edt(~reference_border, sampling=(0, 0, 1))  # Z distances
+    return registered_f_label_array, reg_affine, fopt 
 
-    dx = dt_x[result_border]
-    dy = dt_y[result_border]
-    dz = dt_z[result_border]
-
-    tx = np.median(dx)
-    ty = np.median(dy)
-    tz = np.median(dz)
-    
-    return tx, ty, tz
-
-def initialize_transform_from_masks(fixed_mask: np.ndarray, moving_mask: np.ndarray) -> sitk.Euler3DTransform:
+def apply_dipy_affine_transformation(moving_img, fixed_img, reg_affine):
     """
-    Compute an initial Euler3DTransform from masks by aligning centroids.
+    Apply the affine transformation to the moving image to align it with the fixed image.
 
-    Parameters:
-        fixed_mask (numpy.ndarray): Binary mask of the fixed image.
-        moving_mask (numpy.ndarray): Binary mask of the moving image.
+    Parameters
+    ----------
+    moving_img : nibabel.nifti1.Nifti1Image
+        The moving image to be transformed.
+    fixed_img : nibabel.nifti1.Nifti1Image
+        The fixed image used as a reference.
+    reg_affine : numpy.ndarray
+        The affine transformation matrix returned by affine_registration.
 
-    Returns:
-        sitk.Euler3DTransform: Initial transformation.
+    Returns
+    -------
+    aligned_img : nibabel.nifti1.Nifti1Image
+        The aligned moving image.
     """
+    # Get the data from the moving image
+    moving_data = moving_img.get_fdata()
 
-    # Compute translation vector
-    translation = compute_distances(moving_mask, fixed_mask)
+    # Create an AffineMap object
+    affine_map = AffineMap(reg_affine,
+                           fixed_img.shape, fixed_img.affine,
+                           moving_img.shape, moving_img.affine)
 
-    # Create initial transform
-    init_transform = sitk.Euler3DTransform()
-    init_transform.SetTranslation(translation)
+    # Apply the affine transformation
+    aligned_data = affine_map.transform(moving_data)
 
-    return init_transform
+    # Create a new NIfTI image with the aligned data
+    aligned_img = nib.Nifti1Image(aligned_data, fixed_img.affine, fixed_img.header)
+
+    return aligned_img
 
 def apply_3D_transform(moving_3D_array: np.ndarray, transform: sitk.Transform, mask: bool = False) -> np.ndarray: 
     ''' Apply a 3D transformation to an image.
@@ -323,83 +336,6 @@ def resize_image(image: sitk.Image, new_size: tuple, interpolator=sitk.sitkLinea
 
     return resampled_image
 
-def register_gtv(simu_path: str, f_path: str, gtv_simu_path: str, gtv_f_path: str, output_path: str, normalization: str = 'zscore') -> tuple:
-    ''' Register the GTVs of a fraction image to the simulation image.
-    
-    Parameters:
-        simu_path (str): The path to the simulation image.  
-        f_path (str): The path to the fraction image.
-        gtv_simu_path (str): The path to the GTV of the simulation image.
-        gtv_f_path (str): The path to the GTV of the fraction image.
-        output_path (str): The path to save the registered GTV.
-        normalization (str): The normalization method to use. Options are 'zscore', 'histogram' and None.
-
-    Returns:
-        float: The Dice before registration.
-        float: The Dice after registration.
-    '''
- 
-    # charger simu 
-    simu = sitk.ReadImage(simu_path)
-    simu = sitk.GetArrayFromImage(simu)
-
-    # charger image F5
-    fraction = sitk.ReadImage(f_path)
-    fraction = sitk.GetArrayFromImage(fraction)
-
-    if simu.shape != fraction.shape:
-        print("Images have different shapes.")
-        return None, None 
-
-    # normalize images
-    if normalization == 'zscore':
-        simu = (simu - np.mean(simu)) / np.std(simu)
-        fraction = (fraction - np.mean(fraction)) / np.std(fraction)
-    elif normalization == 'histogram':
-        fraction = match_histograms(fraction, simu)
-    else:
-        pass
-
-    # COMPARE GTVs 
-    gtv_simu = sitk.ReadImage(gtv_simu_path) # charger gtv simu 
-    gtv_simu = sitk.GetArrayFromImage(gtv_simu)
-    gtv_fraction = sitk.ReadImage(gtv_f_path) # charger gtv F5 
-    gtv_fraction = sitk.GetArrayFromImage(gtv_fraction)
-        
-    dice_before = compute_dice(gtv_simu, gtv_fraction)
-    # print("Dice before initialization: ", dice_before)
-
-    init_transform = initialize_transform_from_masks(gtv_simu, gtv_fraction) # init registration based on GTV centroids
-
-    gtv_fraction = apply_3D_transform2(gtv_fraction, gtv_simu, init_transform, mask=True) # register fraction GTV to simu GTV
-
-    dice_init = compute_dice(gtv_simu, gtv_fraction)
-    # print("Dice before registration: ", dice_init)
-
-    # apply init transform to fraction image
-    fraction = apply_3D_transform2(fraction, simu, init_transform, mask=False)
-
-    dice_after = 0
-    run_counter = 0
-    while dice_after <= dice_before:
-        registration_method, T, metric_values = affine_registration(simu, fraction) # register fraction image to simu (finer one)
-        registered_gtv_fraction = apply_3D_transform2(gtv_fraction, gtv_simu, T, mask=True)
-        dice_after = compute_dice(gtv_simu, registered_gtv_fraction)
-        run_counter += 1
-        if run_counter > 1:
-            print(f"Run {run_counter}, Dice before registration: {dice_before}, Dice after registration: {dice_after}")
-        if run_counter == 5:
-            break
-
-    # sauvegarder les images
-    transformed_img = sitk.GetImageFromArray(registered_gtv_fraction)
-    transformed_img = sitk.TransformGeometry(transformed_img, T)
-# 
-    sitk.WriteImage(transformed_img, output_path)
-
-    return dice_before, dice_after
-
-
 def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path: str, output_path: str, normalization: str = 'zscore', transformation: str = 'rigid', metric: str = 'mi') -> tuple:
     ''' Register the fraction image to the simulation image. Evaluate the registration using the Dice computed on GTV masks. 
     
@@ -460,7 +396,7 @@ def register_images(simu_path: str, f_path: str, simu_gtv_path: str, f_gtv_path:
     dice_after = dice_before
     run_counter = 0
     while dice_after <= dice_before:
-        registration_method, T, metric_values = affine_registration(simu, fraction, mask=False, transformation=transformation, metric=metric) # register fraction image to simu (finer one)
+        registration_method, T, metric_values = sitk_affine_registration(simu, fraction, mask=False, transformation=transformation, metric=metric) # register fraction image to simu (finer one)
         registered_fraction = apply_3D_transform2(fraction, simu, T, mask=False)
         registered_f_gtv = apply_3D_transform2(gtv_f, gtv_simu, T, mask=True)
         dice_after = compute_dice(gtv_simu, registered_f_gtv)

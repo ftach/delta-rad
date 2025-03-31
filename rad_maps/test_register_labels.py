@@ -1,4 +1,4 @@
-from registration.register_labels import quick_test, register_mridian_dataset
+from registration.register_labels import *
 
 def main(): 
     '''Test the registration of the labels. 
