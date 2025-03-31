@@ -56,7 +56,7 @@ def rf_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features: int 
 
     #print("Beginning feature selection with Random Forest...")
 
-    best_model = train.train_rf(znorm_scaled_x_train, y_train)
+    best_model = train_rf(znorm_scaled_x_train, y_train)
     selected_features = select_best_features(best_model.feature_importances_, features_list, n_features=max_features)
     
     #print("Feature selection with Random Forest ended.")
@@ -81,7 +81,7 @@ def adaboost_feat_sel(znorm_scaled_x_train, y_train, features_list, max_features
 
     #print("Beginning feature selection with AdaBoost...") 
 
-    best_model = train.train_adaboost(znorm_scaled_x_train, y_train)
+    best_model = train_adaboost(znorm_scaled_x_train, y_train)
     selected_features = select_best_features(best_model.feature_importances_, features_list, n_features=max_features)
 
     #print("Feature selection with AdaBoost ended.")

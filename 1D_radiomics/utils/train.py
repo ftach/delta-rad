@@ -162,7 +162,7 @@ def train_rf(X_train_filtered, y_train):
 
     estimator = RandomForestClassifier(random_state=42) 
 
-    grid_rf = sku.hyper_parameters_search(estimator, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5) 
+    grid_rf = hyper_parameters_search(estimator, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5) 
 
     return grid_rf.best_estimator_
 
@@ -182,7 +182,7 @@ def train_dt(X_train_filtered, y_train):
     estimator = DecisionTreeClassifier(random_state=42, criterion='gini') # we can the change the criterion to entropy 
 
     #HYPER PARAMETER SEARCH
-    grid_dt = sku.hyper_parameters_search(estimator, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_dt = hyper_parameters_search(estimator, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_dt.best_estimator_
 
@@ -204,7 +204,7 @@ def train_adaboost(X_train_filtered, y_train):
 
     estimator = AdaBoostClassifier(random_state=42, algorithm='SAMME') 
 
-    grid_adab = sku.hyper_parameters_search(estimator, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_adab = hyper_parameters_search(estimator, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
     
     return grid_adab.best_estimator_  
 
@@ -223,7 +223,7 @@ def train_lsvc(X_train_filtered, y_train):
     param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01))} # regularization strength tuning
     lsvm = LinearSVC(random_state=42, dual=False)
 
-    grid_lsvm = sku.hyper_parameters_search(lsvm, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_lsvm = hyper_parameters_search(lsvm, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_lsvm.best_estimator_
 
@@ -242,7 +242,7 @@ def train_psvm(X_train_filtered, y_train):
     param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01)), 'degree': range(2, 5, 1)} # number of estimators tuning
     # param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01)), 'degree': [2]}
     ksvm = SVC( kernel="poly", coef0=0, gamma=1.0, probability=True)
-    grid_ksvm = sku.hyper_parameters_search(ksvm, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_ksvm = hyper_parameters_search(ksvm, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_ksvm.best_estimator_
 
@@ -261,7 +261,7 @@ def train_knn(X_train_filtered, y_train):
     param_grid = {'n_neighbors': range(1, 10)} # number of neighbors tuning
     knn = KNeighborsClassifier()
 
-    grid_knn = sku.hyper_parameters_search(knn, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_knn = hyper_parameters_search(knn, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_knn.best_estimator_
 
@@ -283,7 +283,7 @@ def train_logreg(X_train_filtered, y_train, penalty = None):
 
     logreg = LogisticRegression(multi_class='multinomial', penalty=penalty, random_state=42, solver='newton-cg') 
 
-    grid_logreg = sku.hyper_parameters_search(logreg, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_logreg = hyper_parameters_search(logreg, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_logreg.best_estimator_
 
@@ -304,7 +304,7 @@ def train_bagg(X_train_filtered, y_train):
 
     bagg = BaggingClassifier(oob_score=True)
 
-    grid_bagging = sku.hyper_parameters_search(bagg, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_bagging = hyper_parameters_search(bagg, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_bagging.best_estimator_
 
@@ -320,7 +320,7 @@ def train_mlp(X_train_filtered, y_train):
     # }
 
     mlp = MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling')
-    grid_mlp = sku.hyper_parameters_search(mlp, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_mlp = hyper_parameters_search(mlp, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_mlp.best_estimator_
 
@@ -337,7 +337,7 @@ def train_qda(X_train_filtered, y_train):
         'reg_param': list(np.arange(0.01, 0.11, 0.01))} # regularization strength tuning
     clf = QuadraticDiscriminantAnalysis()
 
-    grid_qda = sku.hyper_parameters_search(clf, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
+    grid_qda = hyper_parameters_search(clf, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_qda.best_estimator_ 
 
