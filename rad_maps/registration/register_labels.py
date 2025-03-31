@@ -62,7 +62,6 @@ def register_mridian_dataset(transformation='rigid', metric='pcc', mask='gtv'): 
     dice_after_list = []
     oriented_data_base_dir = '/home/tachennf/Documents/delta-rad/data/ICM_0.35T/oriented_data/'
     patient_list = [p for p in os.listdir(oriented_data_base_dir)]
-    patient_list = ['Patient56', 'Patient61']
     error_patients = []
     for p in patient_list:
         forbidden_patients = ['Patient32', 'Patient57', 'Patient14', 'Patient27', 'Patient80', 'Patient77', 'Patient38', 'Patient79', 'Patient11', 'Patient54', 'Patient18', 'Patient85']
