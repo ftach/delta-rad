@@ -36,6 +36,7 @@ def def_results_dict(delta_rad_tables: list, feat_sel_algo_list: list, pred_algo
                     outcome: {
                         nb_features: {
                             'features': [],
+                            'params': {},
                             'train_metrics': {
                                 'auc': {
                                     'values': [],

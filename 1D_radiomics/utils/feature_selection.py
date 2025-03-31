@@ -4,13 +4,13 @@ from sklearn.feature_selection import VarianceThreshold
 from sklearn.feature_selection import GenericUnivariateSelect, f_classif, chi2, mutual_info_classif
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-import utils.sklearn_utils as sku 
+import train as train
+import sklearn_utils as sku 
 import pandas as pd 
 import numpy as np 
 import random 
 from typing import Sequence
 
-import utils.train as train
 
 SCORER = 'roc_auc' # 'f1'
 

@@ -24,7 +24,7 @@ from sklearn.naive_bayes import GaussianNB
 
 import warnings
 warnings.filterwarnings('ignore')
-import utils.sklearn_utils as sku 
+import sklearn_utils as sku 
 
 SCORER = 'f1' # 'roc_auc' 
 
