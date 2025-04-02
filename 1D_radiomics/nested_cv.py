@@ -1,17 +1,15 @@
 '''Main script to run the feature selection and prediction algorithms comparison on the dataset. '''
 
-import pandas as pd 
 import json 
 import os 
 import time
 import numpy as np 
 import random 
-import yaml 
 
-import utils.feature_selection as fsa 
-import utils.dataset as dataset
-import utils.test as test
-import utils.train as train
+import utils.src.feature_selection as fsa 
+import utils.src.dataset as dataset
+import utils.src.test as test
+import utils.src.train as train
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import train_test_split

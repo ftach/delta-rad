@@ -65,7 +65,7 @@ def plot_heatmap(results: dict, table: str, outcome: str, feat_sel_algo_list: li
             plt.ylabel('Prediction Algorithm')
     plt.show()
 
-def get_best_results_to_plot(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, outcome: str, metric: str, k: int = 3):
+def get_top_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, metric: str, k: int = 10):
     """ 
     Get the top k results for each table and each outcome in terms of sensitivity.
     Args:
@@ -73,133 +73,84 @@ def get_best_results_to_plot(results: dict, delta_rad_tables: list, feat_sel_alg
         delta_rad_tables (list): A list of the radiomic tables.
         feat_sel_algo_list (list): A list of the feature selection algorithms.
         pred_algo_list (list): A list of the prediction algorithms.
-        outcome (str): The outcome of interest.
 
     Returns:
         None
     """
 
     top_results = {}
-    print(f"Top {k} results for each table and {outcome} in terms of {metric}:")
     for table in delta_rad_tables:
         top_results[table] = {}
         for feat_sel_algo in feat_sel_algo_list:
             for pred_algo in pred_algo_list:
-                if metric == 'train_auc': 
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['train_metrics']['auc']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'train_brier_loss':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['train_metrics']['brier_loss']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'test_auc':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['auc']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'test_brier_loss':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['brier_loss']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'sensitivity':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['sensitivity']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'specificity':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['specificity']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                else:
-                    print("Metric not recognized. Please choose one of the following: train_auc, train_brier_loss, test_auc, test_brier_loss, sensitivity, specificity.")
+                for nb_features in results[table][feat_sel_algo][pred_algo]['Récidive Locale'].keys():
+                    if metric == 'train_auc': 
+                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['train_metrics']['auc']['values']
+                    elif metric == 'train_brier_loss':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['train_metrics']['brier_loss']['values']
+                    elif metric == 'test_auc':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['test_metrics']['auc']['values']
+                    elif metric == 'test_brier_loss':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['test_metrics']['auc']['values']
+                    elif metric == 'sensitivity':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['test_metrics']['auc']['values']
+                    elif metric == 'specificity':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['test_metrics']['auc']['values']
+                    else:
+                        print("Metric not recognized. Please choose one of the following: train_auc, train_brier_loss, test_auc, test_brier_loss, sensitivity, specificity.")
                     
-                mean_values = [np.mean(sublist) for sublist in all_values]
-                filtered_values = [x for x in mean_values if (
-                    x != 'N/A') and (x != 0) and (x != 'None')]
-                
+                    mean_value = np.mean(all_fold_values)
+                    mean_value = round(mean_value, 3)  # Round to 3 decimal places
+
+                    if (mean_value != 'N/A') and (mean_value != 0) and (mean_value != 'None'): 
+                        top_results[table][str(mean_value)] = {}
+                        top_results[table][str(mean_value)]['feat_sel_algo'] = feat_sel_algo
+                        top_results[table][str(mean_value)]['pred_algo'] = pred_algo
+                        top_results[table][str(mean_value)]['features'] = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['features']
+                        top_results[table][str(mean_value)]['params'] = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['params']
+
         # Sort the results list by the max value in descending order and take the top k
-        if len(filtered_values) > 0:
-            if metric == 'brier_loss':
-                filtered_values = sorted(
-                    filtered_values, key=lambda x: x, reverse=False)[:k]
-            else:
-                filtered_values = sorted(
-                    filtered_values, key=lambda x: x, reverse=True)[:k]
-            top_results[table] = filtered_values
+        if len(top_results[table]) > 0:
+            sorted_keys = sorted(
+                top_results[table].keys(),
+                key=lambda x: float(x),
+                reverse=(metric != 'brier_loss')
+            )[:k]
+            top_results[table] = {key: top_results[table][key] for key in sorted_keys}
 
     return top_results
 
-
-def get_best_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, outcome: str, metric: str, k: int = 3):
-    """ 
-    Get the top k results for each table and each outcome in terms of sensitivity.
+def print_top_results(top_results: dict, metric: str, k: int = 3):
+    '''Prints the top results.
     Args:
-        results (dict): A dictionary containing the results to be plotted.
-        delta_rad_tables (list): A list of the radiomic tables.
-        feat_sel_algo_list (list): A list of the feature selection algorithms.
-        pred_algo_list (list): A list of the prediction algorithms.
-        outcome (str): The outcome of interest.
-
+        top_results (dict): A dictionary containing the top results to be printed.
+        metric (str): The metric to be used for printing. Options are 'train_auc', 'train_brier_loss', 'test_auc', 'test_brier_loss', 'sensitivity', 'specificity'.
     Returns:
         None
-    """
-
-    top_results = {}
-    print(f"Top {k} results for each table and {outcome} in terms of {metric}:")
-    for table in delta_rad_tables:
-        top_results[table] = {}
-        results_list = []
-        for feat_sel_algo in feat_sel_algo_list:
-            for pred_algo in pred_algo_list:
-                if metric == 'train_auc': 
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['train_metrics']['auc']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'train_brier_loss':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['train_metrics']['brier_loss']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'test_auc':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['auc']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'test_brier_loss':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['brier_loss']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'sensitivity':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['sensitivity']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                elif metric == 'specificity':
-                    all_values = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['specificity']['values']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                    
-                mean_values = [np.mean(sublist) for sublist in all_values]
-                features = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features']
-                            for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                params = [results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params']
-                          for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys()]
-                filtered_values = [x for x in mean_values if (
-                    x != 'N/A') and (x != 0) and (x != 'None')]
-                if len(filtered_values) > 0:
-                    if metric == 'brier_loss':
-                        max_value = min(filtered_values)
-                    else:   
-                        max_value = max(filtered_values)
-                    # get index in the list of the max value
-                    index = filtered_values.index(max_value)
-                    params = params[index]
-                    # get features for which the metric is the max
-                    features = features[index]
-                    results_list.append(
-                        (max_value, pred_algo, feat_sel_algo, features, params))
-
-        # Sort the results list by the max value in descending order and take the top k
-        if len(results_list) > 0:
-            if metric == 'brier_loss':
-                results_list = sorted(
-                    results_list, key=lambda x: x[0], reverse=False)[:k]
+    '''
+    for table, results in top_results.items():
+        print(f"Table: {table}")
+        i = 1
+        for mean_value, result in results.items():
+            if i <= k:
+                print(f"  Mean {metric}: {mean_value}, Feature Selection Algorithm: {result['feat_sel_algo']}, Prediction Algorithm: {result['pred_algo']}, Features: {result['features']}, Parameters: {result['params']}")
+                i += 1
             else:
-                results_list = sorted(
-                    results_list, key=lambda x: x[0], reverse=True)[:k]
-            top_results[table][outcome] = results_list
+                break
+        print()
 
-        # Display the top k results for each table and each outcome
-        print(f"Top {k} mean results for table {table}:")
-        for result in results_list:
-            print(f"Mean {metric}: {result[0]}, Prediction Algorithm: {result[1]}, Feature Selection Algorithm: {result[2]}, Features: {result[3]}")
-        print("\n")
-    return top_results
+def get_top_results_to_plot(top_results: dict):
+    '''Organize the top results in a dict with a key for each table
+    Args:
+        top_results (dict): A dictionary containing the top results to be printed.
+    Returns:
+        data (dict): A dictionary containing the tables as keys and the top results as values.
+    '''
 
+    data = {}
+    for table, results in top_results.items():
+        data[table] = [float(result) for result in list(results.keys())]
+    return data 
 
 def compute_best_metrics(fpr, tpr, thresholds, y_prob, y_true, youden_index: bool = True):
     '''Computes the best metrics for the best threshold according to Youden index.

@@ -9,10 +9,10 @@ import numpy as np
 import random 
 import yaml 
 
-import utils.feature_selection as fsa 
-import utils.dataset as dataset
-import utils.test as test
-import utils.train as train
+import utils.src.feature_selection as fsa 
+import utils.src.dataset as dataset
+import utils.src.test as test
+import utils.src.train as train
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from imblearn.over_sampling import SMOTE
