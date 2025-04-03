@@ -1,0 +1,684 @@
+INFO:radiomics.batch: pyradiomics version: v3.0.1
+INFO:radiomics.batch: Loading CSV
+ERROR:radiomics.batch: CSV READ FAILED
+Traceback (most recent call last):
+  File "<ipython-input-4-e99fd01a19d8>", line 22, in <module>
+    with open(inputCSV, 'r') as inFile:
+FileNotFoundError: [Errno 2] No such file or directory: 'batchPhantomACR.csv'
+INFO:radiomics.batch: Loading Done
+INFO:radiomics.batch: Patients: 0
+INFO:radiomics.batch: pyradiomics version: v3.0.1
+INFO:radiomics.batch: Loading CSV
+INFO:radiomics.batch: Loading Done
+INFO:radiomics.batch: Patients: 55
+INFO:radiomics.featureextractor: Loading parameter file Params_mt_RangeMin0.yaml
+INFO:radiomics.batch: pyradiomics version: v3.0.1
+INFO:radiomics.batch: Loading CSV
+INFO:radiomics.batch: Loading Done
+INFO:radiomics.batch: Patients: 55
+INFO:radiomics.featureextractor: Loading parameter file Params_mt_RangeMin0.yaml
+INFO:radiomics.batch: (1/55) Processing Patient (Image: J0/PostProcessing/J0_17s_1.nii, Mask: J0/PostProcessing/J0_17s_1_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (2/55) Processing Patient (Image: J0/PostProcessing/J0_17s_2.nii, Mask: J0/PostProcessing/J0_17s_2_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (3/55) Processing Patient (Image: J0/PostProcessing/J0_17s_3.nii, Mask: J0/PostProcessing/J0_17s_3_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (4/55) Processing Patient (Image: J0/PostProcessing/J0_17s_4.nii, Mask: J0/PostProcessing/J0_17s_4_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (5/55) Processing Patient (Image: J0/PostProcessing/J0_17s_5.nii, Mask: J0/PostProcessing/J0_17s_5_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (6/55) Processing Patient (Image: J1a/PostProcessing/J1_17s_1.nii, Mask: J1a/PostProcessing/J1_17s_1_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (7/55) Processing Patient (Image: J1a/PostProcessing/J1_17s_2.nii, Mask: J1a/PostProcessing/J1_17s_2_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (8/55) Processing Patient (Image: J1a/PostProcessing/J1_17s_3.nii, Mask: J1a/PostProcessing/J1_17s_3_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (9/55) Processing Patient (Image: J1a/PostProcessing/J1_17s_1.nii, Mask: J1a/PostProcessing/J1_17s_4_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (10/55) Processing Patient (Image: J1a/PostProcessing/J1_17s_5.nii, Mask: J1a/PostProcessing/J1_17s_5_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (11/55) Processing Patient (Image: J1b/PostProcessing/J1_17s_6.nii, Mask: J1b/PostProcessing/J1_17s_6_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (12/55) Processing Patient (Image: J1b/PostProcessing/J1_17s_7.nii, Mask: J1b/PostProcessing/J1_17s_7_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (13/55) Processing Patient (Image: J1b/PostProcessing/J1_17s_8.nii, Mask: J1b/PostProcessing/J1_17s_8_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (14/55) Processing Patient (Image: J1b/PostProcessing/J1_17s_9.nii, Mask: J1b/PostProcessing/J1_17s_9_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (15/55) Processing Patient (Image: J1b/PostProcessing/J1_17s_10.nii, Mask: J1b/PostProcessing/J1_17s_10_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (16/55) Processing Patient (Image: J2a/PostProcessing/J2_17s_1.nii, Mask: J2a/PostProcessing/J2_17s_1_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (17/55) Processing Patient (Image: J2a/PostProcessing/J2_17s_2.nii, Mask: J2a/PostProcessing/J2_17s_2_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (18/55) Processing Patient (Image: J2a/PostProcessing/J2_17s_3.nii, Mask: J2a/PostProcessing/J2_17s_3_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (19/55) Processing Patient (Image: J2a/PostProcessing/J2_17s_4.nii, Mask: J2a/PostProcessing/J2_17s_4_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (20/55) Processing Patient (Image: J2a/PostProcessing/J2_17s_5.nii, Mask: J2a/PostProcessing/J2_17s_5_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (21/55) Processing Patient (Image: J2b/PostProcessing/J2_17s_6.nii, Mask: J2b/PostProcessing/J2_17s_6_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (22/55) Processing Patient (Image: J2b/PostProcessing/J2_17s_7.nii, Mask: J2b/PostProcessing/J2_17s_7_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (23/55) Processing Patient (Image: J2b/PostProcessing/J2_17s_8.nii, Mask: J2b/PostProcessing/J2_17s_8_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (24/55) Processing Patient (Image: J2b/PostProcessing/J2_17s_9.nii, Mask: J2b/PostProcessing/J2_17s_9_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (25/55) Processing Patient (Image: J2b/PostProcessing/J2_17s_10.nii, Mask: J2b/PostProcessing/J2_17s_10_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (26/55) Processing Patient (Image: J3a/PostProcessing/J3_17s_1.nii, Mask: J3a/PostProcessing/J3_17s_1_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (27/55) Processing Patient (Image: J3a/PostProcessing/J3_17s_2.nii, Mask: J3a/PostProcessing/J3_17s_2_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (28/55) Processing Patient (Image: J3a/PostProcessing/J3_17s_3.nii, Mask: J3a/PostProcessing/J3_17s_3_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (29/55) Processing Patient (Image: J3a/PostProcessing/J3_17s_4.nii, Mask: J3a/PostProcessing/J3_17s_4_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (30/55) Processing Patient (Image: J3a/PostProcessing/J3_17s_5.nii, Mask: J3a/PostProcessing/J3_17s_5_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (31/55) Processing Patient (Image: J3b/PostProcessing/J3_17s_6.nii, Mask: J3b/PostProcessing/J3_17s_6_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (32/55) Processing Patient (Image: J3b/PostProcessing/J3_17s_7.nii, Mask: J3b/PostProcessing/J3_17s_7_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (33/55) Processing Patient (Image: J3b/PostProcessing/J3_17s_8.nii, Mask: J3b/PostProcessing/J3_17s_8_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (34/55) Processing Patient (Image: J3b/PostProcessing/J3_17s_9.nii, Mask: J3b/PostProcessing/J3_17s_9_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (35/55) Processing Patient (Image: J3b/PostProcessing/J3_17s_10.nii, Mask: J3b/PostProcessing/J3_17s_10_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (36/55) Processing Patient (Image: J4a/PostProcessing/J4_17s_1.nii, Mask: J4a/PostProcessing/J4_17s_1_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (37/55) Processing Patient (Image: J4a/PostProcessing/J4_17s_2.nii, Mask: J4a/PostProcessing/J4_17s_2_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (38/55) Processing Patient (Image: J4a/PostProcessing/J4_17s_3.nii, Mask: J4a/PostProcessing/J4_17s_3_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (39/55) Processing Patient (Image: J4a/PostProcessing/J4_17s_4.nii, Mask: J4a/PostProcessing/J4_17s_4_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (40/55) Processing Patient (Image: J4a/PostProcessing/J4_17s_5.nii, Mask: J4a/PostProcessing/J4_17s_5_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (41/55) Processing Patient (Image: J4b/PostProcessing/J4_17s_6.nii, Mask: J4b/PostProcessing/J4_17s_6_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (42/55) Processing Patient (Image: J4b/PostProcessing/J4_17s_7.nii, Mask: J4b/PostProcessing/J4_17s_7_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (43/55) Processing Patient (Image: J4b/PostProcessing/J4_17s_8.nii, Mask: J4b/PostProcessing/J4_17s_8_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (44/55) Processing Patient (Image: J4b/PostProcessing/J4_17s_9.nii, Mask: J4b/PostProcessing/J4_17s_9_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (45/55) Processing Patient (Image: J4b/PostProcessing/J4_17s_10.nii, Mask: J4b/PostProcessing/J4_17s_10_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (46/55) Processing Patient (Image: J5a/PostProcessing/J5_17s_1.nii, Mask: J5a/PostProcessing/J5_17s_1_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (47/55) Processing Patient (Image: J5a/PostProcessing/J5_17s_2.nii, Mask: J5a/PostProcessing/J5_17s_2_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (48/55) Processing Patient (Image: J5a/PostProcessing/J5_17s_3.nii, Mask: J5a/PostProcessing/J5_17s_3_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (49/55) Processing Patient (Image: J5a/PostProcessing/J5_17s_4.nii, Mask: J5a/PostProcessing/J5_17s_4_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (50/55) Processing Patient (Image: J5a/PostProcessing/J5_17s_5.nii, Mask: J5a/PostProcessing/J5_17s_5_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (51/55) Processing Patient (Image: J5b/PostProcessing/J5_17s_6.nii, Mask: J5b/PostProcessing/J5_17s_6_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (52/55) Processing Patient (Image: J5b/PostProcessing/J5_17s_7.nii, Mask: J5b/PostProcessing/J5_17s_7_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (53/55) Processing Patient (Image: J5b/PostProcessing/J5_17s_8.nii, Mask: J5b/PostProcessing/J5_17s_8_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (54/55) Processing Patient (Image: J5b/PostProcessing/J5_17s_9.nii, Mask: J5b/PostProcessing/J5_17s_9_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+INFO:radiomics.batch: (55/55) Processing Patient (Image: J5b/PostProcessing/J5_17s_10.nii, Mask: J5b/PostProcessing/J5_17s_10_roi.nii)
+INFO:radiomics.featureextractor: Calculating features with label: 1
+INFO:radiomics.featureextractor: Loading image and mask
+ERROR:radiomics.batch: FEATURE EXTRACTION FAILED
+Traceback (most recent call last):
+  File "C:/Users/Tardieu/Documents/1-Work_Data/Clinique/2020_Radiomics_Morgan/Fantome_ACR_MRIdian/PostProcessing/PyradiomicsResults/processingPhant0.py", line 84, in main
+    featureVector.update(extractor.execute(imageFilepath, maskFilepath, label))
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
+ges\radiomics\featureextractor.py", line 272, in execute
+    image, mask = self.loadImage(imageFilepath, maskFilepath, generalInfo, **_settings)
+  File "C:\Users\Tardieu\AppData\Local\Continuum\anaconda3\lib\site-packages\radiomics\featureextractor.py", line 375, in loadImage
+    raise ValueError('Error reading image Filepath or SimpleITK object')
+ValueError: Error reading image Filepath or SimpleITK object
