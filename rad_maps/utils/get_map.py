@@ -11,7 +11,7 @@ import os
 
 import utils.clustering as cl 
 
-def compute_feature_maps(fractions: list, patients: list, params_path: str, enabled_features: str, mask_type: str = 'gtv') -> list:
+def compute_feature_maps(input_folder: str, output_folder: str, fractions: list, patients: list, params_path: str, enabled_features: list, mask_type: str = 'gtv') -> list:
     '''Compute feature maps for all given patients and fractions. Save them as .nrrd files. 
     Computations are made on fractions MRI that are registered to simulation MRI. Mask is GTV or PTV from simulation MRI. 
 
@@ -19,7 +19,7 @@ def compute_feature_maps(fractions: list, patients: list, params_path: str, enab
     ----------
         fractions: list, list of fractions to compute feature maps for
         patients: list, list of patients to compute feature maps for
-        params_path: str, path to the parameters file
+        params_path: str, path to the parameters file (.yaml)
         enabled_features: list, list of enabled features
         mask_type: str, type of mask to use. Options are 'gtv' or 'ptv'
         
@@ -30,22 +30,19 @@ def compute_feature_maps(fractions: list, patients: list, params_path: str, enab
     errors = []
     for f in fractions:
         for p in patients:
-            # if image == simu: modifications TODO 
-            image_path = 'Data/' + p + '/img_dir/registered_' + p + '_mridian_' + f + '.nii'
-            if os.path.exists(image_path) == False: # if fraction is missing 
-                image_path = 'Data/' + p + '/img_dir/' + p + '_mridian_' + f + '_oriented.nii' # if there was no simu, we don't have registered in front of the name
-                if os.path.exists(image_path) == False:
-                    #print('Image not found for ' + p + ' ' + f)
-                    continue 
-            mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_mridian_' + mask_type + '_oriented.nii' # standard simu mask path
-            if os.path.exists(mask_path) == False:                
-                mask_path = 'Data/' + p + '/mask_dir/' + p + '_IRM_simu_MRIdian_' + mask_type + '_oriented.nii' # other way to write mask path
-                if os.path.exists(mask_path) == False: # means that simu mask does not exists 
-                    #print('Mask not found for ' + p, 'Use fraction 1 mask instead. ')
-                    mask_path = 'Data/' + p + '/mask_dir/' + p + '_mridian_ttt_1_' + mask_type + '_oriented.nii' # use fraction 1 mask otherwise (fractions were registered to F1 in this case)
+            if f != 'simu':
+                image_path = input_folder + p + '/img_dir/' + p + '_mridian_' + f + '.nii'
+                if os.path.exists(image_path) == False: # if fraction is missing 
+                    raise ValueError('Image not found for ' + p + ' ' + f) 
+                mask_path = input_folder + p + '/mask_dir/' + p + '_mridian_' + f + '_' + mask_type + '.nii'
+                if os.path.exists(mask_path) == False: # mask is missing 
+                    raise ValueError('Mask not found for ' + p + ' ' + f)
+                output_path = output_folder + p + '/' + mask_type + '/' + f + '/'
+            else:
+                raise ValueError('Simu image is not taken into account yet')
             try: 
-                computed_features = generate_feature_map(image_path, mask_path, params_path, 'Data/' + p + '/rad_maps/'  + mask_type + '/' + f + '/', enabled_features)
-                assert os.path.exists('Data/' + p + '/rad_maps/' + mask_type + '/' + f + '/'), 'Feature map not created'
+                computed_features = generate_feature_map(image_path, mask_path, params_path, output_path, enabled_features)
+                assert os.path.exists(output_path), 'Feature map not created'
             except ValueError: 
                 #print('Feature map not created for ', p, ' ', f)
                 errors.append(p)
@@ -122,38 +119,35 @@ def compute_clustered_delta_maps(fractions: list, patients: list, enabled_featur
                 
             # print('Clustered {} delta maps computed for {}'.format(f, p))
 
-def generate_feature_map(img_path: str, roi_path: str, parameter_path: str, store_path: str, enabled_features: list) -> None:
+def generate_feature_map(img_path: str, mask_path: str, parameter_path: str, output_path: str, enabled_features: list) -> None:
     """Generate specific feature map based on kernel Radius.
 
     Parameters
     ----------
 
     img_path: str, candidate image path;
-    roi_path: str, candidate ROI path;
+    mask_path: str, candidate ROI path;
     parameter_path: str, .yaml parameter path;
-    store_path: str, directory where to store the feature maps;
+    output_path: str, directory where to store the feature maps;
     enabled_features: list, list of enabled features. Compute all features if None;
 
     Returns
     -------
     """
-    start_time = time.time()
-    extractor = featureextractor.RadiomicsFeatureExtractor(parameter_path, store_path)
+    if os.path.exists(output_path) is False:
+        os.makedirs(output_path)
 
     # compute features
-    result = extractor.execute(img_path, roi_path, voxelBased=True)
+    extractor = featureextractor.RadiomicsFeatureExtractor(parameter_path, output_path)
+    result = extractor.execute(img_path, mask_path, voxelBased=True)
 
     # save maps
-    if os.path.exists(store_path) is False:
-        os.makedirs(store_path)
     for key, val in six.iteritems(result):
         if 'all' in enabled_features: 
             enabled_features = [f for f in result.keys() if f.startswith('original')] # we save all the features
         if isinstance(val, sitk.Image) and key in enabled_features:
-            sitk.WriteImage(val, os.path.join(store_path, key + '.nrrd'), True)
-            np.save(os.path.join(store_path, key + '.npy'), sitk.GetArrayFromImage(val))
+            sitk.WriteImage(val, os.path.join(output_path, key + '.nrrd'), True)
 
-    print('Elapsed time: {} s'.format(time.time() - start_time))
     return enabled_features
 
 def generate_delta_map(mask_paths: list, map_paths: list, feature_name: list, store_path: str) -> None:

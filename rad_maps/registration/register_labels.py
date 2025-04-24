@@ -47,7 +47,7 @@ def quick_test():
     print(f"Dice before registration: {dice_before}")
     print(f"Dice after registration: {dice_after}")
 
-def register_mridian_dataset(transformation='rigid', metric='pcc', mask='gtv'): # TODO implement really when tests are OK
+def register_mridian_dataset(transformation='rigid', metric='pcc', mask='gtv'): 
     '''Performs the registration between simulation image (fixed) and fractions (moving) using the given metrics and transformations.
     Displays the average Dice score before and after registration.
 
@@ -61,24 +61,26 @@ def register_mridian_dataset(transformation='rigid', metric='pcc', mask='gtv'): 
 
     dice_after_list = []
     oriented_data_base_dir = '/home/tachennf/Documents/delta-rad/data/ICM_0.35T/oriented_data/'
-    patient_list = [p for p in os.listdir(oriented_data_base_dir)]
+    # patient_list = [p for p in os.listdir(oriented_data_base_dir)]
+    patient_list = ['Patient76', 'Patient75', 'Patient72', 'Patient59', 'Patient46', 'Patient34', 'Patient35', 'Patient36', 'Patient31', 'Patient12', 'Patient20', 'Patient22', 'Patient26', 'Patient39', 'Patient40']
     error_patients = []
     for p in patient_list:
-        forbidden_patients = ['Patient32', 'Patient57', 'Patient14', 'Patient27', 'Patient80', 'Patient77', 'Patient38', 'Patient79', 'Patient11', 'Patient54', 'Patient18', 'Patient85']
-        # Patient77 has no GTV but a PTV
-        # Patient38 has a weird error 
-        # Patients to checks: 11, 54, 18, 85, 02, 65
-        if p in forbidden_patients:
-            continue
+        # forbidden_patients = ['Patient32', 'Patient57', 'Patient14', 'Patient27', 'Patient80', 'Patient77', 'Patient38', 'Patient79', 'Patient11', 'Patient54', 'Patient18', 'Patient85']
+        # # Patient77 has no GTV but a PTV
+        # # Patient38 has a weird error 
+        # # Patients to checks: 11, 54, 18, 85, 02, 65
+        # if p in forbidden_patients:
+        #     continue
         print(f"{p}")
 
         # check that we have patient folder 
-        if os.path.exists(f'{oriented_data_base_dir}/{p}') == False: 
-            continue
+        output_patient_dir = f'/home/tachennf/Documents/delta-rad/data/ICM_0.35T/registered_data/{p}/'
+
+        # if os.path.exists(f'{oriented_data_base_dir}/{p}') == False: 
+        #     continue
 
         img_paths = [f for f in os.listdir(f'{oriented_data_base_dir}/{p}/img_dir/')]
         img_paths = sorted(img_paths)
-        output_patient_dir = f'/home/tachennf/Documents/delta-rad/data/ICM_0.35T/registered_data/{p}/'
         if os.path.exists(output_patient_dir) == False: 
             os.makedirs(output_patient_dir)
 
