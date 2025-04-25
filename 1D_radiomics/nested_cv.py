@@ -44,7 +44,7 @@ def main(param_file: str):
         for outcome in outcomes_list: 
             print("Training for outcome ", outcome)
             # Load the dataset 
-            X, y, features_list = dataset.get_xy(os.path.join(folder_path, table), os.path.join(folder_path, outcome_csv), outcome)
+            X, y, features_list = dataset.get_xy(os.path.join(folder_path, table), os.path.join(folder_path, outcome_csv), outcome, smote=smote)
             X_train, _, y_train, _ = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y[outcome])
             
             ###################### FEATURE SELECTION WITHOUT CVAL ##############################
@@ -63,7 +63,7 @@ def main(param_file: str):
                 for nb_features in range(1, max_features+1): # number of features selected
                     
                     sel_features, X_filtered = fsa.filter_dataset2(X, best_features, nb_features)
-                    gridcvs, results = train.init_for_prediction(results, table, fs_algo, best_feat_sel_model, pred_algo_list, len(sel_features), outcome) # init pred algo
+                    gridcvs = train.init_grids(pred_algo_list) 
                     
                     # NESTED CV LOOP
                     skfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=42) # outer folds
@@ -74,18 +74,13 @@ def main(param_file: str):
                             X_test = X_filtered.iloc[outer_valid_idx]
                             y_test = y.iloc[outer_valid_idx]
                             
-                            y_train = np.array(y_train) # convert to numpy array
-                            y_train = y_train.reshape(-1, 1).ravel() # to avoid errors
-                            y_test = np.array(y_test) # convert to numpy array
-                            y_test = y_test.reshape(-1, 1).ravel()
+                            y_train = np.array(y_train).reshape(-1, 1).ravel() # convert to numpy array to avoid errors
+                            y_test = np.array(y_test).reshape(-1, 1).ravel() # convert to numpy array
                             
-                            if smote: # use smote to balance the dataset
-                                sm = SMOTE(random_state=42, sampling_strategy='minority')
-                                X_train, y_train = sm.fit_resample(X_train, y_train) 
                             gs_est.fit(X_train, y_train) # work on grid search: hyperparameter tuning
                             optimal_threshold, train_auc, train_brier_loss = train.compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold based on train set results
                             brier_loss, brier_loss_ci, test_auc, test_auc_ci, sensitivity, sensitivity_ci, specificity, specificity_ci = test.compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
-                            results = test.save_results(results, table, fs_algo, pred_algo, outcome, sel_features, gs_est, train_auc, train_brier_loss, test_auc, sensitivity, specificity, brier_loss, test_auc_ci, sensitivity_ci, specificity_ci, brier_loss_ci)
+                            results = test.save_results(results, table, fs_algo, pred_algo, outcome, sel_features, best_feat_sel_model, gs_est, train_auc, train_brier_loss, test_auc, sensitivity, specificity, brier_loss, test_auc_ci, sensitivity_ci, specificity_ci, brier_loss_ci)
                     print("Predictions done for ", len(sel_features), " features.")
 
     results_ser = dataset.convert_to_list(results)

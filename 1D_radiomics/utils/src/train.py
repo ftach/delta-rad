@@ -27,35 +27,17 @@ warnings.filterwarnings('ignore')
 from .sklearn_utils import * 
 
 SCORER = 'f1' # 'roc_auc' 
-
-def init_for_prediction(results: dict, table: str, fs_algo: str, best_feat_sel_model: object, pred_algo_list: list, nb_features: int, outcome: str):
+def init_grids(pred_algo_list: list):
     '''Initialize the structures and parameters for the prediction algorithms. 
     
     Parameters:
     ----------------
-    results (dict): The dictionary containing the results of the prediction algorithms.
-    table (str): The name of the table.
-    fs_algo (str): The name of the feature selection algorithm.
-    best_feat_sel_model (object): The best feature selection model.
     pred_algo_list (list): The list of classifiers names for which to get the pipelines.
-    nb_features (int): The number of features selected.
-    sel_features (list): The list of selected features.
-    outcome (str): The name of the outcome to predict.
 
     Returns:
     ----------------
     gridcvs (dict): A dictionary containing the GridSearchCV objects for each classifier.
-    results (dict): The initialized results dictionary that will contain the results of the prediction algorithms.
     '''
-    # INIT PRED ALGO RESULTS
-    if best_feat_sel_model is not None:
-        try: # TODO: see how to handle this 
-            results[table][fs_algo]['params'] = best_feat_sel_model.best_params_
-        except AttributeError:
-            results[table][fs_algo]['params'] = best_feat_sel_model.get_params()
-    else: 
-        results[table][fs_algo]['params'] = 'no_feature_selection'
-
     # INITIALIZATION 
     param_grids = get_param_grids(pred_algo_list) # Get parameter grids and pipelines
     pipes = get_pipelines(pred_algo_list) # Setting up the pipelines
@@ -74,7 +56,7 @@ def init_for_prediction(results: dict, table: str, fs_algo: str, best_feat_sel_m
                            refit=True) # refit the best model with the entire dataset
         gridcvs[pred_algo] = gcv
     
-    return gridcvs, results
+    return gridcvs
 
 
 def get_param_grids(pred_algo_list: list): 
@@ -137,7 +119,7 @@ def get_pipelines(pred_algo_list: list):
         elif pred_algo == 'BAGG':
             pipeline = Pipeline([('scaler', StandardScaler()), ('BAGG', BaggingClassifier(oob_score=True))])
         elif pred_algo == 'MLP':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('MLP', MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling'))])
+            pipeline = Pipeline([('scaler', StandardScaler()), ('MLP', MLPClassifier(random_state=42, max_iter=2000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling'))])
         elif pred_algo == 'QDA':
             pipeline = Pipeline([('scaler', StandardScaler()), ('QDA', QuadraticDiscriminantAnalysis())])
         pipelines.append(pipeline)
@@ -394,6 +376,7 @@ def train_model(pred_algo: str, X_train_filtered: pd.DataFrame, y_train: pd.Data
 def compute_opt_threshold(gs_est, X_train, y_train): 
     '''
     Compute the optimal threshold for a given model based on Youden's J statistic. Also reports the train AUC and Brier loss.
+    Save the model too. 
 
     Parameters:
     gs_est (GridSearchCV): The GridSearchCV object containing the best estimator.

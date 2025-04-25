@@ -76,7 +76,7 @@ def def_results_dict(delta_rad_tables: list, feat_sel_algo_list: list, pred_algo
     return results
 
 
-def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcome: str, sel_features: list, gs_est: object, train_auc: float, train_brier_loss: float, test_auc: float, sensitivity: float, specificity: float, brier_loss: float, test_auc_ci: tuple, sensitivity_ci: tuple, specificity_ci: tuple, brier_loss_ci: tuple):
+def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcome: str, sel_features: list, best_feat_sel_model: object, gs_est: object, train_auc: float, train_brier_loss: float, test_auc: float, sensitivity: float, specificity: float, brier_loss: float, test_auc_ci: tuple, sensitivity_ci: tuple, specificity_ci: tuple, brier_loss_ci: tuple):
     '''Save the results of the prediction algorithms.
 
     Parameters:
@@ -103,8 +103,16 @@ def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcom
     ----------------
     results (dict): The updated results dictionary that will contain the results of the prediction algorithms
     '''
+    # FS ALGO PARAMETERS
+    if best_feat_sel_model is not None:
+        try: # TODO: see how to handle this 
+            results[table][fs_algo]['params'] = best_feat_sel_model.best_params_
+        except AttributeError:
+            results[table][fs_algo]['params'] = best_feat_sel_model.get_params()
+    else: 
+        results[table][fs_algo]['params'] = 'no_feature_selection'
 
-    # MODEL PARAMETERS
+    # PRED MODEL PARAMETERS
     results[table][fs_algo][pred_algo][outcome][len(sel_features)]['features'] = sel_features
     results[table][fs_algo][pred_algo][outcome][len(sel_features)]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
 
@@ -126,8 +134,8 @@ def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcom
 
     return results
 
-def save_train_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcome: str, sel_features: list, gs_est: object, train_auc: float, train_brier_loss: float):
-    '''Save the results of the prediction algorithms made only on the training set.
+def save_train_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcome: str, sel_features: list, best_feat_sel_model: object, gs_est: object, train_auc: float, train_brier_loss: float):
+    '''Save the results of the feature selection and prediction algorithms made only on the training set.
 
     Parameters:
     ----------------
@@ -145,6 +153,14 @@ def save_train_results(results: dict, table: str, fs_algo: str, pred_algo: str, 
     ----------------
     results (dict): The updated results dictionary that will contain the results of the prediction algorithms
     '''
+
+    if best_feat_sel_model is not None:
+        try: # TODO: see how to handle this 
+            results[table][fs_algo]['params'] = best_feat_sel_model.best_params_
+        except AttributeError:
+            results[table][fs_algo]['params'] = best_feat_sel_model.get_params()
+    else: 
+        results[table][fs_algo]['params'] = 'no_feature_selection'
 
     # MODEL PARAMETERS
     results[table][fs_algo][pred_algo][outcome][len(sel_features)]['features'] = sel_features

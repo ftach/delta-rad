@@ -3,6 +3,8 @@
 import pandas as pd 
 import numpy as np
 import yaml 
+from imblearn.over_sampling import SMOTE
+
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import train_test_split
@@ -26,12 +28,12 @@ def load_config(config_path: str) -> dict:
             return None
 
 
-def get_highly_corr_features(correlation_matrix: pd.DataFrame, threshold: float = 0.9):
+def get_highly_corr_features(correlation_matrix: pd.DataFrame, threshold: float = 0.7):
     """
     Identify pairs of highly correlated features from a correlation matrix.
     Args:
         correlation_matrix (pd.DataFrame): A pandas DataFrame representing the correlation matrix.
-        threshold (float, optional): The correlation threshold above which features are considered highly correlated. Default is 0.9.
+        threshold (float, optional): The correlation threshold above which features are considered highly correlated. Default is 0.7.
     Returns:
         list of tuples: A list of tuples where each tuple contains two feature names and their correlation value.
                         Example: [(feature1, feature2, correlation_value), ...]
@@ -79,7 +81,7 @@ def remove_highly_corr_features(highly_correlated_pairs, original_df: pd.DataFra
 
     return reduced_df 
 
-def get_xy(rad_csv_path: str, outcome_csv_path: str, outcome: str = 'Décès', forbidden_patients: list = [57, 32, 56, 63]): # also 74, 82, 84, 85 are forbidden
+def get_xy(rad_csv_path: str, outcome_csv_path: str, outcome: str = 'Décès', forbidden_patients: list = [57, 32, 56, 63], smote = True): # also 74, 82, 84, 85 are forbidden
     """
     Load and preprocess dataset for training and validation.
 
@@ -92,7 +94,7 @@ def get_xy(rad_csv_path: str, outcome_csv_path: str, outcome: str = 'Décès', f
     Returns:
     tuple: A tuple containing:
         - X (pd.DataFrame): Features.
-        - y (np.ndarray): Labels.
+        - y (pd.DataFrame): Labels.
         - features_list (pd.Index): List of feature names.
     """
 
@@ -103,18 +105,21 @@ def get_xy(rad_csv_path: str, outcome_csv_path: str, outcome: str = 'Décès', f
     X = X.drop(X.columns[0], axis=1) # drop first X column (Patient indexes)
     X = X.dropna() # delete nan values
 
-    correlation_matrix = X.corr(method='pearson') 
-    X = remove_highly_corr_features(get_highly_corr_features(correlation_matrix), X) #  drop features whom collinearity > 0.9 
-
     outcome_df = pd.read_csv(outcome_csv_path)
     outcome_df = outcome_df[~outcome_df[outcome_df.columns[0]].isin(forbidden_patients)]# drop forbidden patients
     outcome_df = outcome_df.drop(outcome_df.columns[0], axis=1) # drop first column (Patient indexes)
     y = outcome_df.loc[outcome_df.index.isin(X.index)] # ensure same patients in X and y
-
-    # remove patients from X that are not in y
-    X = X.loc[X.index.isin(y.index)]
+    X = X.loc[X.index.isin(y.index)] # remove patients from X that are not in y
 
     y = y.loc[:, [outcome]] # get the specific outcome column
+    assert set(X.index) == set(y.index), "X and y have different patients"
+
+    if smote: # use smote to balance the dataset
+        sm = SMOTE(random_state=42, sampling_strategy='minority')
+        X, y = sm.fit_resample(X, y) 
+ 
+    correlation_matrix = X.corr(method='pearson') 
+    X = remove_highly_corr_features(get_highly_corr_features(correlation_matrix), X) #  drop features whom collinearity > 0.9 
 
     return X, y, X.columns
 

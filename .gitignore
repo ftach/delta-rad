@@ -7,3 +7,4 @@
 *.nrrd
 *.dcm
 *.npy
+*.joblib
