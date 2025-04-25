@@ -101,10 +101,6 @@ def main(mask_type: str = 'ptv') -> None:
     compute_feature_maps_same_mask(patients_filtered, fractions, folder_path, rad_maps_folder, params_path, enabled_features, mask_type)
 
     compute_delta_map(patients_filtered, fractions, folder_path, rad_maps_folder, enabled_features, mask_type) 
-    # gm.compute_clustered_delta_maps(fractions, patients_filtered, enabled_features, 3, mask_type) # optional if already computed
-    # gs.compute_delta_params(fractions, patients_filtered, enabled_features, mask_type)
-
-
 
 if __name__ == '__main__':
     main(mask_type='ptv_5px')
