@@ -4,30 +4,55 @@ import os
 import utils.get_map as gm 
 import utils.get_stats as gs
 
+def compute_feature_maps(patients: list, fractions: list, input_path: str, output_path: str, params_path: str, enabled_features: list, mask_type: str) -> None:
+    '''Compute the feature maps for the given patients and fractions.
+    
+    Parameters:
+    patients: list of str, list of patients to compute the feature maps for.
+    fractions: list of str, list of fractions to compute the feature maps for.
+    input_path: str, path to the input data.
+    output_path: str, path to the output data.
+    params_path: str, path to the parameters file.
+    enabled_features: list of str, list of features to compute.
+    mask_type: str, type of mask to use. Options are 'ptv' and 'gtv'.
+
+    Returns:
+    None
+    '''
+
+    # Compute features maps if they were not computed yet
+    for p in patients: 
+        for f in fractions:
+            rad_map_path = output_path + p + '/' + mask_type + '/' + f + '/'
+            if os.path.exists(rad_map_path) == False: # if maps were not computed yet
+                os.makedirs(rad_map_path)
+                image_path = input_path + p + '/img_dir/' + p + '_mridian_' + f + '.nii'
+                if os.path.exists(image_path) == False: # if fraction is missing 
+                    raise ValueError('Image not found for ' + p + ' ' + f) 
+                mask_path = input_path + p + '/mask_dir/' + p + '_mridian_' + f + '_' + mask_type + '.nii'
+                if os.path.exists(mask_path) == False: # mask is missing 
+                    raise ValueError('Mask not found for ' + p + ' ' + f)
+                computed_features = gm.generate_feature_map(image_path, mask_path, params_path, rad_map_path, enabled_features)
+                print(f'Computed {len(computed_features)} feature maps for {p}.')
+            
+            else: 
+                continue
+
 def main(mask_type='ptv'): 
     params = 'params.yaml' 
 
     fractions = ['ttt_1', 'ttt_5'] 
-    # get list of folders in Data/ if the name of the folder begins by Patient 
     folder_path = '/home/tachennf/Documents/delta-rad/data/ICM_0.35T/registered_data/'
     output_path = '/home/tachennf/Documents/delta-rad/data/ICM_0.35T/rad_maps/'
     patients_filtered = ['Patient48', 'Patient76', 'Patient75', 'Patient72', 'Patient59', 'Patient46', 'Patient34', 'Patient36', 'Patient31', 'Patient12', 'Patient20', 'Patient22', 'Patient26', 'Patient39', 'Patient40']
-    
-    #patients_list = [p for p in os.listdir(folder_path) if p.startswith('Patient')]
-    # patients_to_remove = ['Patient32', 'Patient56', 'Patient57', 'Patient66', 'Patient14', 'Patient27', 'Patient80','Patient 85', 'Patient79', 'Patient54', 'Patient86', 'Patient20', 'Patient64', 'Patient61', 'Patient71'] # 54, 61, 64, 66, 71, 79, 86 don't have F5
-    # patients_filtered = [p for p in patients_list if p not in patients_to_remove]
-
     enabled_features = ['original_gldm_GrayLevelNonUniformity', 'original_glrlm_RunLengthNonUniformity', 'original_glszm_ZoneEntropy', 'original_glszm_GrayLevelNonUniformityNormalized', 'original_gldm_GrayLevelNonUniformity', 'original_glrlm_GrayLevelNonUniformityNormalized']
-    #enabled_features = ['all'] # ['original_firstorder_Kurtosis', 'original_gldm_DependenceEntropy'] # 'original_glcm_Imc1', # TODO/ deal size issue witg glcm_Imc1 features
-    # enabled_features = [f.replace('.nrrd', '') for f in os.listdir('/home/tachennf/Documents/delta-rad/rad_maps/Data/Patient76/rad_maps/ptv/ttt_1/') if f.endswith('.nrrd')] # list of feature maps to compare
-    
-    # COMPUTE SIMPLE FEATURE MAPS AND ANALYZE THEIR PARAMETERS 
-    computed_features = gm.compute_feature_maps(folder_path, output_path, fractions, patients_filtered, params, enabled_features, 'ptv') 
+  
+    compute_feature_maps(patients_filtered, fractions, folder_path, output_path, params, enabled_features, mask_type) 
     # gs.compute_params(fractions, patients_filtered, enabled_features, mask_type='ptv') # compute intensity parameters for each feature map and save in a csv file
-    print(f'Computed {len(computed_features)} feature maps for {len(patients_filtered)} patients and {len(fractions)} fractions.')
+    print(f'Computed feature maps for {len(patients_filtered)} patients and {len(fractions)} fractions.')
 
 if __name__ == '__main__':
-    main(mask_type='ptv')
+    main(mask_type='ptv_5px')
     # features from Gladis analysis:     enabled_features = ['original_gldm_GrayLevelNonUniformity', 'original_glrlm_RunLengthNonUniformity', 'original_glszm_ZoneEntropy', 'original_glszm_GrayLevelNonUniformityNormalized', 'original_gldm_GrayLevelNonUniformity', 'original_glrlm_GrayLevelNonUniformityNormalized']
 
     # Récidives # all have F1 and F5!  but not PTV!!!

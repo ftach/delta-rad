@@ -187,6 +187,7 @@ def compare_groups(x1: np.ndarray, x2: np.ndarray) -> tuple:
     Returns
     -------
     result: bool, True if the two groups are significantly different;
+    p_val: float, p-value of the test;
     '''
     result = pg.mwu(x1, x2, alternative='two-sided')
     p_val = float(result['p-val'].values)
