@@ -65,7 +65,7 @@ def plot_heatmap(results: dict, table: str, outcome: str, feat_sel_algo_list: li
             plt.ylabel('Prediction Algorithm')
     plt.show()
 
-def get_top_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, metric: str, k: int = 10):
+def get_top_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, outcome: str, metric: str, k: int = 10):
     """ 
     Get the top k results for each table and each outcome in terms of sensitivity.
     Args:
@@ -83,19 +83,19 @@ def get_top_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: l
         top_results[table] = {}
         for feat_sel_algo in feat_sel_algo_list:
             for pred_algo in pred_algo_list:
-                for nb_features in results[table][feat_sel_algo][pred_algo]['Récidive Locale'].keys():
+                for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys():
                     if metric == 'train_auc': 
-                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['train_metrics']['auc']['values']
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['train_metrics']['auc']['values']
                     elif metric == 'train_brier_loss':
-                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['train_metrics']['brier_loss']['values']
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['train_metrics']['brier_loss']['values']
                     elif metric == 'test_auc':
-                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['test_metrics']['auc']['values']
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['auc']['values']
                     elif metric == 'test_brier_loss':
-                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['test_metrics']['auc']['values']
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['brier_loss']['values']
                     elif metric == 'sensitivity':
-                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['test_metrics']['auc']['values']
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['sensitivity']['values']
                     elif metric == 'specificity':
-                        all_fold_values = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['test_metrics']['auc']['values']
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['specificity']['values']
                     else:
                         print("Metric not recognized. Please choose one of the following: train_auc, train_brier_loss, test_auc, test_brier_loss, sensitivity, specificity.")
                     
@@ -106,8 +106,8 @@ def get_top_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: l
                         top_results[table][str(mean_value)] = {}
                         top_results[table][str(mean_value)]['feat_sel_algo'] = feat_sel_algo
                         top_results[table][str(mean_value)]['pred_algo'] = pred_algo
-                        top_results[table][str(mean_value)]['features'] = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['features']
-                        top_results[table][str(mean_value)]['params'] = results[table][feat_sel_algo][pred_algo]['Récidive Locale'][nb_features]['params']
+                        top_results[table][str(mean_value)]['features'] = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features']
+                        top_results[table][str(mean_value)]['params'] = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params']
 
         # Sort the results list by the max value in descending order and take the top k
         if len(top_results[table]) > 0:

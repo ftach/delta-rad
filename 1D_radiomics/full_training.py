@@ -28,7 +28,7 @@ def main(param_file: str):
     params = dataset.load_config(param_file)
     folder_path = params['paths']['data_folder_path']
     outcome_csv = params['paths']['outcome_csv_file']
-    # results_file = params['paths']['results_file']   
+    results_file = params['paths']['results_file']   
     delta_rad_tables = params['paths']['delta_rad_tables']
     models_folder = params['paths']['models_folder']
     if not os.path.exists(models_folder):
@@ -40,7 +40,7 @@ def main(param_file: str):
     max_features = params['parameters']['max_features']
     smote = params['parameters']['smote']
 
-    # results = test.def_results_dict(delta_rad_tables, feat_sel_algo_list, pred_algo_list, outcomes_list, max_features)
+    results = test.def_results_dict(delta_rad_tables, feat_sel_algo_list, pred_algo_list, outcomes_list, max_features)
 
     ###################### MAIN LOOP ##############################
     for table in delta_rad_tables:
@@ -60,29 +60,26 @@ def main(param_file: str):
                     X = znorm_scaler.fit_transform(X)
                 best_features, best_feat_sel_model = fsa.get_best_features(X, y, fs_algo, features_list=features_list, max_features=max_features)
                 print("Feature selection done for ", fs_algo)
-                
                 # PREDICTIONS
                 print("Training...")
                 for nb_features in range(1, max_features+1): # number of features selected
-                    
                     sel_features, X_filtered = fsa.filter_dataset3(X, best_features, nb_features, features_list)
                     gridcvs = train.init_grids(pred_algo_list) # init pred algo and CV grid 
  
                     # CV LOOP
                     for pred_algo, gs_est in sorted(gridcvs.items()):
                         print("Training for ", pred_algo)   
-                        gs_est.fit(X, y) # work on grid search: hyperparameter tuning
+                        gs_est.fit(X_filtered, y) # work on grid search: hyperparameter tuning
                         model_path = models_folder + table + "_" + fs_algo + "_" + pred_algo + "_" + str(nb_features) + ".joblib"
                         joblib.dump(gs_est.best_estimator_, model_path)
-                        # optimal_threshold, train_auc, train_brier_loss = train.compute_opt_threshold(gs_est, X, y) # compute optimal threshold based on train set results
-                        # results = test.save_train_results(results, table, fs_algo, pred_algo, outcome, sel_features, best_feat_sel_model, gs_est, train_auc, train_brier_loss)
-                    print("Predictions done for ", len(sel_features), " features.")
+                        results = test.save_model_results(results, table, fs_algo, pred_algo, outcome, sel_features, best_feat_sel_model, gs_est) # save the best features in a file
+                        print("Predictions done for ", len(sel_features), " features.")
 
-    # results_ser = dataset.convert_to_list(results)
+    results_ser = dataset.convert_to_list(results)
  
-    # with open(results_file, 'w') as f: 
-    #     json.dump(results_ser, f)                     
-    # print("Results saved in {} file.".format(results_file))    
+    with open(results_file, 'w') as f: 
+        json.dump(results_ser, f)                     
+    print("Results saved in {} file.".format(results_file))    
 
     print("--- %s seconds ---" % (time.time() - start_time))
 

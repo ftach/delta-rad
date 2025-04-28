@@ -78,9 +78,10 @@ def main(param_file: str):
                             y_test = np.array(y_test).reshape(-1, 1).ravel() # convert to numpy array
                             
                             gs_est.fit(X_train, y_train) # work on grid search: hyperparameter tuning
-                            optimal_threshold, train_auc, train_brier_loss = train.compute_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold based on train set results
+                            optimal_threshold, train_auc, train_brier_loss = train.compute_cv_opt_threshold(gs_est, X_train, y_train) # compute optimal threshold based on train set results
                             brier_loss, brier_loss_ci, test_auc, test_auc_ci, sensitivity, sensitivity_ci, specificity, specificity_ci = test.compute_test_metrics(gs_est, X_test, y_test, optimal_threshold)
-                            results = test.save_results(results, table, fs_algo, pred_algo, outcome, sel_features, best_feat_sel_model, gs_est, train_auc, train_brier_loss, test_auc, sensitivity, specificity, brier_loss, test_auc_ci, sensitivity_ci, specificity_ci, brier_loss_ci)
+                            results = test.save_model_results(results, table, fs_algo, pred_algo, outcome, sel_features, best_feat_sel_model, gs_est) # save the best features in a file
+                            results = test.save_results(results, table, fs_algo, pred_algo, outcome, sel_features, train_auc, train_brier_loss, test_auc, sensitivity, specificity, brier_loss, test_auc_ci, sensitivity_ci, specificity_ci, brier_loss_ci)
                     print("Predictions done for ", len(sel_features), " features.")
 
     results_ser = dataset.convert_to_list(results)

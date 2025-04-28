@@ -57,16 +57,16 @@ if __name__ == '__main__':
 
     # Récidives # all have F1 and F5!  but not PTV!!!
     # Patient 48
-    # Patient 80: error registration
     # Patient 76
     # Patient 75
     # Patient 72
     # Patient 59
     # Patient 46
     # Patient 34
-    # Patient 35: error registration 
     # Patient 36
     # Patient 31
+    # Patient 35: error registration 
+    # Patient 80: error registration
 
     # Non récidives # all have F1 and F5!  but not PTV!!!
     # Patient 12

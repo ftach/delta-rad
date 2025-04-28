@@ -75,8 +75,35 @@ def def_results_dict(delta_rad_tables: list, feat_sel_algo_list: list, pred_algo
 
     return results
 
+def save_model_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcome: str, sel_features: list, best_feat_sel_model: object, gs_est: object):
+    '''Save the results of the prediction algorithms.
 
-def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcome: str, sel_features: list, best_feat_sel_model: object, gs_est: object, train_auc: float, train_brier_loss: float, test_auc: float, sensitivity: float, specificity: float, brier_loss: float, test_auc_ci: tuple, sensitivity_ci: tuple, specificity_ci: tuple, brier_loss_ci: tuple):
+    Parameters:
+    ----------------
+    results (dict): The dictionary containing the results of the prediction algorithms.
+    table (str): The name of the table.
+    fs_algo (str): The name of the feature selection algorithm.
+    sel_features (list): The list of selected features.
+
+    Returns:
+    ----------------
+    results (dict): The updated results dictionary that will contain the results of the prediction algorithms
+    '''
+    # FS ALGO PARAMETERS
+    if best_feat_sel_model is not None:
+        try: # TODO: see how to handle this 
+            results[table][fs_algo]['params'] = best_feat_sel_model.best_params_
+        except AttributeError:
+            results[table][fs_algo]['params'] = best_feat_sel_model.get_params()
+    else: 
+        results[table][fs_algo]['params'] = 'no_feature_selection'
+        # PRED MODEL PARAMETERS
+    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['features'] = sel_features
+    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
+
+    return results
+
+def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcome: str, sel_features: list, train_auc: float, train_brier_loss: float, test_auc: float, sensitivity: float, specificity: float, brier_loss: float, test_auc_ci: tuple, sensitivity_ci: tuple, specificity_ci: tuple, brier_loss_ci: tuple):
     '''Save the results of the prediction algorithms.
 
     Parameters:
@@ -87,7 +114,6 @@ def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcom
     pred_algo (str): The name of the prediction algorithm.
     outcome (str): The name of the outcome to predict.
     sel_features (list): The list of selected features.
-    gs_est (object): The GridSearchCV object containing the best estimator.
     train_auc (float): The train AUC.
     train_brier_loss (float): The train Brier loss.
     test_auc (float): The test AUC.
@@ -103,19 +129,6 @@ def save_results(results: dict, table: str, fs_algo: str, pred_algo: str, outcom
     ----------------
     results (dict): The updated results dictionary that will contain the results of the prediction algorithms
     '''
-    # FS ALGO PARAMETERS
-    if best_feat_sel_model is not None:
-        try: # TODO: see how to handle this 
-            results[table][fs_algo]['params'] = best_feat_sel_model.best_params_
-        except AttributeError:
-            results[table][fs_algo]['params'] = best_feat_sel_model.get_params()
-    else: 
-        results[table][fs_algo]['params'] = 'no_feature_selection'
-
-    # PRED MODEL PARAMETERS
-    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['features'] = sel_features
-    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
-
     # TRAIN SCORES
     results[table][fs_algo][pred_algo][outcome][len(sel_features)]['train_metrics']['auc']['values'].append(train_auc) 
     results[table][fs_algo][pred_algo][outcome][len(sel_features)]['train_metrics']['brier_loss']['values'].append(train_brier_loss)
@@ -279,7 +292,7 @@ def compute_pvalue(binary_preds1, binary_preds2, y_test):
 
     return result.pvalue 
 
-def compute_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFrame, optimal_threshold):
+def compute_cv_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFrame, optimal_threshold):
     '''
     Compute the test metrics and their confidence intervals for a given model.
 
@@ -323,6 +336,87 @@ def compute_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFr
         if np.isnan(test_auc) == False:
             test_auc_list.append(test_auc)
 
+
+        # compute sensitivity and specificity based on y_pred 
+        outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 
+        tn, fp, fn, tp = confusion_matrix(y_test, outer_y_pred).ravel()
+        sensitivity = tp / (tp + fn) 
+        specificity = tn / (tn + fp)  
+
+        if np.isnan(sensitivity) == False:
+            sensitivity_list.append(sensitivity)
+        if np.isnan(specificity) == False:
+            specificity_list.append(specificity)
+        if np.isnan(brier_loss) == False:
+            brier_loss_list.append(brier_loss)
+            
+    if len(test_auc_list) == 0: 
+        raise ValueError("No AUC values were computed.")
+    elif len(sensitivity_list) == 0:
+        raise ValueError("No sensitivity values were computed.")
+    elif len(specificity_list) == 0:
+        raise ValueError("No specificity values were computed.")
+    elif len(brier_loss_list) == 0:
+        raise ValueError("No Brier loss values were computed.")
+    else: 
+        brier_loss = np.mean(brier_loss_list)
+        brier_loss_ci = (np.percentile(brier_loss_list, 2.5), np.percentile(brier_loss_list, 97.5))
+        
+        test_auc = np.mean(test_auc_list)
+        test_auc_ci = (np.percentile(test_auc_list, 2.5), np.percentile(test_auc_list, 97.5))
+    
+        sensitivity = np.mean(sensitivity_list)
+        sensitivity_ci = (np.percentile(sensitivity_list, 2.5), np.percentile(sensitivity_list, 97.5))
+    
+        specificity = np.mean(specificity_list)
+        specificity_ci = (np.percentile(specificity_list, 2.5), np.percentile(specificity_list, 97.5))
+
+    return brier_loss, brier_loss_ci, test_auc, test_auc_ci, sensitivity, sensitivity_ci, specificity, specificity_ci
+
+
+def compute_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFrame, optimal_threshold):
+    '''
+    Compute the test metrics and their confidence intervals for a given model.
+
+    Parameters:
+    best_model (object): The best estimator.
+    X_test (pd.DataFrame): The test data features.
+    y_test (pd.DataFrame): The test data labels.
+    optimal_threshold (float): The optimal threshold for the model.
+
+    Returns:
+    results (dict): The updated results dictionary that will contain the results of the prediction algorithms.
+    '''
+    outer_y_prob = gs_est.predict_proba(X_test)[:, 1]
+    
+    assert y_test.shape == outer_y_prob.shape, "Shapes are not the same"
+    idx = np.arange(y_test.shape[0])
+
+    # Diagnostic checks
+    unique_probs = np.unique(outer_y_prob)
+    if len(unique_probs) == 1:
+        print("Warning: All predictions are the same.")
+
+    unique_classes = np.unique(y_test)
+    if len(unique_classes) == 1:
+        print("Warning: y_test contains only one class.")
+
+    if np.isnan(outer_y_prob).any():
+        print("Warning: outer_y_prob contains NaN values.")
+
+    brier_loss_list = []
+    test_auc_list = []
+    sensitivity_list = []
+    specificity_list = []
+
+    for i in range(200): 
+        pred_idx = np.random.choice(idx, size=idx.shape[0], replace=True)
+
+        brier_loss = brier_score_loss(y_test[pred_idx], outer_y_prob[pred_idx]) 
+        fpr, tpr, _ = roc_curve(y_test[pred_idx], outer_y_prob[pred_idx]) 
+        test_auc = auc(fpr, tpr) 
+        if np.isnan(test_auc) == False:
+            test_auc_list.append(test_auc)
 
         # compute sensitivity and specificity based on y_pred 
         outer_y_pred = (outer_y_prob >= optimal_threshold).astype(int) # threshold obtained on train set 

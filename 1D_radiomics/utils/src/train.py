@@ -107,21 +107,21 @@ def get_pipelines(pred_algo_list: list):
     pipelines = []
     for pred_algo in pred_algo_list:
         if pred_algo == 'RF':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('RF', RandomForestClassifier(random_state=42))])
+            pipeline = Pipeline([('RF', RandomForestClassifier(random_state=42))])
         elif pred_algo == 'ADABOOST':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('ADABOOST', AdaBoostClassifier(random_state=42, algorithm='SAMME'))])
+            pipeline = Pipeline([('ADABOOST', AdaBoostClassifier(random_state=42, algorithm='SAMME'))])
         elif pred_algo == 'LOGREGRIDGE':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('LOGREGRIDGE', LogisticRegression(multi_class='multinomial', solver='newton-cg', random_state=42))])
+            pipeline = Pipeline([('LOGREGRIDGE', LogisticRegression(multi_class='multinomial', solver='newton-cg', random_state=42))])
         elif pred_algo == 'PSVM':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('PSVM', SVC(kernel='poly', coef0=0, gamma=1.0, probability=True, random_state=42))])
+            pipeline = Pipeline([('PSVM', SVC(kernel='poly', coef0=0, gamma=1.0, probability=True, random_state=42))])
         elif pred_algo == 'KNN':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('KNN', KNeighborsClassifier())])
+            pipeline = Pipeline([('KNN', KNeighborsClassifier())])
         elif pred_algo == 'BAGG':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('BAGG', BaggingClassifier(oob_score=True))])
+            pipeline = Pipeline([('BAGG', BaggingClassifier(oob_score=True))])
         elif pred_algo == 'MLP':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('MLP', MLPClassifier(random_state=42, max_iter=2000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling'))])
+            pipeline = Pipeline([('MLP', MLPClassifier(random_state=42, max_iter=2000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling'))])
         elif pred_algo == 'QDA':
-            pipeline = Pipeline([('scaler', StandardScaler()), ('QDA', QuadraticDiscriminantAnalysis())])
+            pipeline = Pipeline([('QDA', QuadraticDiscriminantAnalysis())])
         pipelines.append(pipeline)
 
     return pipelines
@@ -373,7 +373,7 @@ def train_model(pred_algo: str, X_train_filtered: pd.DataFrame, y_train: pd.Data
     #print("Training with {} ended.".format(pred_algo))
     return best_model 
 
-def compute_opt_threshold(gs_est, X_train, y_train): 
+def compute_cv_opt_threshold(gs_est, X_train, y_train): 
     '''
     Compute the optimal threshold for a given model based on Youden's J statistic. Also reports the train AUC and Brier loss.
     Save the model too. 
@@ -390,6 +390,34 @@ def compute_opt_threshold(gs_est, X_train, y_train):
     '''
     
     best_model = gs_est.best_estimator_  # Best model from inner CV
+    y_prob = best_model.predict_proba(X_train)[:, 1]  # Inner validation set probabilities
+    fpr, tpr, thresholds = roc_curve(y_train, y_prob)
+    train_auc = auc(fpr, tpr)
+    train_brier_loss = brier_score_loss(y_train, y_prob)
+
+    # Determine the optimal threshold using Youden's J statistic
+    J_scores = tpr - fpr
+    optimal_idx = J_scores.argmax()
+    optimal_threshold = thresholds[optimal_idx] 
+
+    return optimal_threshold, train_auc, train_brier_loss
+
+def compute_opt_threshold(best_model, X_train, y_train): 
+    '''
+    Compute the optimal threshold for a given model based on Youden's J statistic. Also reports the train AUC and Brier loss.
+    Save the model too. 
+
+    Parameters:
+    best_model (object): The best estimator.
+    X_train (pd.DataFrame): The training data features.
+    y_train (pd.Series): The training data labels.
+
+    Returns:
+    float: The optimal threshold for the model. 
+    float: The train AUC.
+    float: The train Brier loss.
+    '''
+    
     y_prob = best_model.predict_proba(X_train)[:, 1]  # Inner validation set probabilities
     fpr, tpr, thresholds = roc_curve(y_train, y_prob)
     train_auc = auc(fpr, tpr)

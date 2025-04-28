@@ -366,7 +366,8 @@ def filter_dataset3(X: np.ndarray, best_features: Sequence, nb_features: int, fe
     
     # Use indices to filter the arrays
     X = pd.DataFrame(X, columns=features_list)
-    X_filtered = X.drop(columns=selected_features, axis=1)
+    # drop all but selected features
+    X_filtered = X[selected_features]
     
     assert len(selected_features) == nb_features, print(len(selected_features), nb_features, selected_features, best_features)
 
