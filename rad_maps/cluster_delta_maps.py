@@ -3,7 +3,22 @@
 import os 
 from utils.clustering import gen_clustered_map
 
-def cluster_delta_map(patients: list, delta_fraction: str, original_data_folder: str, rad_maps_folder: str, enabled_features: list, mask_type: str) -> None:
+def cluster_delta_map(patients: list, delta_fraction: str, rad_maps_folder: str, enabled_features: list, mask_type: str, method: str, k = None) -> None:
+    '''Cluster the delta maps for the given patients and fractions. Saves them as .nrrd files. 
+
+    Parameters:
+    patients: list of str, list of patients to compute the feature maps for.
+    delta_fraction: str, delta fraction name.
+    rad_maps_folder: str, path to the input data.
+    enabled_features: list of str, list of features to compute.
+    mask_type: str, type of mask to use. Options are 'ptv' and 'gtv'.
+    method: str, clustering method to use. Options are 'otsu', 'gmm' and 'kmeans'.
+    k: int, number of clusters to use for clustering. If None, use Gaussian Mixture model with 2 to 4 clusters and cross validation.
+
+    Returns:
+    None
+    '''
+
     # load delta map 
     for p in patients: 
         print(f'Computing delta feature maps for {p}...')
@@ -15,10 +30,7 @@ def cluster_delta_map(patients: list, delta_fraction: str, original_data_folder:
             delta_map_path = rad_maps_folder + p + '/' + mask_type + '/' + delta_fraction + '/' + feature + '.nrrd'
             if os.path.exists(delta_map_path) == False: # if map is missing
                 raise ValueError('Delta map not found for ' + p + ' ' + delta_fraction)
-            mask_path = original_data_folder + p + '/mask_dir/' + p + '_mridian_' + delta_fraction[:5] + '_' + mask_type + '.nii'
-            if os.path.exists(mask_path) == False: # mask is missing
-                raise ValueError('Mask not found for ' + p + ' ' + delta_fraction.split('_')[0])
-            gen_clustered_map(delta_map_path, mask_path, output_folder, feature, k=4, method='otsu') # generate clustered map
+            gen_clustered_map(delta_map_path, output_folder, feature, k, method) # generate clustered map
         # else: 
         #     print(f'Clustered maps for {p} and {delta_fraction} already computed.')
 
@@ -31,6 +43,6 @@ def main():
     enabled_features = ['original_gldm_GrayLevelNonUniformity', 'original_glrlm_RunLengthNonUniformity', 'original_glszm_ZoneEntropy', 'original_glszm_GrayLevelNonUniformityNormalized', 'original_glrlm_GrayLevelNonUniformityNormalized']
     patients_filtered = ['Patient48', 'Patient76', 'Patient75', 'Patient72', 'Patient59', 'Patient46', 'Patient34', 'Patient36', 'Patient31', 'Patient12', 'Patient20', 'Patient22', 'Patient26', 'Patient39', 'Patient40']
     
-    cluster_delta_map(patients_filtered, delta_fraction, folder_path, rad_maps_folder, enabled_features, mask_type)
+    cluster_delta_map(patients_filtered, delta_fraction, rad_maps_folder, enabled_features, mask_type)
 if __name__ == '__main__':
     main()
