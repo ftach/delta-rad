@@ -52,21 +52,31 @@ def main():
     rad_maps_folder = '/home/tachennf/Documents/delta-rad/data/ICM_0.35T/rad_maps/'
     enabled_features = ['original_gldm_GrayLevelNonUniformity', 'original_glrlm_RunLengthNonUniformity', 'original_glszm_ZoneEntropy', 'original_glszm_GrayLevelNonUniformityNormalized', 'original_glrlm_GrayLevelNonUniformityNormalized']
     
-    one_year_local_control_df = pd.read_csv('/home/tachennf/Documents/delta-rad/data/ICM_0.35T/extracted_radiomics/one_year_local_control_status.csv', index_col=0)
-    recidivist_patients = one_year_local_control_df[one_year_local_control_df['one_year_local_control_status'] == 1].index.tolist()
+    outcome_df = pd.read_csv('/home/tachennf/Documents/delta-rad/data/ICM_0.35T/extracted_radiomics/nine_months_metastatic_status.csv', index_col=0)
+    recidivist_patients = outcome_df[outcome_df['nine_months_metastatic_status'] == 1].index.tolist() #  one_year_local_control_status
     recidivist = [x.replace(" ", "") for x in recidivist_patients]
-    non_recidivist_patients = one_year_local_control_df[one_year_local_control_df['one_year_local_control_status'] == 0].index.tolist()
+    non_recidivist_patients = outcome_df[outcome_df['nine_months_metastatic_status'] == 0].index.tolist() # one_year_local_control_status
     non_recidivist = [x.replace(" ", "") for x in non_recidivist_patients]
 
 
     error_patients = ['Patient11', 'Patient18', 'Patient85', 'Patient79', 'Patient54', 'Patient86', 'Patient66', 'Patient32', 'Patient64', 'Patient61', 'Patient80'] 
+    recidivist = [x for x in recidivist if x not in error_patients]
+    non_recidivist = [x for x in non_recidivist if x not in error_patients]
 
-    recidivist = ['Patient76', 'Patient05', 'Patient02', 'Patient09', 'Patient31', 'Patient45', 'Patient48', 'Patient59', 'Patient72', 'Patient75']
-    non_recidivist = ['Patient73', 'Patient81', 'Patient16', 'Patient01', 'Patient29', 'Patient10', 'Patient82', 'Patient07', 'Patient03', 'Patient04', 'Patient08', 'Patient12', 'Patient51', 
-                      'Patient14', 'Patient06', 'Patient15', 'Patient13', 'Patient17', 'Patient21', 'Patient49', 'Patient25', 'Patient19', 'Patient23', 'Patient20', 'Patient22', 'Patient24', 
-                      'Patient26', 'Patient28', 'Patient38', 'Patient33', 'Patient40', 'Patient30', 'Patient36', 'Patient71', 'Patient34', 'Patient35', 'Patient37', 'Patient39', 'Patient57', 
-                      'Patient41', 'Patient42', 'Patient43', 'Patient44', 'Patient58', 'Patient60', 'Patient46', 'Patient63', 'Patient69', 'Patient53', 'Patient55', 'Patient56', 'Patient62', 
-                      'Patient78', 'Patient70', 'Patient65', 'Patient67', 'Patient68', 'Patient74', 'Patient84', 'Patient77', 'Patient83', 'Patient52', 'Patient50', 'Patient47']
+    # METASTATIC STATUS
+    recidivist = ['Patient81', 'Patient76', 'Patient01', 'Patient29', 'Patient10', 'Patient04', 'Patient08', 'Patient51', 'Patient06', 'Patient09', 'Patient15', 'Patient21', 'Patient49', 'Patient25', 
+     'Patient19', 'Patient23', 'Patient24', 'Patient28', 'Patient33', 'Patient37', 'Patient41', 'Patient42', 'Patient58', 'Patient46', 'Patient63', 'Patient56', 'Patient59', 'Patient72', 
+     'Patient78', 'Patient70', 'Patient65', 'Patient67', 'Patient68', 'Patient74', 'Patient84', 'Patient50', 'Patient47']
+    non_recidivist = ['Patient73', 'Patient16', 'Patient82', 'Patient07', 'Patient03', 'Patient05', 'Patient02', 'Patient12', 'Patient14', 'Patient13', 'Patient17', 'Patient20', 'Patient22', 
+                    'Patient26', 'Patient31', 'Patient38', 'Patient40', 'Patient30', 'Patient36', 'Patient71', 'Patient45', 'Patient34', 'Patient35', 'Patient48', 'Patient39', 'Patient57',
+                    'Patient43', 'Patient44', 'Patient60', 'Patient69', 'Patient53', 'Patient55', 'Patient62', 'Patient75', 'Patient77', 'Patient83', 'Patient52']
+    # LOCAL CONTROL 
+    # recidivist = ['Patient76', 'Patient05', 'Patient02', 'Patient09', 'Patient31', 'Patient45', 'Patient48', 'Patient59', 'Patient72', 'Patient75']
+    # non_recidivist = ['Patient73', 'Patient81', 'Patient16', 'Patient01', 'Patient29', 'Patient10', 'Patient82', 'Patient07', 'Patient03', 'Patient04', 'Patient08', 'Patient12', 'Patient51', 
+    #                   'Patient14', 'Patient06', 'Patient15', 'Patient13', 'Patient17', 'Patient21', 'Patient49', 'Patient25', 'Patient19', 'Patient23', 'Patient20', 'Patient22', 'Patient24', 
+    #                   'Patient26', 'Patient28', 'Patient38', 'Patient33', 'Patient40', 'Patient30', 'Patient36', 'Patient71', 'Patient34', 'Patient35', 'Patient37', 'Patient39', 'Patient57', 
+    #                   'Patient41', 'Patient42', 'Patient43', 'Patient44', 'Patient58', 'Patient60', 'Patient46', 'Patient63', 'Patient69', 'Patient53', 'Patient55', 'Patient56', 'Patient62', 
+    #                   'Patient78', 'Patient70', 'Patient65', 'Patient67', 'Patient68', 'Patient74', 'Patient84', 'Patient77', 'Patient83', 'Patient52', 'Patient50', 'Patient47']
     
     print("Number of recidivist patients: ", len(recidivist))
     print("Number of non-recidivist patients: ", len(non_recidivist))
@@ -89,7 +99,7 @@ def main():
         entropies_non_recidivist = compute_cluster_site_entropies(non_recidivist, fractions, rad_maps_folder, feature, mask_type) # Compute cluster site entropy between the two fractions
         print(f'Recidivist patients: {np.mean(entropies_recidivist[1])}, {np.std(entropies_recidivist[1])}')
         print(f'Non-recidivist patients: {np.mean(entropies_non_recidivist[1])}, {np.std(entropies_non_recidivist[1])}', end='\n\n')
-        result, pval = compare_groups(entropies_recidivist[1], entropies_non_recidivist[1])
+        result, pval = compare_groups(entropies_recidivist[0], entropies_non_recidivist[0])
         if result == True: 
             print(f'Significant difference between recidivist and non-recidivist patients for {feature}.')
             print(f'Mean recidivist: {np.mean(entropies_recidivist[1])}, std: {np.std(entropies_recidivist[1])}')

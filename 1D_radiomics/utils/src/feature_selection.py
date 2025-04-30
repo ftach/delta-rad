@@ -308,7 +308,8 @@ def filter_dataset(X_train: np.ndarray, X_val: np.ndarray, best_features: Sequen
     X_train_filtered = X_train_filtered.to_numpy()
     X_val_filtered = X_val_filtered.to_numpy()
 
-
+    assert X_train_filtered.shape[1] == nb_features, print(X_train_filtered.shape[1], nb_features, selected_features, best_features)
+    assert X_val_filtered.shape[1] == nb_features, print(X_val_filtered.shape[1], nb_features, selected_features, best_features)
     return selected_features, X_train_filtered, X_val_filtered
 
 def filter_dataset2(X: np.ndarray, best_features: Sequence, nb_features: int): 

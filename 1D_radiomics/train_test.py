@@ -56,25 +56,21 @@ def main(param_file: str):
                 
                 # Split the dataset into train and test sets
                 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y[outcome])
-                y_train = np.array(y_train).reshape(-1, 1).ravel() # convert to numpy array to avoid errors
-                y_test = np.array(y_test).reshape(-1, 1).ravel() # convert to numpy array
 
                 # Feature selection
                 best_features, best_feat_sel_model = fsa.get_best_features(X_train, y_train, fs_algo, features_list=features_list, max_features=max_features)
                 print("Feature selection done for ", fs_algo)
+                y_train = np.array(y_train).reshape(-1, 1).ravel() # convert to numpy array to avoid errors
+                y_test = np.array(y_test).reshape(-1, 1).ravel() # convert to numpy array                
                 
                 # PREDICTIONS
                 print("Training...")
                 for nb_features in range(1, max_features+1): # number of features selected
-                    
-                    sel_features, X_train = fsa.filter_dataset3(X_train, best_features, nb_features, features_list)
-                    # check if there are NaN values in the training set dataframe
-                    assert not X_train.isna().any().any(), print(X_train)
-                    X_test = fsa.filter_dataset3(X_test, best_features, nb_features, features_list)[1] # filter the test set with the same features as the train set
+                    sel_features, X_train_filtered, X_test_filtered = fsa.filter_dataset(X_train, X_test, best_features, nb_features, features_list)
                     for pred_algo in pred_algo_list:
-                        best_model = train.train_model(pred_algo, X_train, y_train) # train the model                       
-                        optimal_threshold, train_auc, train_brier_loss = train.compute_opt_threshold(best_model, X_train, y_train) # compute optimal threshold based on train set results
-                        brier_loss, brier_loss_ci, test_auc, test_auc_ci, sensitivity, sensitivity_ci, specificity, specificity_ci = test.compute_test_metrics(best_model, X_test, y_test, optimal_threshold) # bootstraping
+                        best_model = train.train_model(pred_algo, X_train_filtered, y_train) # train the model                       
+                        optimal_threshold, train_auc, train_brier_loss = train.compute_opt_threshold(best_model, X_train_filtered, y_train) # compute optimal threshold based on train set results
+                        brier_loss, brier_loss_ci, test_auc, test_auc_ci, sensitivity, sensitivity_ci, specificity, specificity_ci = test.compute_test_metrics(best_model, X_test_filtered, y_test, optimal_threshold) # bootstraping
                         results = test.save_model_results(results, table, fs_algo, pred_algo, outcome, sel_features, best_feat_sel_model, best_model) # save the best features in a file
                         results = test.save_results(results, table, fs_algo, pred_algo, outcome, sel_features, train_auc, train_brier_loss, test_auc, sensitivity, specificity, brier_loss, test_auc_ci, sensitivity_ci, specificity_ci, brier_loss_ci)
                     print("Predictions done for ", len(sel_features), " features.")
