@@ -97,9 +97,13 @@ def save_model_results(results: dict, table: str, fs_algo: str, pred_algo: str, 
             results[table][fs_algo]['params'] = best_feat_sel_model.get_params()
     else: 
         results[table][fs_algo]['params'] = 'no_feature_selection'
-        # PRED MODEL PARAMETERS
+
+    # PRED MODEL PARAMETERS
     results[table][fs_algo][pred_algo][outcome][len(sel_features)]['features'] = sel_features
-    results[table][fs_algo][pred_algo][outcome][len(sel_features)]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
+    try: 
+        results[table][fs_algo][pred_algo][outcome][len(sel_features)]['params'] = gs_est.best_params_ #  params of best algo (based on cross validation search) trained again 
+    except AttributeError:
+        results[table][fs_algo][pred_algo][outcome][len(sel_features)]['params'] = gs_est.get_params() #  params of best algo (based on cross validation search) trained again
 
     return results
 
@@ -374,7 +378,7 @@ def compute_cv_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.Dat
     return brier_loss, brier_loss_ci, test_auc, test_auc_ci, sensitivity, sensitivity_ci, specificity, specificity_ci
 
 
-def compute_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFrame, optimal_threshold):
+def compute_test_metrics(best_model: object, X_test: pd.DataFrame, y_test: pd.DataFrame, optimal_threshold):
     '''
     Compute the test metrics and their confidence intervals for a given model.
 
@@ -387,7 +391,7 @@ def compute_test_metrics(gs_est: object, X_test: pd.DataFrame, y_test: pd.DataFr
     Returns:
     results (dict): The updated results dictionary that will contain the results of the prediction algorithms.
     '''
-    outer_y_prob = gs_est.predict_proba(X_test)[:, 1]
+    outer_y_prob = best_model.predict_proba(X_test)[:, 1]
     
     assert y_test.shape == outer_y_prob.shape, "Shapes are not the same"
     idx = np.arange(y_test.shape[0])

@@ -70,6 +70,7 @@ def main(param_file: str):
                     for pred_algo, gs_est in sorted(gridcvs.items()):
                         print("Training for ", pred_algo)   
                         gs_est.fit(X_filtered, y) # work on grid search: hyperparameter tuning
+                        
                         model_path = models_folder + table + "_" + fs_algo + "_" + pred_algo + "_" + str(nb_features) + ".joblib"
                         joblib.dump(gs_est.best_estimator_, model_path)
                         results = test.save_model_results(results, table, fs_algo, pred_algo, outcome, sel_features, best_feat_sel_model, gs_est) # save the best features in a file

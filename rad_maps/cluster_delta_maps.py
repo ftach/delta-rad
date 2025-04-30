@@ -23,13 +23,13 @@ def cluster_delta_map(patients: list, delta_fraction: str, rad_maps_folder: str,
     for p in patients: 
         print(f'Computing delta feature maps for {p}...')
         output_folder = rad_maps_folder + p + '/' + mask_type + '/' + delta_fraction + '/clustered_map/'
-        # if os.path.exists(output_folder) == False:
-        #     os.mkdir(output_folder)
+        if os.path.exists(output_folder) == False:
+            os.mkdir(output_folder)
         # if len(os.listdir(output_folder)) == 0: # if maps were not computed yet
         for feature in enabled_features:
             delta_map_path = rad_maps_folder + p + '/' + mask_type + '/' + delta_fraction + '/' + feature + '.nrrd'
             if os.path.exists(delta_map_path) == False: # if map is missing
-                raise ValueError('Delta map not found for ' + p + ' ' + delta_fraction)
+                continue
             gen_clustered_map(delta_map_path, output_folder, feature, k, method) # generate clustered map
         # else: 
         #     print(f'Clustered maps for {p} and {delta_fraction} already computed.')

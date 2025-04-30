@@ -26,21 +26,23 @@ def compute_feature_maps_same_mask(patients: list, fractions: list, input_path: 
 
     # Compute features maps if they were not computed yet
     for p in patients: 
+        print(f'Computing feature maps for {p}...')
         mask_path = input_path + p + '/mask_dir/' + p + '_mridian_' + fractions[0] + '_' + mask_type + '.nii'
         if os.path.exists(mask_path) == False: # mask is missing 
-            raise ValueError('Mask not found for ' + p + ' ' + f)
+            continue 
         for f in fractions:
             rad_map_path = output_path + p + '/' + mask_type + '/' + f + '/'
             if os.path.exists(rad_map_path) == False: # if maps were not computed yet
                 os.makedirs(rad_map_path)
                 image_path = input_path + p + '/img_dir/' + p + '_mridian_' + f + '.nii'
                 if os.path.exists(image_path) == False: # if fraction is missing 
-                    raise ValueError('Image not found for ' + p + ' ' + f) 
+                    continue
 
                 computed_features = gm.generate_feature_map(image_path, mask_path, params_path, rad_map_path, enabled_features)
                 print(f'Computed {len(computed_features)} feature maps for {p}.')
             
             else: 
+                print(f'Feature maps for {p} and {f} already computed.')
                 continue
 
 def compute_delta_map(patients: list, fractions: list, original_data_folder: str, rad_maps_folder: str, enabled_features: list, mask_type: str) -> None:
@@ -69,15 +71,15 @@ def compute_delta_map(patients: list, fractions: list, original_data_folder: str
 
                 map1_path = rad_maps_folder + p + '/' + mask_type + '/' + fractions[0] + '/' + feature + '.nrrd'
                 if os.path.exists(map1_path) == False: # if fraction is missing 
-                    raise ValueError('Image not found for ' + p + ' ' + fractions[0]) 
+                    continue
                 
                 map2_path = rad_maps_folder + p + '/' + mask_type + '/' + fractions[1] + '/' + feature + '.nrrd'
                 if os.path.exists(map2_path) == False: # mask is missing 
-                    raise ValueError('Image not found for ' + p + ' ' + fractions[1])
+                    continue
                 
                 mask_path = original_data_folder + p + '/mask_dir/' + p + '_mridian_' + fractions[0] + '_' + mask_type + '.nii'
                 if os.path.exists(mask_path) == False: # mask is missing
-                    raise ValueError('Mask not found for ' + p + ' ' + fractions[0])
+                    continue
                 
                 gm.generate_delta_map([map1_path, map2_path], output_folder, feature)
 

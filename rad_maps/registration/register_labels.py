@@ -61,8 +61,8 @@ def register_mridian_dataset(transformation='rigid', metric='pcc', mask='gtv'):
 
     dice_after_list = []
     oriented_data_base_dir = '/home/tachennf/Documents/delta-rad/data/ICM_0.35T/oriented_data/'
-    # patient_list = [p for p in os.listdir(oriented_data_base_dir)]
-    patient_list = ['Patient76', 'Patient75', 'Patient72', 'Patient59', 'Patient46', 'Patient34', 'Patient35', 'Patient36', 'Patient31', 'Patient12', 'Patient20', 'Patient22', 'Patient26', 'Patient39', 'Patient40']
+    patient_list = [p for p in os.listdir(oriented_data_base_dir)]
+    # patient_list = ['Patient76', 'Patient75', 'Patient72', 'Patient59', 'Patient46', 'Patient34', 'Patient35', 'Patient36', 'Patient31', 'Patient12', 'Patient20', 'Patient22', 'Patient26', 'Patient39', 'Patient40']
     error_patients = []
     for p in patient_list:
         # forbidden_patients = ['Patient32', 'Patient57', 'Patient14', 'Patient27', 'Patient80', 'Patient77', 'Patient38', 'Patient79', 'Patient11', 'Patient54', 'Patient18', 'Patient85']
@@ -108,9 +108,22 @@ def register_mridian_dataset(transformation='rigid', metric='pcc', mask='gtv'):
             output_simu_path = f'{output_patient_dir}/img_dir/' + simu_name
             output_simu_label_path = f'{output_patient_dir}/mask_dir/' + simu_name.replace('.nii', f'_{mask}.nii')
 
+            if os.path.exists(output_f_label_path): # alredy registered
+                print(f"Already registered {p} {path}")
+                continue
+
             if os.path.exists(f_path) == False: # if fraction is missing 
-                raise ValueError("Error, path should exist")
+                print(f"Fraction {f_path} not found for {p}")
+                continue
             
+            if os.path.exists(label_f_path) == False: # mask is missing
+                print(f"Mask {label_f_path} not found for {p}")
+                continue
+
+            if os.path.exists(label_simu_path) == False: # mask is missing
+                print(f"Mask {label_simu_path} not found for {p}")
+                continue
+
             # Load images 
             simu_array = sitk.GetArrayFromImage(sitk.ReadImage(simu_path))
             f_array = sitk.GetArrayFromImage(sitk.ReadImage(f_path))
@@ -138,7 +151,10 @@ def register_mridian_dataset(transformation='rigid', metric='pcc', mask='gtv'):
             while dice_after < 0.7: 
                 print("Error with sitk registration (Dice was {}), using dipy registration: test {}".format(dice_after, k+1))
                 # Perform registration using dipy 
-                registered_f_label_array, T, popt = r.dipy_registration(nib.load(label_simu_path), nib.load(label_f_path), transformation=transformation)
+                try: 
+                    registered_f_label_array, T, popt = r.dipy_registration(nib.load(label_simu_path), nib.load(label_f_path), transformation=transformation)
+                except Exception:       
+                    break
                 registered_f_label_array = np.transpose(registered_f_label_array, (2, 1, 0))
                 assert registered_f_label_array.shape == simu_label_array.shape, 'Error, registered image and simu image should have the same shape'
                 # Apply the transformation to the fraction images

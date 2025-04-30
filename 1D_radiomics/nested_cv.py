@@ -14,7 +14,10 @@ import utils.src.train as train
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
-from imblearn.over_sampling import SMOTE
+
+import cProfile
+import pstats 
+from io import StringIO
 
 np.random.seed(42)
 random.seed(42)
@@ -93,4 +96,14 @@ def main(param_file: str):
     print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == "__main__": 
+    # Profile the function
+    pr = cProfile.Profile()
+    pr.enable()
     main('/home/tachennf/Documents/delta-rad/1D_radiomics/nested_cv_settings.yaml')
+
+    pr.disable()
+    # Print the results
+    s = StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
+    ps.print_stats(20)
+    print(s.getvalue())

@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings('ignore')
 from .sklearn_utils import * 
 
-SCORER = 'f1' # 'roc_auc' 
+SCORER = 'roc_auc' 
 def init_grids(pred_algo_list: list):
     '''Initialize the structures and parameters for the prediction algorithms. 
     
@@ -72,14 +72,14 @@ def get_param_grids(pred_algo_list: list):
     param_grids = []
     for pred_algo in pred_algo_list:
         if pred_algo == 'RF': 
-            param_grid = [{'RF__max_depth': range(1, 5, 4), 'RF__n_estimators' : range(25, 50, 25)}]
+            param_grid = [{'RF__max_depth': range(1, 5, 1), 'RF__n_estimators' : range(25, 1001, 25)}]
         elif pred_algo == 'ADABOOST':
-            param_grid = [{'ADABOOST__n_estimators' : range(25, 50, 25)}]
+            param_grid = [{'ADABOOST__n_estimators' : range(25, 1001, 25)}]
         elif pred_algo == 'LOGREGRIDGE':
             param_grid = [{'LOGREGRIDGE__penalty': ['l2'],
-                        'LOGREGRIDGE__C': np.power(10., np.arange(-4, 4))}]
+                        'LOGREGRIDGE__C': np.power(10., np.arange(-3, 4))}]
         elif pred_algo =='PSVM':
-            param_grid = [{'PSVM__C' : list(np.arange(0.01, 0.11, 0.01)), 'PSVM__degree': range(2, 5, 1)}]
+            param_grid = [{'PSVM__C' : np.power(10., np.arange(-3, 4)), 'PSVM__degree': range(2, 5, 1)}]
         elif pred_algo == 'KNN':
             param_grid = [{'KNN__n_neighbors': range(1, 10)}]
         elif pred_algo == 'BAGG':
@@ -89,7 +89,7 @@ def get_param_grids(pred_algo_list: list):
                 'MLP__alpha' : 10.0 ** -np.arange(2, 5), 
                 'MLP__learning_rate_init': 10.0 ** -np.arange(2, 5)            }]
         elif pred_algo == 'QDA':
-            param_grid = [{'QDA__reg_param': list(np.arange(0.01, 0.11, 0.01))}]
+            param_grid = [{'QDA__reg_param': np.power(10., np.arange(-3, 4))}]
         param_grids.append(param_grid)
 
     return param_grids
@@ -139,8 +139,7 @@ def train_rf(X_train_filtered, y_train):
     RandomForestClassifier: The best estimator found by the grid search.
     """
 
-    param_grid = {'max_depth': range(1, 5, 4), 'n_estimators' : range(25, 50, 25)} # maximimum depth and number of estimators tuning
-    # param_grid = {'n_estimators' : range(25, 1001, 25)}
+    param_grid = {'max_depth': range(1, 5, 1), 'n_estimators' : range(25, 1001, 25)} # maximimum depth and number of estimators tuning
 
     estimator = RandomForestClassifier(random_state=42) 
 
@@ -180,9 +179,7 @@ def train_adaboost(X_train_filtered, y_train):
     AdaBoostClassifier: The best estimator found by the hyperparameter search.
     """
 
-    #param_grid = {'n_estimators' : range(25, 50, 25)} # number of estimators tuning
     param_grid = {'n_estimators' : range(25, 1001, 25)}
-
 
     estimator = AdaBoostClassifier(random_state=42, algorithm='SAMME') 
 
@@ -221,8 +218,7 @@ def train_psvm(X_train_filtered, y_train):
     sklearn.svm.SVC: The best estimator found by the grid search.
     """
 
-    param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01)), 'degree': range(2, 5, 1)} # number of estimators tuning
-    # param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01)), 'degree': [2]}
+    param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000], 'degree': range(2, 5, 1)} # number of estimators tuning
     ksvm = SVC( kernel="poly", coef0=0, gamma=1.0, probability=True)
     grid_ksvm = hyper_parameters_search(ksvm, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
@@ -259,9 +255,9 @@ def train_logreg(X_train_filtered, y_train, penalty = None):
     """
 
     if penalty is None:
-        param_grid = {'solver': ['newton-cg']} # C is the inverse of regularization stength, as in SVM 
+        param_grid = {'solver': ['newton-cg']} 
     else:
-        param_grid = {'C' : list(np.arange(0.01, 0.11, 0.01))}
+        param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]} # C is the inverse of regularization stength, as in SVM 
 
     logreg = LogisticRegression(multi_class='multinomial', penalty=penalty, random_state=42, solver='newton-cg') 
 
@@ -281,7 +277,6 @@ def train_bagg(X_train_filtered, y_train):
     BaggingClassifier: The best estimator found by the hyperparameter search.
     """
 
-    #param_grid = {'n_estimators' : range(25, 50, 25)} # number of estimators tuning
     param_grid = {'n_estimators' : range(25, 1001, 25)}
 
     bagg = BaggingClassifier(oob_score=True)
@@ -296,12 +291,7 @@ def train_mlp(X_train_filtered, y_train):
         'learning_rate_init': 10.0 ** -np.arange(2, 5),
     }
 
-    # param_grid = {
-    #     'alpha' : [10.0 ** -3], 
-    #     'learning_rate_init': [10.0 ** -3],
-    # }
-
-    mlp = MLPClassifier(random_state=42, max_iter=1000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling')
+    mlp = MLPClassifier(random_state=42, max_iter=2000, hidden_layer_sizes=(100, 100), solver='adam', learning_rate='invscaling')
     grid_mlp = hyper_parameters_search(mlp, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
 
     return grid_mlp.best_estimator_
@@ -316,7 +306,7 @@ def train_lda(X_train_filtered, y_train):
 def train_qda(X_train_filtered, y_train):
 
     param_grid = {
-        'reg_param': list(np.arange(0.01, 0.11, 0.01))} # regularization strength tuning
+        'reg_param': list(np.arange(0, 0.11, 0.01))} # regularization strength tuning
     clf = QuadraticDiscriminantAnalysis()
 
     grid_qda = hyper_parameters_search(clf, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)
