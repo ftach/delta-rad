@@ -21,7 +21,7 @@ def cluster_delta_map(patients: list, delta_fraction: str, rad_maps_folder: str,
 
     # load delta map 
     for p in patients: 
-        print(f'Computing delta feature maps for {p}...')
+        print(f'Computing clustered feature maps for {p}...')
         output_folder = rad_maps_folder + p + '/' + mask_type + '/' + delta_fraction + '/clustered_map/'
         if os.path.exists(output_folder) == False:
             os.mkdir(output_folder)

@@ -56,7 +56,7 @@ def gmm_cluster_map_cv(map: np.ndarray) -> np.ndarray:
     clustered_map: np.array, clustered map (2D or 3D);
     '''
     param_grid = {
-        "n_components": range(2, 5),
+        "n_components": range(2, 10),
     }
     grid_search = GridSearchCV(GaussianMixture(covariance_type='full', random_state=0), param_grid=param_grid, scoring=gmm_bic_score)
     grid_search.fit(map.flatten().reshape(-1, 1))
@@ -102,7 +102,7 @@ def gen_clustered_map(rad_map_path: str, store_path: str, feature_name: str, k: 
     if k is None: # if k is not specified, use GMM with cross validation to find the best k
         clustered_map = gmm_cluster_map_cv(rad_map)
         
-    if np.unique(rad_map).shape[0] > k: # 'Delta map has only one unique value. Clustering is not possible.'
+    elif np.unique(rad_map).shape[0] > k: # 'Delta map has only one unique value. Clustering is not possible.'
         if method == 'gmm':
             clustered_map = gmm_cluster_map(rad_map, k)
         elif method == 'kmeans':

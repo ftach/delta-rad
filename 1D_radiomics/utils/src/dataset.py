@@ -28,7 +28,7 @@ def load_config(config_path: str) -> dict:
             return None
 
 
-def get_highly_corr_features(correlation_matrix: pd.DataFrame, threshold: float = 0.7):
+def get_highly_corr_features(correlation_matrix: pd.DataFrame, threshold: float = 0.8):
     """
     Identify pairs of highly correlated features from a correlation matrix.
     Args:

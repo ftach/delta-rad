@@ -111,11 +111,18 @@ def get_top_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: l
 
         # Sort the results list by the max value in descending order and take the top k
         if len(top_results[table]) > 0:
-            sorted_keys = sorted(
-                top_results[table].keys(),
-                key=lambda x: float(x),
-                reverse=(metric != 'brier_loss')
-            )[:k]
+            if 'brier_loss' in metric:
+                sorted_keys = sorted(
+                    top_results[table].keys(),
+                    key=lambda x: float(x),
+                    reverse=False
+                )[:k]
+            else:
+                sorted_keys = sorted(
+                    top_results[table].keys(),
+                    key=lambda x: float(x),
+                    reverse=True
+                )[:k]
             top_results[table] = {key: top_results[table][key] for key in sorted_keys}
 
     return top_results

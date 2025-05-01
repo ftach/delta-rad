@@ -38,8 +38,12 @@ def compute_feature_maps_same_mask(patients: list, fractions: list, input_path: 
                 if os.path.exists(image_path) == False: # if fraction is missing 
                     continue
 
-                computed_features = gm.generate_feature_map(image_path, mask_path, params_path, rad_map_path, enabled_features)
-                print(f'Computed {len(computed_features)} feature maps for {p}.')
+                try: 
+                    computed_features = gm.generate_feature_map(image_path, mask_path, params_path, rad_map_path, enabled_features)
+                    print(f'Computed {len(computed_features)} feature maps for {p}.')
+                except ValueError as e:
+                    print(f'Error computing feature maps for {p} {f}: {e}')
+                    continue
             
             else: 
                 print(f'Feature maps for {p} and {f} already computed.')

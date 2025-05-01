@@ -4,6 +4,8 @@ import os
 import utils.get_map as gm 
 import utils.get_stats as gs
 
+from compute_delta_maps import compute_feature_maps_same_mask
+
 def compute_feature_maps(patients: list, fractions: list, input_path: str, output_path: str, params_path: str, enabled_features: list, mask_type: str) -> None:
     '''Compute the feature maps for the given patients and fractions.
     
@@ -44,15 +46,19 @@ def main(mask_type='ptv'):
     fractions = ['ttt_1', 'ttt_5'] 
     folder_path = '/home/tachennf/Documents/delta-rad/data/ICM_0.35T/registered_data/'
     output_path = '/home/tachennf/Documents/delta-rad/data/ICM_0.35T/rad_maps/'
-    patients_filtered = ['Patient48', 'Patient76', 'Patient75', 'Patient72', 'Patient59', 'Patient46', 'Patient34', 'Patient36', 'Patient31', 'Patient12', 'Patient20', 'Patient22', 'Patient26', 'Patient39', 'Patient40']
-    enabled_features = ['original_gldm_GrayLevelNonUniformity', 'original_glrlm_RunLengthNonUniformity', 'original_glszm_ZoneEntropy', 'original_glszm_GrayLevelNonUniformityNormalized', 'original_gldm_GrayLevelNonUniformity', 'original_glrlm_GrayLevelNonUniformityNormalized']
-  
-    compute_feature_maps(patients_filtered, fractions, folder_path, output_path, params, enabled_features, mask_type) 
+    error_patients = ['Patient11', 'Patient18', 'Patient85', 'Patient79', 'Patient54', 'Patient86', 'Patient66', 'Patient32', 'Patient64', 'Patient61', 'Patient80', 'Patient14', 'Patient27', 'Patient09', 'Patient08'] 
+    patients = os.listdir(folder_path)
+    patients_filtered = [p for p in patients if p not in error_patients and p.startswith('Patient')]
+    # patients_filtered = ['Patient48', 'Patient76', 'Patient75', 'Patient72', 'Patient59', 'Patient46', 'Patient34', 'Patient36', 'Patient31', 'Patient12', 'Patient20', 'Patient22', 'Patient26', 'Patient39', 'Patient40']
+    enabled_features = ['original_gldm_GrayLevelNonUniformity', 'original_glrlm_RunLengthNonUniformity', 'original_glszm_ZoneEntropy', 'original_glszm_GrayLevelNonUniformityNormalized', 'original_glrlm_GrayLevelNonUniformityNormalized']
+
+    # compute_feature_maps(patients_filtered, fractions, folder_path, output_path, params, enabled_features, mask_type) 
+    compute_feature_maps_same_mask(patients_filtered, fractions, folder_path, output_path, params, enabled_features, mask_type) # compute feature maps for each fraction and save in a csv file
     # gs.compute_params(fractions, patients_filtered, enabled_features, mask_type='ptv') # compute intensity parameters for each feature map and save in a csv file
     print(f'Computed feature maps for {len(patients_filtered)} patients and {len(fractions)} fractions.')
 
 if __name__ == '__main__':
-    main(mask_type='ptv_5px')
+    main(mask_type='gtv')
     # features from Gladis analysis:     enabled_features = ['original_gldm_GrayLevelNonUniformity', 'original_glrlm_RunLengthNonUniformity', 'original_glszm_ZoneEntropy', 'original_glszm_GrayLevelNonUniformityNormalized', 'original_gldm_GrayLevelNonUniformity', 'original_glrlm_GrayLevelNonUniformityNormalized']
 
     # Récidives # all have F1 and F5!  but not PTV!!!
