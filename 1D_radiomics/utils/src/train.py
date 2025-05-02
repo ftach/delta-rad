@@ -257,7 +257,7 @@ def train_logreg(X_train_filtered, y_train, penalty = None):
     if penalty is None:
         param_grid = {'solver': ['newton-cg']} 
     else:
-        param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]} # C is the inverse of regularization stength, as in SVM 
+        param_grid = {'C': np.power(10., np.arange(-3, 4))} # C is the inverse of regularization stength, as in SVM 
 
     logreg = LogisticRegression(multi_class='multinomial', penalty=penalty, random_state=42, solver='newton-cg') 
 
@@ -306,7 +306,7 @@ def train_lda(X_train_filtered, y_train):
 def train_qda(X_train_filtered, y_train):
 
     param_grid = {
-        'reg_param': list(np.arange(0, 0.11, 0.01))} # regularization strength tuning
+        'reg_param': np.power(10., np.arange(-3, 4))} # regularization strength tuning
     clf = QuadraticDiscriminantAnalysis()
 
     grid_qda = hyper_parameters_search(clf, X_train_filtered, y_train, param_grid, scorer=SCORER, cv=5)

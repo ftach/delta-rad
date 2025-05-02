@@ -32,22 +32,22 @@ def compute_feature_maps_same_mask(patients: list, fractions: list, input_path: 
             continue 
         for f in fractions:
             rad_map_path = output_path + p + '/' + mask_type + '/' + f + '/'
-            if os.path.exists(rad_map_path) == False: # if maps were not computed yet
-                os.makedirs(rad_map_path)
-                image_path = input_path + p + '/img_dir/' + p + '_mridian_' + f + '.nii'
-                if os.path.exists(image_path) == False: # if fraction is missing 
-                    continue
-
-                try: 
-                    computed_features = gm.generate_feature_map(image_path, mask_path, params_path, rad_map_path, enabled_features)
-                    print(f'Computed {len(computed_features)} feature maps for {p}.')
-                except ValueError as e:
-                    print(f'Error computing feature maps for {p} {f}: {e}')
-                    continue
-            
-            else: 
-                print(f'Feature maps for {p} and {f} already computed.')
+            # if os.path.exists(rad_map_path) == False: # if maps were not computed yet
+            #     os.makedirs(rad_map_path)
+            image_path = input_path + p + '/img_dir/' + p + '_mridian_' + f + '.nii'
+            if os.path.exists(image_path) == False: # if fraction is missing 
                 continue
+
+            try: 
+                computed_features = gm.generate_feature_map(image_path, mask_path, params_path, rad_map_path, enabled_features)
+                print(f'Computed {len(computed_features)} feature maps for {p}.')
+            except ValueError as e:
+                print(f'Error computing feature maps for {p} {f}: {e}')
+                continue
+            
+            # else: 
+            #     print(f'Feature maps for {p} and {f} already computed.')
+            #     continue
 
 def compute_delta_map(patients: list, fractions: list, original_data_folder: str, rad_maps_folder: str, enabled_features: list, mask_type: str) -> None:
     '''Compute the feature maps for the given patients and fractions.
