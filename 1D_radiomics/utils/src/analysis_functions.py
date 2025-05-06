@@ -13,6 +13,92 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 
+def get_one_top_results(results: dict, delta_rad_tables: list, feat_sel_algo_list: list, pred_algo_list: list, outcome: str, metric: str):
+    """ 
+    Get the the first top result for each table and each outcome in terms of the given metric.
+    Args:
+        results (dict): A dictionary containing the results to be plotted.
+        delta_rad_tables (list): A list of the radiomic tables.
+        feat_sel_algo_list (list): A list of the feature selection algorithms.
+        pred_algo_list (list): A list of the prediction algorithms.
+        outcome (str): The outcome to be used for selecting the top results.
+        metric (str): The metric to be used for selecting the top results. Options are 'train_auc', 'train_brier_loss', 'test_auc', 'test_brier_loss', 'sensitivity', 'specificity'.
+
+    Returns:
+        top_results (dict): A dictionary containing the top1 result for each table and each outcome.
+    """
+
+    top_results = {}
+    for table in delta_rad_tables:
+        top_results[table] = {}
+        for feat_sel_algo in feat_sel_algo_list:
+            for pred_algo in pred_algo_list:
+                for nb_features in results[table][feat_sel_algo][pred_algo][outcome].keys():
+                    if metric == 'train_auc': 
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['train_metrics']['auc']['values']
+                    elif metric == 'train_brier_loss':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['train_metrics']['brier_loss']['values']
+                    elif metric == 'test_auc':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['auc']['values']
+                    elif metric == 'test_brier_loss':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['brier_loss']['values']
+                    elif metric == 'sensitivity':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['sensitivity']['values']
+                    elif metric == 'specificity':
+                        all_fold_values = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['specificity']['values']
+                    else:
+                        print("Metric not recognized. Please choose one of the following: train_auc, train_brier_loss, test_auc, test_brier_loss, sensitivity, specificity.")
+                    mean_value = np.mean(all_fold_values)
+                    mean_value = round(mean_value, 3)  # Round to 3 decimal places
+
+                    if (mean_value != 'N/A') and (mean_value != 0) and (mean_value != 'None'): 
+                        top_results[table][str(mean_value)] = {}
+                        top_results[table][str(mean_value)]['feat_sel_algo'] = feat_sel_algo
+                        top_results[table][str(mean_value)]['pred_algo'] = pred_algo
+                        top_results[table][str(mean_value)]['features'] = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['features']
+                        top_results[table][str(mean_value)]['params'] = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['params']
+
+        # Sort the results list by the max value in descending order and take the top k
+        if len(top_results[table]) > 0:
+            if 'brier_loss' in metric:
+                sorted_keys = sorted(
+                    top_results[table].keys(),
+                    key=lambda x: float(x),
+                    reverse=False
+                )[:1]
+            else:
+                sorted_keys = sorted(
+                    top_results[table].keys(),
+                    key=lambda x: float(x),
+                    reverse=True
+                )[:1]
+            top_results[table] = {key: top_results[table][key] for key in sorted_keys}
+
+    return top_results
+
+def plot_auc_barplot(results, table, feat_sel_algo, pred_algo, outcome, nb_features, i): 
+    """
+    Plots a barplot of the AUC with confidence interval as error for the given table, feature selection algorithm, prediction algorithm, outcome, and number of features.
+
+    Args:
+        results (dict): A dictionary containing the results to be plotted.
+        table (str): The name of the table to be plotted.
+        feat_sel_algo (str): The feature selection algorithm to be plotted.
+        pred_algo (str): The prediction algorithm to be plotted.
+        outcome (str): The outcome to be plotted.
+        nb_features (int): The number of features to be plotted.
+        i (int): The index of the bar to be plotted.
+        
+    Returns:
+        None
+    """
+
+    colormap = plt.cm.get_cmap('tab10', 10)  # 'tab10' is a colormap with 10 distinct colors
+    conf_int = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['auc']['conf_int']
+    auc = results[table][feat_sel_algo][pred_algo][outcome][nb_features]['test_metrics']['auc']['values']
+    yerr = np.array([[auc[0] - conf_int[0][0]], [conf_int[0][1] - auc[0]]])
+    plt.bar(table, auc[0], yerr=yerr, capsize=5, color=colormap(i), alpha=0.6, width=0.4)
+
 
 def plot_heatmap(results: dict, table: str, outcome: str, feat_sel_algo_list: list, pred_algo_list: list, metrics: list = ['roc_auc', 'sensitivity', 'specificity'], value: str = 'max'):
     """
