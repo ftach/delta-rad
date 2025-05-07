@@ -8,3 +8,5 @@
 *.dcm
 *.npy
 *.joblib
+*.xlsx
+*.xls
